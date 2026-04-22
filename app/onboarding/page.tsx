@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser, useAuth } from "@clerk/nextjs";
 import { completeOnboarding } from "@/lib/api";
@@ -8,6 +9,8 @@ export default function OnboardingPage() {
   const router = useRouter();
   const { user } = useUser();
   const { getToken } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   async function handleRole(role: "client" | "professional") {
     if (role === "professional") {
@@ -15,17 +18,21 @@ export default function OnboardingPage() {
       return;
     }
 
-    await completeOnboarding(
-      {
-        email: user?.primaryEmailAddress?.emailAddress ?? "",
-        fullName: user?.fullName ?? "",
-        role: "client",
-      },
-      getToken
-    );
+    setLoading(true);
+    setError("");
+    try {
+      const email    = user?.primaryEmailAddress?.emailAddress ?? "";
+      const fullName = user?.fullName ?? user?.firstName ?? email.split("@")[0] ?? "Usuario";
 
-    await user?.update({ unsafeMetadata: { onboardingComplete: true, roles: ["client"] } });
-    router.push("/");
+      await completeOnboarding({ email, fullName, role: "client" }, getToken);
+      await user?.update({ unsafeMetadata: { onboardingComplete: true, roles: ["client"] } });
+      router.push("/");
+    } catch (err) {
+      setError("Ocurrió un error. Intentá de nuevo.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -37,10 +44,15 @@ export default function OnboardingPage() {
           <p className="text-sm text-muted">Podés cambiar esto después desde tu perfil</p>
         </div>
 
+        {error && (
+          <p className="text-sm text-red-600 bg-red-50 rounded-xl px-4 py-3 text-center">{error}</p>
+        )}
+
         <div className="space-y-3">
           <button
             onClick={() => handleRole("client")}
-            className="w-full bg-surface border-2 border-border rounded-2xl p-5 text-left hover:border-primary hover:shadow-md transition-all active:scale-95 group"
+            disabled={loading}
+            className="w-full bg-surface border-2 border-border rounded-2xl p-5 text-left hover:border-primary hover:shadow-md transition-all active:scale-95 disabled:opacity-50"
           >
             <div className="text-3xl mb-2">🏠</div>
             <p className="font-semibold text-ink text-base">Busco servicios</p>
@@ -49,7 +61,8 @@ export default function OnboardingPage() {
 
           <button
             onClick={() => handleRole("professional")}
-            className="w-full bg-surface border-2 border-border rounded-2xl p-5 text-left hover:border-primary hover:shadow-md transition-all active:scale-95"
+            disabled={loading}
+            className="w-full bg-surface border-2 border-border rounded-2xl p-5 text-left hover:border-primary hover:shadow-md transition-all active:scale-95 disabled:opacity-50"
           >
             <div className="text-3xl mb-2">🔧</div>
             <p className="font-semibold text-ink text-base">Soy profesional</p>

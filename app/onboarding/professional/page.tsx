@@ -18,6 +18,7 @@ export default function ProfessionalOnboardingPage() {
   const [zone,  setZone]  = useState("");
   const [bio,   setBio]   = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const canSubmit = trade && zone;
 
@@ -25,22 +26,18 @@ export default function ProfessionalOnboardingPage() {
     e.preventDefault();
     if (!canSubmit) return;
     setLoading(true);
+    setError("");
 
     try {
-      await completeOnboarding(
-        {
-          email: user?.primaryEmailAddress?.emailAddress ?? "",
-          fullName: user?.fullName ?? "",
-          role: "professional",
-          trade,
-          zone,
-          bio,
-        },
-        getToken
-      );
+      const email    = user?.primaryEmailAddress?.emailAddress ?? "";
+      const fullName = user?.fullName ?? user?.firstName ?? email.split("@")[0] ?? "Usuario";
 
+      await completeOnboarding({ email, fullName, role: "professional", trade, zone, bio }, getToken);
       await user?.update({ unsafeMetadata: { onboardingComplete: true, roles: ["professional"] } });
       router.push("/");
+    } catch (err) {
+      setError("Ocurrió un error al guardar tu perfil. Intentá de nuevo.");
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -108,6 +105,10 @@ export default function ProfessionalOnboardingPage() {
               className="w-full text-sm text-ink placeholder:text-muted bg-cream rounded-xl p-3 resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
             />
           </div>
+
+          {error && (
+            <p className="text-sm text-red-600 bg-red-50 rounded-xl px-4 py-3">{error}</p>
+          )}
 
           <button
             type="submit"

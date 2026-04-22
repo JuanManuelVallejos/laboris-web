@@ -14,7 +14,7 @@ export default function NavBottom() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-surface border-t border-border flex items-center justify-around px-2 py-2 z-10">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-border flex items-center justify-around px-2 py-2 z-10">
       {items.map((item) => {
         const active = pathname === item.href;
         return (

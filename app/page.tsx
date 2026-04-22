@@ -12,10 +12,10 @@ export default async function Home() {
     <div className="flex flex-col min-h-screen bg-cream">
       <Topbar />
 
-      <main className="flex-1 px-4 pt-4 pb-24 space-y-5 max-w-lg mx-auto w-full">
+      <main className="flex-1 px-4 pt-4 pb-24 md:pb-8 max-w-5xl mx-auto w-full space-y-5">
 
         {/* Búsqueda */}
-        <div className="relative">
+        <div className="relative md:max-w-xl">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted text-sm">🔍</span>
           <input
             type="text"
@@ -45,7 +45,7 @@ export default async function Home() {
               No hay profesionales disponibles en tu zona.
             </p>
           ) : (
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {professionals.map((p) => (
                 <ProfessionalCard key={p.id} professional={p} />
               ))}

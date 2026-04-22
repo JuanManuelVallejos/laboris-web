@@ -23,7 +23,7 @@ export default function RequestPage() {
         <h1 className="text-base font-semibold text-ink">Solicitar presupuesto</h1>
       </header>
 
-      <main className="flex-1 px-4 pt-5 pb-32 max-w-lg mx-auto w-full">
+      <main className="flex-1 px-4 pt-5 pb-32 md:pb-8 max-w-lg mx-auto w-full">
         <form onSubmit={handleSubmit} className="space-y-4">
 
           <div className="bg-surface rounded-2xl p-4 shadow-sm">
@@ -57,11 +57,22 @@ export default function RequestPage() {
             </button>
           </div>
 
+          {/* Inline submit on desktop */}
+          <div className="hidden md:block pt-2">
+            <button
+              type="submit"
+              disabled={!description.trim()}
+              className="w-full bg-primary text-surface font-semibold py-3.5 rounded-2xl shadow-md disabled:opacity-40 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors"
+            >
+              Enviar solicitud
+            </button>
+          </div>
+
         </form>
       </main>
 
-      {/* CTA fijo */}
-      <div className="fixed bottom-0 left-0 right-0 px-4 pb-6 pt-4 bg-gradient-to-t from-cream via-cream/90 to-transparent">
+      {/* Mobile CTA fijo */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 px-4 pb-6 pt-4 bg-gradient-to-t from-cream via-cream/90 to-transparent">
         <div className="max-w-lg mx-auto">
           <button
             onClick={handleSubmit}

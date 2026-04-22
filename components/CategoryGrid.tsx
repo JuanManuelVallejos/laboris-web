@@ -11,7 +11,7 @@ const categories = [
 
 export default function CategoryGrid() {
   return (
-    <div className="grid grid-cols-4 gap-3">
+    <div className="grid grid-cols-4 md:grid-cols-8 gap-3">
       {categories.map((cat) => (
         <button
           key={cat.label}

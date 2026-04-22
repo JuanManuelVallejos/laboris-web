@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { SignedIn, SignedOut, UserButton, SignInButton } from "@clerk/nextjs";
+import { Show, UserButton, SignInButton, SignUpButton } from "@clerk/nextjs";
 
 const navLinks = [
   { href: "/",        label: "Inicio" },
@@ -34,38 +34,31 @@ export default function Topbar() {
         </nav>
       </div>
 
-      {/* Mobile right side */}
-      <div className="md:hidden flex items-center gap-2">
-        <SignedIn>
-          <UserButton afterSignOutUrl="/" />
-        </SignedIn>
-        <SignedOut>
-          <SignInButton mode="modal">
-            <button className="text-sm font-medium text-primary px-3 py-1.5 rounded-xl border border-primary/30 hover:bg-primary/5 transition-colors">
-              Ingresar
-            </button>
-          </SignInButton>
-        </SignedOut>
-      </div>
-
-      {/* Desktop right side */}
-      <div className="hidden md:flex items-center gap-3">
+      {/* Auth — mobile + desktop */}
+      <div className="flex items-center gap-2 md:gap-3">
         <button
-          className="w-9 h-9 flex items-center justify-center rounded-full bg-cream text-base hover:bg-border transition-colors"
+          className="hidden md:flex w-9 h-9 items-center justify-center rounded-full bg-cream text-base hover:bg-border transition-colors"
           aria-label="Notificaciones"
         >
           🔔
         </button>
-        <SignedIn>
-          <UserButton afterSignOutUrl="/" />
-        </SignedIn>
-        <SignedOut>
+
+        <Show when="signed-out">
           <SignInButton mode="modal">
-            <button className="text-sm font-semibold text-surface bg-primary px-4 py-2 rounded-xl hover:bg-primary/90 transition-colors">
+            <button className="text-sm font-medium text-primary px-3 py-1.5 rounded-xl border border-primary/30 hover:bg-primary/5 transition-colors md:hidden">
               Ingresar
             </button>
           </SignInButton>
-        </SignedOut>
+          <SignInButton mode="modal">
+            <button className="hidden md:block text-sm font-semibold text-surface bg-primary px-4 py-2 rounded-xl hover:bg-primary/90 transition-colors">
+              Ingresar
+            </button>
+          </SignInButton>
+        </Show>
+
+        <Show when="signed-in">
+          <UserButton afterSignOutUrl="/" />
+        </Show>
       </div>
     </header>
   );

@@ -34,7 +34,7 @@ export default function ProfessionalOnboardingPage() {
 
       await completeOnboarding({ email, fullName, role: "professional", trade, zone, bio }, getToken);
       await user?.update({ unsafeMetadata: { onboardingComplete: true, roles: ["professional"] } });
-      router.push("/");
+      window.location.replace("/");
     } catch (err) {
       setError(`Error: ${err instanceof Error ? err.message : String(err)}`);
       console.error(err);

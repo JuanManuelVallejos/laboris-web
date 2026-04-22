@@ -26,7 +26,7 @@ export default function OnboardingPage() {
 
       await completeOnboarding({ email, fullName, role: "client" }, getToken);
       await user?.update({ unsafeMetadata: { onboardingComplete: true, roles: ["client"] } });
-      router.push("/");
+      window.location.replace("/");
     } catch (err) {
       setError("Ocurrió un error. Intentá de nuevo.");
       console.error(err);

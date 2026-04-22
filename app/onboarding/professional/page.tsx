@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useUser, useAuth } from "@clerk/nextjs";
 import Link from "next/link";
 import { completeOnboarding } from "@/lib/api";
@@ -10,17 +9,17 @@ const trades = ["Plomero", "Gasista", "Electricista", "Cerrajero", "Pintor", "Ai
 const zones  = ["CABA", "Zona Norte", "Zona Sur", "Zona Oeste", "GBA"];
 
 export default function ProfessionalOnboardingPage() {
-  const router = useRouter();
   const { user } = useUser();
   const { getToken } = useAuth();
 
-  const [trade, setTrade] = useState("");
-  const [zone,  setZone]  = useState("");
-  const [bio,   setBio]   = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [fullName, setFullName] = useState(user?.fullName ?? "");
+  const [trade,    setTrade]    = useState("");
+  const [zone,     setZone]     = useState("");
+  const [bio,      setBio]      = useState("");
+  const [loading,  setLoading]  = useState(false);
+  const [error,    setError]    = useState("");
 
-  const canSubmit = trade && zone;
+  const canSubmit = fullName.trim() && trade && zone;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -29,10 +28,16 @@ export default function ProfessionalOnboardingPage() {
     setError("");
 
     try {
-      const email    = user?.primaryEmailAddress?.emailAddress ?? "";
-      const fullName = user?.fullName ?? user?.firstName ?? email.split("@")[0] ?? "Usuario";
+      const email = user?.primaryEmailAddress?.emailAddress ?? "";
 
-      await completeOnboarding({ email, fullName, role: "professional", trade, zone, bio }, getToken);
+      // Actualizar nombre en Clerk
+      const [firstName, ...rest] = fullName.trim().split(" ");
+      await user?.update({ firstName, lastName: rest.join(" ") || undefined });
+
+      // Crear usuario + profesional en la DB
+      await completeOnboarding({ email, fullName: fullName.trim(), role: "professional", trade, zone, bio }, getToken);
+
+      // Marcar onboarding completo y hacer reload para refrescar JWT
       await user?.update({ unsafeMetadata: { onboardingComplete: true, roles: ["professional"] } });
       window.location.replace("/");
     } catch (err) {
@@ -52,6 +57,18 @@ export default function ProfessionalOnboardingPage() {
 
       <main className="flex-1 px-4 pt-5 pb-8 max-w-lg mx-auto w-full">
         <form onSubmit={handleSubmit} className="space-y-4">
+
+          <div className="bg-surface rounded-2xl p-4 shadow-sm">
+            <label className="text-sm font-semibold text-ink block mb-2">Tu nombre *</label>
+            <input
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="Ej: Juan Vallejo"
+              className="w-full text-sm text-ink placeholder:text-muted bg-cream rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/30 transition border border-border"
+              required
+            />
+          </div>
 
           <div className="bg-surface rounded-2xl p-4 shadow-sm">
             <label className="text-sm font-semibold text-ink block mb-2">Oficio *</label>

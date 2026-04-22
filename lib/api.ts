@@ -23,6 +23,32 @@ export async function ping(): Promise<boolean> {
   }
 }
 
+export interface OnboardingData {
+  email: string;
+  fullName: string;
+  role: "client" | "professional";
+  trade?: string;
+  zone?: string;
+  bio?: string;
+}
+
+export async function completeOnboarding(
+  data: OnboardingData,
+  getToken: () => Promise<string | null>
+): Promise<{ userId: string; role: string }> {
+  const token = await getToken();
+  const res = await fetch(`${BASE}/api/v1/onboarding`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Onboarding failed");
+  return res.json();
+}
+
 export async function createRequest(
   professionalId: string,
   description: string,

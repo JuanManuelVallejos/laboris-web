@@ -36,7 +36,7 @@ export default function ProfessionalOnboardingPage() {
       await user?.update({ unsafeMetadata: { onboardingComplete: true, roles: ["professional"] } });
       router.push("/");
     } catch (err) {
-      setError("Ocurrió un error al guardar tu perfil. Intentá de nuevo.");
+      setError(`Error: ${err instanceof Error ? err.message : String(err)}`);
       console.error(err);
     } finally {
       setLoading(false);

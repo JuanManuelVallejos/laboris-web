@@ -45,7 +45,10 @@ export async function completeOnboarding(
     },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error("Onboarding failed");
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`${res.status}: ${body}`);
+  }
   return res.json();
 }
 

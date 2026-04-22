@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SignedIn, SignedOut, UserButton, SignInButton } from "@clerk/nextjs";
 
 const navLinks = [
   { href: "/",        label: "Inicio" },
@@ -33,12 +34,19 @@ export default function Topbar() {
         </nav>
       </div>
 
-      <button
-        className="md:hidden w-9 h-9 flex items-center justify-center rounded-full bg-cream text-base"
-        aria-label="Notificaciones"
-      >
-        🔔
-      </button>
+      {/* Mobile right side */}
+      <div className="md:hidden flex items-center gap-2">
+        <SignedIn>
+          <UserButton afterSignOutUrl="/" />
+        </SignedIn>
+        <SignedOut>
+          <SignInButton mode="modal">
+            <button className="text-sm font-medium text-primary px-3 py-1.5 rounded-xl border border-primary/30 hover:bg-primary/5 transition-colors">
+              Ingresar
+            </button>
+          </SignInButton>
+        </SignedOut>
+      </div>
 
       {/* Desktop right side */}
       <div className="hidden md:flex items-center gap-3">
@@ -48,12 +56,16 @@ export default function Topbar() {
         >
           🔔
         </button>
-        <Link
-          href="/perfil"
-          className="w-9 h-9 flex items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary"
-        >
-          U
-        </Link>
+        <SignedIn>
+          <UserButton afterSignOutUrl="/" />
+        </SignedIn>
+        <SignedOut>
+          <SignInButton mode="modal">
+            <button className="text-sm font-semibold text-surface bg-primary px-4 py-2 rounded-xl hover:bg-primary/90 transition-colors">
+              Ingresar
+            </button>
+          </SignInButton>
+        </SignedOut>
       </div>
     </header>
   );

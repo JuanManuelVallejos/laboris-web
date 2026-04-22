@@ -22,3 +22,20 @@ export async function ping(): Promise<boolean> {
     return false;
   }
 }
+
+export async function createRequest(
+  professionalId: string,
+  description: string,
+  getToken: () => Promise<string | null>
+): Promise<void> {
+  const token = await getToken();
+  const res = await fetch(`${BASE}/api/v1/requests`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ professionalId, description }),
+  });
+  if (!res.ok) throw new Error("Failed to create request");
+}

@@ -1,50 +1,61 @@
-import Link from "next/link";
-import { getProfessionals, ping } from "@/lib/api";
+import { getProfessionals } from "@/lib/api";
+import Topbar from "@/components/Topbar";
+import NavBottom from "@/components/NavBottom";
+import FilterChips from "@/components/FilterChips";
+import CategoryGrid from "@/components/CategoryGrid";
+import ProfessionalCard from "@/components/ProfessionalCard";
 
 export default async function Home() {
-  const [professionals, apiUp] = await Promise.all([
-    getProfessionals().catch(() => []),
-    ping(),
-  ]);
+  const professionals = await getProfessionals().catch(() => []);
 
   return (
-    <main className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-3xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Laboris</h1>
-          <span className={`text-sm px-3 py-1 rounded-full font-medium ${apiUp ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
-            API {apiUp ? "online" : "offline"}
-          </span>
+    <div className="flex flex-col min-h-screen bg-cream">
+      <Topbar />
+
+      <main className="flex-1 px-4 pt-4 pb-24 space-y-5 max-w-lg mx-auto w-full">
+
+        {/* Búsqueda */}
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted text-sm">🔍</span>
+          <input
+            type="text"
+            placeholder="¿Qué servicio necesitás?"
+            className="w-full bg-surface border border-border rounded-2xl pl-9 pr-4 py-3 text-sm text-ink placeholder:text-muted focus:outline-none focus:border-primary transition-colors"
+          />
         </div>
 
-        <h2 className="text-lg font-semibold text-gray-700 mb-4">Profesionales</h2>
+        {/* Filtros */}
+        <FilterChips />
 
-        {professionals.length === 0 ? (
-          <p className="text-gray-500">No hay profesionales disponibles.</p>
-        ) : (
-          <ul className="space-y-3">
-            {professionals.map((p) => (
-              <li key={p.id}>
-                <Link
-                  href={`/professionals/${p.id}`}
-                  className="flex items-center justify-between bg-white rounded-xl px-5 py-4 shadow-sm hover:shadow-md transition"
-                >
-                  <div>
-                    <p className="font-medium text-gray-900">{p.name}</p>
-                    <p className="text-sm text-gray-500 capitalize">{p.trade} · {p.zone}</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    {p.verified && (
-                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">verificado</span>
-                    )}
-                    <span className="text-sm text-yellow-500 font-medium">★ {p.rating}</span>
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </main>
+        {/* Categorías */}
+        <section>
+          <h2 className="text-sm font-semibold text-ink mb-3">Servicios</h2>
+          <CategoryGrid />
+        </section>
+
+        {/* Profesionales */}
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-ink">Disponibles cerca tuyo</h2>
+            <button className="text-xs text-primary font-medium">ver más</button>
+          </div>
+
+          {professionals.length === 0 ? (
+            <p className="text-sm text-muted text-center py-8">
+              No hay profesionales disponibles en tu zona.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {professionals.map((p) => (
+                <ProfessionalCard key={p.id} professional={p} />
+              ))}
+            </div>
+          )}
+        </section>
+
+      </main>
+
+      <NavBottom />
+    </div>
   );
 }

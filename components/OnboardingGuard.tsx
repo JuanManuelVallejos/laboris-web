@@ -12,7 +12,9 @@ export default function OnboardingGuard() {
     if (!isLoaded) return;
     if (!user) return;
     const done = user.unsafeMetadata?.onboardingComplete;
-    if (!done) router.replace("/onboarding");
+    if (!done) { router.replace("/onboarding"); return; }
+    const roles = user.unsafeMetadata?.roles as string[] | undefined;
+    if (roles?.includes("professional")) router.replace("/pro");
   }, [isLoaded, user, router]);
 
   return null;

@@ -39,7 +39,7 @@ export default function ProfessionalOnboardingPage() {
 
       // Marcar onboarding completo y hacer reload para refrescar JWT
       await user?.update({ unsafeMetadata: { onboardingComplete: true, roles: ["professional"] } });
-      window.location.replace("/");
+      window.location.replace("/pro");
     } catch (err) {
       setError(`Error: ${err instanceof Error ? err.message : String(err)}`);
       console.error(err);

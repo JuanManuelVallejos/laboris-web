@@ -53,6 +53,18 @@ export async function completeOnboarding(
   return res.json();
 }
 
+export async function getMyProfessional(
+  getToken: () => Promise<string | null>
+): Promise<Professional> {
+  const token = await getToken();
+  const res = await fetch(`${BASE}/api/v1/me/professional`, {
+    cache: "no-store",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("Professional profile not found");
+  return res.json();
+}
+
 export async function createRequest(
   professionalId: string,
   description: string,

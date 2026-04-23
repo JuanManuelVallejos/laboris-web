@@ -3,6 +3,7 @@ export interface Professional {
   name: string;
   trade: string;
   zone: string;
+  bio: string;
   rating: number;
   verified: boolean;
 }

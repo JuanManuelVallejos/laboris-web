@@ -62,8 +62,9 @@ export async function getMyProfessional(
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: "error desconocido" }));
-    throw new Error(body.error ?? "error desconocido");
+    const body = await res.json().catch(() => null);
+    if (!body) throw new Error(`Error ${res.status} — el servidor no está disponible todavía. Intentá de nuevo en unos segundos.`);
+    throw new Error(body.error ?? `Error ${res.status}`);
   }
   return res.json();
 }

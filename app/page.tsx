@@ -4,12 +4,14 @@ import NavBottom from "@/components/NavBottom";
 import FilterChips from "@/components/FilterChips";
 import CategoryGrid from "@/components/CategoryGrid";
 import ProfessionalCard from "@/components/ProfessionalCard";
+import OnboardingGuard from "@/components/OnboardingGuard";
 
 export default async function Home() {
   const professionals = await getProfessionals().catch(() => []);
 
   return (
     <div className="flex flex-col min-h-screen bg-cream">
+      <OnboardingGuard />
       <Topbar />
 
       <main className="flex-1 px-4 pt-4 pb-24 md:pb-8 max-w-5xl mx-auto w-full space-y-5">

@@ -49,7 +49,7 @@ export default async function ProfessionalPage({ params }: { params: Promise<{ i
                   )}
                 </div>
                 <p className="text-sm text-muted capitalize mt-0.5">{professional.trade} · {professional.zone}</p>
-                <p className="text-sm text-amber-500 font-medium mt-1">★ {professional.rating}</p>
+                <p className="text-sm text-amber-500 font-medium mt-1">{professional.rating > 0 ? `★ ${professional.rating}` : "Sin calificación"}</p>
               </div>
             </div>
 
@@ -64,7 +64,7 @@ export default async function ProfessionalPage({ params }: { params: Promise<{ i
             {/* Stats */}
             <div className="grid grid-cols-3 gap-3">
               {[
-                { label: "Calificación", value: `★ ${professional.rating}` },
+                { label: "Calificación", value: professional.rating > 0 ? `★ ${professional.rating}` : "Sin calificación" },
                 { label: "Zona", value: professional.zone },
                 { label: "Estado", value: professional.verified ? "Verificado" : "No verificado" },
               ].map((stat) => (
@@ -82,7 +82,7 @@ export default async function ProfessionalPage({ params }: { params: Promise<{ i
               <div>
                 <p className="text-sm font-semibold text-ink">{professional.name}</p>
                 <p className="text-xs text-muted capitalize">{professional.trade} · {professional.zone}</p>
-                <p className="text-sm text-amber-500 font-medium mt-1">★ {professional.rating}</p>
+                <p className="text-sm text-amber-500 font-medium mt-1">{professional.rating > 0 ? `★ ${professional.rating}` : "Sin calificación"}</p>
               </div>
               <Link
                 href={`/professionals/${id}/request`}

@@ -21,7 +21,9 @@ export default function ProfessionalCard({ professional }: Props) {
         <p className="font-semibold text-ink text-sm truncate">{professional.name}</p>
         <p className="text-xs text-muted capitalize truncate">{professional.trade}</p>
         <div className="flex items-center gap-2 mt-1">
-          <span className="text-xs text-amber-500 font-medium">★ {professional.rating}</span>
+          <span className="text-xs text-amber-500 font-medium">
+            {professional.rating > 0 ? `★ ${professional.rating}` : "Sin calificación"}
+          </span>
           {professional.verified && (
             <span className="text-[10px] bg-verified/10 text-verified font-semibold px-2 py-0.5 rounded-full">
               verificado

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
+import Link from "next/link";
 import Topbar from "@/components/Topbar";
 import NavBottom from "@/components/NavBottom";
 import { getSentRequests } from "@/lib/api";
@@ -22,7 +23,7 @@ const statusColor: Record<string, string> = {
 export default function PedidosPage() {
   const { getToken } = useAuth();
   const [requests, setRequests] = useState<Request[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading]   = useState(true);
 
   useEffect(() => {
     getSentRequests(getToken)
@@ -50,6 +51,9 @@ export default function PedidosPage() {
             <span className="text-3xl mb-2">📋</span>
             <p className="text-sm font-medium text-ink">No enviaste solicitudes aún</p>
             <p className="text-xs text-muted mt-1">Buscá un profesional y contactalo</p>
+            <Link href="/" className="mt-4 text-sm font-semibold text-primary border border-primary/30 rounded-xl px-4 py-2 hover:bg-primary/5 transition-colors">
+              Ver profesionales →
+            </Link>
           </div>
         )}
 
@@ -58,13 +62,21 @@ export default function PedidosPage() {
             {requests.map((req) => (
               <div key={req.id} className="bg-surface rounded-2xl p-4 shadow-sm space-y-2">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-semibold text-ink capitalize">{req.professionalId}</p>
+                  <p className="text-sm font-semibold text-ink">{req.professionalName}</p>
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor[req.status]}`}>
                     {statusLabel[req.status]}
                   </span>
                 </div>
                 <p className="text-sm text-muted leading-relaxed">{req.description}</p>
-                <p className="text-xs text-muted">{new Date(req.createdAt).toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" })}</p>
+                {req.status === "rejected" && req.rejectionReason && (
+                  <div className="bg-red-50 rounded-xl px-3 py-2">
+                    <p className="text-xs font-semibold text-red-600 mb-0.5">Motivo del rechazo</p>
+                    <p className="text-xs text-red-500">{req.rejectionReason}</p>
+                  </div>
+                )}
+                <p className="text-xs text-muted">
+                  {new Date(req.createdAt).toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" })}
+                </p>
               </div>
             ))}
           </div>

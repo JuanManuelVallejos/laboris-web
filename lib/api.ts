@@ -114,8 +114,10 @@ export interface Request {
   clientId: string;
   clientName: string;
   professionalId: string;
+  professionalName: string;
   description: string;
   status: "pending" | "accepted" | "rejected";
+  rejectionReason: string;
   createdAt: string;
 }
 
@@ -148,7 +150,8 @@ export async function getSentRequests(
 export async function updateRequestStatus(
   id: string,
   status: "accepted" | "rejected",
-  getToken: () => Promise<string | null>
+  getToken: () => Promise<string | null>,
+  rejectionReason?: string
 ): Promise<void> {
   const token = await getToken();
   const res = await fetch(`${BASE}/api/v1/requests/${id}`, {
@@ -157,7 +160,10 @@ export async function updateRequestStatus(
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ status }),
+    body: JSON.stringify({ status, rejectionReason: rejectionReason ?? "" }),
   });
-  if (!res.ok) throw new Error("Failed to update request");
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: "error desconocido" }));
+    throw new Error(body.error ?? "error desconocido");
+  }
 }

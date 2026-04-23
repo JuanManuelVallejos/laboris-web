@@ -23,11 +23,14 @@ const statusColor: Record<string, string> = {
 
 export default function ProDashboard() {
   const { getToken } = useAuth();
-  const [profile, setProfile] = useState<Professional | null>(null);
-  const [requests, setRequests] = useState<Request[]>([]);
+  const [profile, setProfile]           = useState<Professional | null>(null);
+  const [requests, setRequests]         = useState<Request[]>([]);
   const [profileError, setProfileError] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState<string | null>(null);
+  const [loading, setLoading]           = useState(true);
+  const [updating, setUpdating]         = useState<string | null>(null);
+  // rejectingId → which card is showing the reason form
+  const [rejectingId, setRejectingId]   = useState<string | null>(null);
+  const [reason, setReason]             = useState("");
 
   useEffect(() => {
     Promise.all([
@@ -39,16 +42,37 @@ export default function ProDashboard() {
     }).finally(() => setLoading(false));
   }, [getToken]);
 
-  async function handleStatus(id: string, status: "accepted" | "rejected") {
+  async function handleAccept(id: string) {
     setUpdating(id);
     try {
-      await updateRequestStatus(id, status, getToken);
-      setRequests((prev) => prev.map((r) => r.id === id ? { ...r, status } : r));
-    } catch {
-      // silently fail — status stays as is
+      await updateRequestStatus(id, "accepted", getToken);
+      setRequests((prev) => prev.map((r) => r.id === id ? { ...r, status: "accepted" } : r));
     } finally {
       setUpdating(null);
     }
+  }
+
+  async function handleReject(id: string) {
+    if (!reason.trim()) return;
+    setUpdating(id);
+    try {
+      await updateRequestStatus(id, "rejected", getToken, reason.trim());
+      setRequests((prev) => prev.map((r) => r.id === id ? { ...r, status: "rejected", rejectionReason: reason.trim() } : r));
+      setRejectingId(null);
+      setReason("");
+    } finally {
+      setUpdating(null);
+    }
+  }
+
+  function startRejecting(id: string) {
+    setRejectingId(id);
+    setReason("");
+  }
+
+  function cancelRejecting() {
+    setRejectingId(null);
+    setReason("");
   }
 
   return (
@@ -70,10 +94,7 @@ export default function ProDashboard() {
           <div className="bg-surface rounded-2xl p-6 shadow-sm text-center space-y-3">
             <p className="text-sm text-red-600 font-medium">{profileError}</p>
             <p className="text-xs text-muted">Tu perfil profesional no se encuentra en la base de datos.</p>
-            <Link
-              href="/onboarding/professional"
-              className="inline-block text-sm font-semibold text-primary border border-primary/30 rounded-xl px-4 py-2 hover:bg-primary/5 transition-colors"
-            >
+            <Link href="/onboarding/professional" className="inline-block text-sm font-semibold text-primary border border-primary/30 rounded-xl px-4 py-2 hover:bg-primary/5 transition-colors">
               Completar perfil →
             </Link>
           </div>
@@ -81,9 +102,7 @@ export default function ProDashboard() {
 
         {!loading && profile && (
           <div className="bg-surface rounded-2xl p-4 shadow-sm flex items-start gap-4">
-            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-2xl shrink-0">
-              👤
-            </div>
+            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-2xl shrink-0">👤</div>
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-ink text-base">{profile.name}</p>
               <p className="text-sm text-muted mt-0.5 capitalize">{profile.trade} · {profile.zone}</p>
@@ -96,10 +115,7 @@ export default function ProDashboard() {
                 )}
               </div>
               {profile.bio && <p className="text-sm text-muted mt-2 line-clamp-2">{profile.bio}</p>}
-              <Link
-                href="/pro/edit"
-                className="mt-3 inline-block text-xs font-semibold text-primary border border-primary/30 rounded-xl px-3 py-1.5 hover:bg-primary/5 transition-colors"
-              >
+              <Link href="/pro/edit" className="mt-3 inline-block text-xs font-semibold text-primary border border-primary/30 rounded-xl px-3 py-1.5 hover:bg-primary/5 transition-colors">
                 Editar perfil →
               </Link>
             </div>
@@ -132,24 +148,62 @@ export default function ProDashboard() {
                         {statusLabel[req.status]}
                       </span>
                     </div>
+
                     <p className="text-sm text-muted leading-relaxed">{req.description}</p>
-                    <p className="text-xs text-muted">{new Date(req.createdAt).toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" })}</p>
-                    {req.status === "pending" && (
+
+                    {req.status === "rejected" && req.rejectionReason && (
+                      <p className="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">
+                        Motivo: {req.rejectionReason}
+                      </p>
+                    )}
+
+                    <p className="text-xs text-muted">
+                      {new Date(req.createdAt).toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" })}
+                    </p>
+
+                    {req.status === "pending" && rejectingId !== req.id && (
                       <div className="flex gap-2 pt-1">
                         <button
-                          onClick={() => handleStatus(req.id, "accepted")}
+                          onClick={() => handleAccept(req.id)}
                           disabled={updating === req.id}
                           className="flex-1 text-xs font-semibold py-2 rounded-xl bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition-colors"
                         >
-                          Aceptar
+                          {updating === req.id ? "..." : "Aceptar"}
                         </button>
                         <button
-                          onClick={() => handleStatus(req.id, "rejected")}
+                          onClick={() => startRejecting(req.id)}
                           disabled={updating === req.id}
                           className="flex-1 text-xs font-semibold py-2 rounded-xl border border-red-300 text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors"
                         >
                           Rechazar
                         </button>
+                      </div>
+                    )}
+
+                    {req.status === "pending" && rejectingId === req.id && (
+                      <div className="space-y-2 pt-1">
+                        <textarea
+                          value={reason}
+                          onChange={(e) => setReason(e.target.value)}
+                          placeholder="Motivo del rechazo (obligatorio)"
+                          rows={2}
+                          className="w-full text-xs text-ink placeholder:text-muted bg-cream rounded-xl px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-red-300 border border-red-200 transition"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleReject(req.id)}
+                            disabled={!reason.trim() || updating === req.id}
+                            className="flex-1 text-xs font-semibold py-2 rounded-xl bg-red-600 text-white hover:bg-red-700 disabled:opacity-40 transition-colors"
+                          >
+                            {updating === req.id ? "..." : "Confirmar rechazo"}
+                          </button>
+                          <button
+                            onClick={cancelRejecting}
+                            className="text-xs font-semibold py-2 px-3 rounded-xl border border-border text-muted hover:bg-cream transition-colors"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>

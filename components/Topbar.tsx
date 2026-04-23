@@ -1,5 +1,7 @@
+"use client";
+
 import Link from "next/link";
-import { Show, UserButton, SignInButton, SignUpButton } from "@clerk/nextjs";
+import { Show, UserButton, SignInButton } from "@clerk/nextjs";
 
 const navLinks = [
   { href: "/",        label: "Inicio" },

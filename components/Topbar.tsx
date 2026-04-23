@@ -5,7 +5,6 @@ import { Show, UserButton, SignInButton } from "@clerk/nextjs";
 
 const navLinks = [
   { href: "/",        label: "Inicio" },
-  { href: "/search",  label: "Buscar" },
   { href: "/pedidos", label: "Pedidos" },
   { href: "/perfil",  label: "Perfil" },
 ];

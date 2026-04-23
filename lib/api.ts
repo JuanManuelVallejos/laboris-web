@@ -65,6 +65,26 @@ export async function getMyProfessional(
   return res.json();
 }
 
+export async function updateMyProfessional(
+  data: { trade: string; zone: string; bio: string },
+  getToken: () => Promise<string | null>
+): Promise<Professional> {
+  const token = await getToken();
+  const res = await fetch(`${BASE}/api/v1/me/professional`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`${res.status}: ${body}`);
+  }
+  return res.json();
+}
+
 export async function createRequest(
   professionalId: string,
   description: string,

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
+import Link from "next/link";
 import Topbar from "@/components/Topbar";
 import NavBottom from "@/components/NavBottom";
 import { getMyProfessional } from "@/lib/api";
@@ -58,6 +59,12 @@ export default function ProDashboard() {
               {profile.bio && (
                 <p className="text-sm text-muted mt-2 line-clamp-2">{profile.bio}</p>
               )}
+              <Link
+                href="/pro/edit"
+                className="mt-3 inline-block text-xs font-semibold text-primary border border-primary/30 rounded-xl px-3 py-1.5 hover:bg-primary/5 transition-colors"
+              >
+                Editar perfil →
+              </Link>
             </div>
           </div>
         )}

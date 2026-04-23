@@ -28,7 +28,7 @@ export default function ProDashboard() {
   const [profileError, setProfileError] = useState("");
   const [loading, setLoading]           = useState(true);
   const [updating, setUpdating]         = useState<string | null>(null);
-  // rejectingId → which card is showing the reason form
+  const [actionError, setActionError]   = useState("");
   const [rejectingId, setRejectingId]   = useState<string | null>(null);
   const [reason, setReason]             = useState("");
 
@@ -44,9 +44,12 @@ export default function ProDashboard() {
 
   async function handleAccept(id: string) {
     setUpdating(id);
+    setActionError("");
     try {
       await updateRequestStatus(id, "accepted", getToken);
-      setRequests((prev) => prev.map((r) => r.id === id ? { ...r, status: "accepted" } : r));
+      setRequests((prev) => prev.map((r) => r.id === id ? { ...r, status: "accepted" as const } : r));
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : "Error al aceptar");
     } finally {
       setUpdating(null);
     }
@@ -55,11 +58,14 @@ export default function ProDashboard() {
   async function handleReject(id: string) {
     if (!reason.trim()) return;
     setUpdating(id);
+    setActionError("");
     try {
       await updateRequestStatus(id, "rejected", getToken, reason.trim());
-      setRequests((prev) => prev.map((r) => r.id === id ? { ...r, status: "rejected", rejectionReason: reason.trim() } : r));
+      setRequests((prev) => prev.map((r) => r.id === id ? { ...r, status: "rejected" as const, rejectionReason: reason.trim() } : r));
       setRejectingId(null);
       setReason("");
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : "Error al rechazar");
     } finally {
       setUpdating(null);
     }
@@ -81,6 +87,10 @@ export default function ProDashboard() {
 
       <main className="flex-1 px-4 pt-5 pb-24 max-w-lg mx-auto w-full space-y-4">
         <h2 className="text-lg font-bold text-ink">Mi panel</h2>
+
+        {actionError && (
+          <p className="text-sm text-red-600 bg-red-50 rounded-xl px-4 py-3">{actionError}</p>
+        )}
 
         {loading && (
           <div className="space-y-4">

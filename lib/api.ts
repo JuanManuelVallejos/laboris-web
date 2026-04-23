@@ -61,7 +61,10 @@ export async function getMyProfessional(
     cache: "no-store",
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) throw new Error("Professional profile not found");
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: "error desconocido" }));
+    throw new Error(body.error ?? "error desconocido");
+  }
   return res.json();
 }
 

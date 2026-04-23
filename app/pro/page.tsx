@@ -33,7 +33,16 @@ export default function ProDashboard() {
         )}
 
         {error && (
-          <p className="text-sm text-red-600 bg-red-50 rounded-xl px-4 py-3">{error}</p>
+          <div className="bg-surface rounded-2xl p-6 shadow-sm text-center space-y-3">
+            <p className="text-sm text-red-600 font-medium">{error}</p>
+            <p className="text-xs text-muted">Tu perfil profesional no se encuentra en la base de datos.</p>
+            <Link
+              href="/onboarding/professional"
+              className="inline-block text-sm font-semibold text-primary border border-primary/30 rounded-xl px-4 py-2 hover:bg-primary/5 transition-colors"
+            >
+              Completar perfil →
+            </Link>
+          </div>
         )}
 
         {profile && (

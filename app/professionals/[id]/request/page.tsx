@@ -2,24 +2,45 @@
 
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@clerk/nextjs";
+import { getProfessional, createRequest } from "@/lib/api";
 
 export default function RequestPage() {
   const router = useRouter();
   const params = useParams();
-  const [description, setDescription] = useState("");
+  const { getToken } = useAuth();
+  const id = params.id as string;
 
-  function handleSubmit(e: React.FormEvent) {
+  const [professionalName, setProfessionalName] = useState("");
+  const [description, setDescription] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    getProfessional(id).then((p) => setProfessionalName(p.name)).catch(() => {});
+  }, [id]);
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    router.push("/request-sent");
+    if (!description.trim()) return;
+    setLoading(true);
+    setError("");
+    try {
+      await createRequest(id, description.trim(), getToken);
+      router.push("/request-sent");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al enviar la solicitud");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <div className="flex flex-col min-h-screen bg-cream">
 
-      {/* Header */}
       <header className="bg-surface px-4 pt-4 pb-3 flex items-center gap-3 sticky top-0 z-10 border-b border-border">
-        <Link href={`/professionals/${params.id}`} className="text-primary font-medium text-sm">←</Link>
+        <Link href={`/professionals/${id}`} className="text-primary font-medium text-sm">←</Link>
         <h1 className="text-base font-semibold text-ink">Solicitar presupuesto</h1>
       </header>
 
@@ -28,7 +49,7 @@ export default function RequestPage() {
 
           <div className="bg-surface rounded-2xl p-4 shadow-sm">
             <p className="text-xs text-muted mb-1">Enviando solicitud a</p>
-            <p className="text-sm font-semibold text-ink">Profesional seleccionado</p>
+            <p className="text-sm font-semibold text-ink">{professionalName || "…"}</p>
           </div>
 
           <div className="bg-surface rounded-2xl p-4 shadow-sm">
@@ -45,41 +66,31 @@ export default function RequestPage() {
             />
           </div>
 
-          <div className="bg-surface rounded-2xl p-4 shadow-sm">
-            <p className="text-sm font-semibold text-ink mb-1">Adjuntá fotos</p>
-            <p className="text-xs text-muted mb-3">Opcional — ayudan al profesional a entender mejor el trabajo</p>
-            <button
-              type="button"
-              className="w-full border-2 border-dashed border-border rounded-xl py-5 text-sm text-muted flex flex-col items-center gap-1 hover:border-primary hover:text-primary transition-colors"
-            >
-              <span className="text-xl">📎</span>
-              <span>Subir foto</span>
-            </button>
-          </div>
+          {error && (
+            <p className="text-sm text-red-600 bg-red-50 rounded-xl px-4 py-3">{error}</p>
+          )}
 
-          {/* Inline submit on desktop */}
           <div className="hidden md:block pt-2">
             <button
               type="submit"
-              disabled={!description.trim()}
+              disabled={!description.trim() || loading}
               className="w-full bg-primary text-surface font-semibold py-3.5 rounded-2xl shadow-md disabled:opacity-40 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors"
             >
-              Enviar solicitud
+              {loading ? "Enviando..." : "Enviar solicitud"}
             </button>
           </div>
 
         </form>
       </main>
 
-      {/* Mobile CTA fijo */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 px-4 pb-6 pt-4 bg-gradient-to-t from-cream via-cream/90 to-transparent">
         <div className="max-w-lg mx-auto">
           <button
             onClick={handleSubmit}
-            disabled={!description.trim()}
+            disabled={!description.trim() || loading}
             className="w-full bg-primary text-surface font-semibold py-3.5 rounded-2xl shadow-md disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all"
           >
-            Enviar solicitud
+            {loading ? "Enviando..." : "Enviar solicitud"}
           </button>
         </div>
       </div>

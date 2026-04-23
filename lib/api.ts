@@ -103,5 +103,61 @@ export async function createRequest(
     },
     body: JSON.stringify({ professionalId, description }),
   });
-  if (!res.ok) throw new Error("Failed to create request");
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: "error desconocido" }));
+    throw new Error(body.error ?? "error desconocido");
+  }
+}
+
+export interface Request {
+  id: string;
+  clientId: string;
+  clientName: string;
+  professionalId: string;
+  description: string;
+  status: "pending" | "accepted" | "rejected";
+  createdAt: string;
+}
+
+export async function getReceivedRequests(
+  getToken: () => Promise<string | null>
+): Promise<Request[]> {
+  const token = await getToken();
+  const res = await fetch(`${BASE}/api/v1/me/requests/received`, {
+    cache: "no-store",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data ?? [];
+}
+
+export async function getSentRequests(
+  getToken: () => Promise<string | null>
+): Promise<Request[]> {
+  const token = await getToken();
+  const res = await fetch(`${BASE}/api/v1/me/requests/sent`, {
+    cache: "no-store",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data ?? [];
+}
+
+export async function updateRequestStatus(
+  id: string,
+  status: "accepted" | "rejected",
+  getToken: () => Promise<string | null>
+): Promise<void> {
+  const token = await getToken();
+  const res = await fetch(`${BASE}/api/v1/requests/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ status }),
+  });
+  if (!res.ok) throw new Error("Failed to update request");
 }

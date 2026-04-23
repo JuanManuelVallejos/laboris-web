@@ -5,21 +5,51 @@ import { useAuth } from "@clerk/nextjs";
 import Link from "next/link";
 import Topbar from "@/components/Topbar";
 import NavBottom from "@/components/NavBottom";
-import { getMyProfessional } from "@/lib/api";
+import { getMyProfessional, getReceivedRequests, updateRequestStatus } from "@/lib/api";
+import type { Request } from "@/lib/api";
 import type { Professional } from "@/lib/types";
+
+const statusLabel: Record<string, string> = {
+  pending:  "Pendiente",
+  accepted: "Aceptada",
+  rejected: "Rechazada",
+};
+
+const statusColor: Record<string, string> = {
+  pending:  "bg-amber-100 text-amber-700",
+  accepted: "bg-green-100 text-green-700",
+  rejected: "bg-red-100 text-red-600",
+};
 
 export default function ProDashboard() {
   const { getToken } = useAuth();
   const [profile, setProfile] = useState<Professional | null>(null);
+  const [requests, setRequests] = useState<Request[]>([]);
+  const [profileError, setProfileError] = useState("");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [updating, setUpdating] = useState<string | null>(null);
 
   useEffect(() => {
-    getMyProfessional(getToken)
-      .then(setProfile)
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
+    Promise.all([
+      getMyProfessional(getToken).catch((e) => { setProfileError(e.message); return null; }),
+      getReceivedRequests(getToken).catch(() => []),
+    ]).then(([prof, reqs]) => {
+      if (prof) setProfile(prof);
+      setRequests(reqs as Request[]);
+    }).finally(() => setLoading(false));
   }, [getToken]);
+
+  async function handleStatus(id: string, status: "accepted" | "rejected") {
+    setUpdating(id);
+    try {
+      await updateRequestStatus(id, status, getToken);
+      setRequests((prev) => prev.map((r) => r.id === id ? { ...r, status } : r));
+    } catch {
+      // silently fail — status stays as is
+    } finally {
+      setUpdating(null);
+    }
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-cream">
@@ -29,12 +59,16 @@ export default function ProDashboard() {
         <h2 className="text-lg font-bold text-ink">Mi panel</h2>
 
         {loading && (
-          <div className="bg-surface rounded-2xl p-6 shadow-sm animate-pulse h-32" />
+          <div className="space-y-4">
+            <div className="bg-surface rounded-2xl p-6 shadow-sm animate-pulse h-32" />
+            <div className="bg-surface rounded-2xl p-6 shadow-sm animate-pulse h-48" />
+          </div>
         )}
 
-        {error && (
+        {/* Perfil */}
+        {!loading && profileError && (
           <div className="bg-surface rounded-2xl p-6 shadow-sm text-center space-y-3">
-            <p className="text-sm text-red-600 font-medium">{error}</p>
+            <p className="text-sm text-red-600 font-medium">{profileError}</p>
             <p className="text-xs text-muted">Tu perfil profesional no se encuentra en la base de datos.</p>
             <Link
               href="/onboarding/professional"
@@ -45,29 +79,23 @@ export default function ProDashboard() {
           </div>
         )}
 
-        {profile && (
+        {!loading && profile && (
           <div className="bg-surface rounded-2xl p-4 shadow-sm flex items-start gap-4">
             <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-2xl shrink-0">
               👤
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-ink text-base">{profile.name}</p>
-              <p className="text-sm text-muted mt-0.5 capitalize">
-                {profile.trade} · {profile.zone}
-              </p>
+              <p className="text-sm text-muted mt-0.5 capitalize">{profile.trade} · {profile.zone}</p>
               <div className="flex items-center gap-2 mt-1.5">
                 <span className="text-sm text-amber-500 font-medium">
                   ★ {profile.rating > 0 ? profile.rating.toFixed(1) : "Sin reviews"}
                 </span>
                 {profile.verified && (
-                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
-                    Verificado
-                  </span>
+                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">Verificado</span>
                 )}
               </div>
-              {profile.bio && (
-                <p className="text-sm text-muted mt-2 line-clamp-2">{profile.bio}</p>
-              )}
+              {profile.bio && <p className="text-sm text-muted mt-2 line-clamp-2">{profile.bio}</p>}
               <Link
                 href="/pro/edit"
                 className="mt-3 inline-block text-xs font-semibold text-primary border border-primary/30 rounded-xl px-3 py-1.5 hover:bg-primary/5 transition-colors"
@@ -78,14 +106,58 @@ export default function ProDashboard() {
           </div>
         )}
 
-        <div className="bg-surface rounded-2xl p-4 shadow-sm">
-          <h3 className="font-semibold text-ink text-sm mb-3">Solicitudes recibidas</h3>
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <span className="text-3xl mb-2">📭</span>
-            <p className="text-sm font-medium text-ink">No tenés solicitudes aún</p>
-            <p className="text-xs text-muted mt-1">Cuando alguien te contacte, aparecerá acá</p>
+        {/* Solicitudes */}
+        {!loading && (
+          <div className="bg-surface rounded-2xl p-4 shadow-sm">
+            <h3 className="font-semibold text-ink text-sm mb-3">
+              Solicitudes recibidas
+              {requests.length > 0 && (
+                <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">{requests.length}</span>
+              )}
+            </h3>
+
+            {requests.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <span className="text-3xl mb-2">📭</span>
+                <p className="text-sm font-medium text-ink">No tenés solicitudes aún</p>
+                <p className="text-xs text-muted mt-1">Cuando alguien te contacte, aparecerá acá</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {requests.map((req) => (
+                  <div key={req.id} className="border border-border rounded-xl p-3 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold text-ink">{req.clientName}</p>
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor[req.status]}`}>
+                        {statusLabel[req.status]}
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted leading-relaxed">{req.description}</p>
+                    <p className="text-xs text-muted">{new Date(req.createdAt).toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" })}</p>
+                    {req.status === "pending" && (
+                      <div className="flex gap-2 pt-1">
+                        <button
+                          onClick={() => handleStatus(req.id, "accepted")}
+                          disabled={updating === req.id}
+                          className="flex-1 text-xs font-semibold py-2 rounded-xl bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition-colors"
+                        >
+                          Aceptar
+                        </button>
+                        <button
+                          onClick={() => handleStatus(req.id, "rejected")}
+                          disabled={updating === req.id}
+                          className="flex-1 text-xs font-semibold py-2 rounded-xl border border-red-300 text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors"
+                        >
+                          Rechazar
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
+        )}
       </main>
 
       <NavBottom />

@@ -15,6 +15,12 @@ export default function PerfilPage() {
     router.push("/sign-in");
   }
 
+  const roles = user?.unsafeMetadata?.roles as string[] | undefined;
+  if (isLoaded && roles?.includes("professional")) {
+    router.replace("/pro");
+    return null;
+  }
+
   if (!isLoaded) {
     return (
       <div className="flex flex-col min-h-screen bg-cream">

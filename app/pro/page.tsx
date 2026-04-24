@@ -135,14 +135,23 @@ export default function ProDashboard() {
         {/* Solicitudes */}
         {!loading && (
           <div className="bg-surface rounded-2xl p-4 shadow-sm">
-            <h3 className="font-semibold text-ink text-sm mb-3">
-              Solicitudes recibidas
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-ink text-sm">
+                Pedidos pendientes
+                {requests.filter(r => r.status === "pending").length > 0 && (
+                  <span className="ml-2 text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
+                    {requests.filter(r => r.status === "pending").length}
+                  </span>
+                )}
+              </h3>
               {requests.length > 0 && (
-                <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">{requests.length}</span>
+                <Link href="/pro/pedidos" className="text-xs text-primary font-medium hover:underline">
+                  Ver historial →
+                </Link>
               )}
-            </h3>
+            </div>
 
-            {requests.length === 0 ? (
+            {requests.filter(r => r.status === "pending").length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <span className="text-3xl mb-2">📭</span>
                 <p className="text-sm font-medium text-ink">No tenés solicitudes aún</p>
@@ -150,7 +159,7 @@ export default function ProDashboard() {
               </div>
             ) : (
               <div className="space-y-3">
-                {requests.map((req) => (
+                {requests.filter(r => r.status === "pending").map((req) => (
                   <div key={req.id} className="border border-border rounded-xl p-3 space-y-2">
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-sm font-semibold text-ink">{req.clientName}</p>

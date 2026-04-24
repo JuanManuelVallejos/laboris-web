@@ -1,21 +1,24 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 
 export default function OnboardingGuard() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     if (!isLoaded) return;
-    if (!user) return;
+    if (!user) { setReady(true); return; }
     const done = user.unsafeMetadata?.onboardingComplete;
     if (!done) { router.replace("/onboarding"); return; }
     const roles = user.unsafeMetadata?.roles as string[] | undefined;
-    if (roles?.includes("professional")) router.replace("/pro");
+    if (roles?.includes("professional")) { router.replace("/pro"); return; }
+    setReady(true);
   }, [isLoaded, user, router]);
 
+  if (!ready) return <div className="fixed inset-0 bg-cream z-50" />;
   return null;
 }

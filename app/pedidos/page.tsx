@@ -31,7 +31,7 @@ export default function PedidosPage() {
   useEffect(() => {
     if (!isLoaded) return;
     const roles = user?.unsafeMetadata?.roles as string[] | undefined;
-    if (roles?.includes("professional")) { router.replace("/pro"); return; }
+    if (roles?.includes("professional")) { router.replace("/pro/pedidos"); return; }
     getSentRequests(getToken)
       .then(setRequests)
       .finally(() => setLoading(false));

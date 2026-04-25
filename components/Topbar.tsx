@@ -16,6 +16,12 @@ const navLinks = [
   { href: "/perfil",  label: "Perfil" },
 ];
 
+function notifHref(type: string): string {
+  if (type === "new_request") return "/pro/pedidos";
+  if (type === "request_accepted" || type === "request_rejected") return "/pedidos";
+  return "/";
+}
+
 function NotificationBell() {
   const { isSignedIn, getToken } = useAuth();
   const [unread, setUnread] = useState(0);
@@ -83,16 +89,22 @@ function NotificationBell() {
           ) : (
             <ul className="max-h-80 overflow-y-auto divide-y divide-border">
               {notifications.map((n) => (
-                <li key={n.id} className="px-4 py-3">
-                  <p className="text-sm text-ink">{n.message}</p>
-                  <p className="text-xs text-muted mt-0.5">
-                    {new Date(n.createdAt).toLocaleString("es-AR", {
-                      day: "numeric",
-                      month: "short",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
+                <li key={n.id}>
+                  <Link
+                    href={notifHref(n.type)}
+                    onClick={() => setOpen(false)}
+                    className="block px-4 py-3 hover:bg-cream transition-colors"
+                  >
+                    <p className="text-sm text-ink">{n.message}</p>
+                    <p className="text-xs text-muted mt-0.5">
+                      {new Date(n.createdAt).toLocaleString("es-AR", {
+                        day: "numeric",
+                        month: "short",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </Link>
                 </li>
               ))}
             </ul>

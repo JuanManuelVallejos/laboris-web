@@ -182,6 +182,86 @@ export async function getUnreadCount(
   return data.count ?? 0;
 }
 
+export interface UserWithRoles {
+  id: string;
+  clerkId: string;
+  email: string;
+  fullName: string;
+  createdAt: string;
+  roles: string[];
+}
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export async function getAdminProfessionals(
+  page: number,
+  getToken: () => Promise<string | null>
+): Promise<PaginatedResponse<Professional>> {
+  const token = await getToken();
+  const res = await fetch(`${BASE}/api/v1/admin/professionals?page=${page}&limit=20`, {
+    cache: "no-store",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`${res.status}`);
+  return res.json();
+}
+
+export async function getAdminUsers(
+  page: number,
+  getToken: () => Promise<string | null>
+): Promise<PaginatedResponse<UserWithRoles>> {
+  const token = await getToken();
+  const res = await fetch(`${BASE}/api/v1/admin/users?page=${page}&limit=20`, {
+    cache: "no-store",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`${res.status}`);
+  return res.json();
+}
+
+export async function adminVerifyProfessional(
+  id: string,
+  verified: boolean,
+  getToken: () => Promise<string | null>
+): Promise<void> {
+  const token = await getToken();
+  await fetch(`${BASE}/api/v1/admin/professionals/${id}/verify`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ verified }),
+  });
+}
+
+export async function adminSetProfessionalStatus(
+  id: string,
+  status: "active" | "suspended",
+  getToken: () => Promise<string | null>
+): Promise<void> {
+  const token = await getToken();
+  await fetch(`${BASE}/api/v1/admin/professionals/${id}/status`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ status }),
+  });
+}
+
+export async function adminDeleteProfessional(
+  id: string,
+  getToken: () => Promise<string | null>
+): Promise<void> {
+  const token = await getToken();
+  await fetch(`${BASE}/api/v1/admin/professionals/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
 export async function markAllNotificationsRead(
   getToken: () => Promise<string | null>
 ): Promise<void> {

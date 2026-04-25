@@ -6,4 +6,5 @@ export interface Professional {
   bio: string;
   rating: number;
   verified: boolean;
+  status: "active" | "suspended";
 }

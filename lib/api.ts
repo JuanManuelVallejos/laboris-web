@@ -147,6 +147,51 @@ export async function getSentRequests(
   return data ?? [];
 }
 
+export interface Notification {
+  id: string;
+  userId: string;
+  type: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+}
+
+export async function getNotifications(
+  getToken: () => Promise<string | null>
+): Promise<Notification[]> {
+  const token = await getToken();
+  const res = await fetch(`${BASE}/api/v1/me/notifications`, {
+    cache: "no-store",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data ?? [];
+}
+
+export async function getUnreadCount(
+  getToken: () => Promise<string | null>
+): Promise<number> {
+  const token = await getToken();
+  const res = await fetch(`${BASE}/api/v1/me/notifications/unread-count`, {
+    cache: "no-store",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) return 0;
+  const data = await res.json();
+  return data.count ?? 0;
+}
+
+export async function markAllNotificationsRead(
+  getToken: () => Promise<string | null>
+): Promise<void> {
+  const token = await getToken();
+  await fetch(`${BASE}/api/v1/me/notifications/read-all`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
 export async function updateRequestStatus(
   id: string,
   status: "accepted" | "rejected",

@@ -30,12 +30,12 @@ export default function NavBottom() {
           <Link
             key={item.href}
             href={item.href}
-            className={`flex flex-col items-center gap-0.5 px-4 py-1 rounded-xl transition-colors ${
-              active ? "text-primary" : "text-muted"
-            }`}
+            className="flex flex-col items-center gap-0.5 px-4 py-1"
           >
-            <span className="text-xl">{item.icon}</span>
-            <span className={`text-[11px] font-medium ${active ? "text-primary" : "text-muted"}`}>
+            <span className={`flex items-center justify-center w-12 h-8 rounded-full transition-colors ${active ? "bg-primary/10" : ""}`}>
+              <span className={`text-xl transition-transform ${active ? "scale-110" : ""}`}>{item.icon}</span>
+            </span>
+            <span className={`text-[11px] font-semibold transition-colors ${active ? "text-primary" : "text-muted"}`}>
               {item.label}
             </span>
           </Link>

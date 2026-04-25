@@ -54,12 +54,12 @@ export default async function ProfessionalPage({ params }: { params: Promise<{ i
             </div>
 
             {/* Sobre mí */}
-            <div className="bg-surface rounded-2xl p-5 shadow-sm">
-              <h3 className="text-sm font-semibold text-ink mb-2">Sobre mí</h3>
-              <p className="text-sm text-muted leading-relaxed">
-                Profesional con experiencia en {professional.trade.toLowerCase()}. Trabajo en {professional.zone} con atención personalizada y garantía en todos los trabajos.
-              </p>
-            </div>
+            {professional.bio && (
+              <div className="bg-surface rounded-2xl p-5 shadow-sm">
+                <h3 className="text-sm font-semibold text-ink mb-2">Sobre mí</h3>
+                <p className="text-sm text-muted leading-relaxed">{professional.bio}</p>
+              </div>
+            )}
 
             {/* Stats */}
             <div className="grid grid-cols-3 gap-3">

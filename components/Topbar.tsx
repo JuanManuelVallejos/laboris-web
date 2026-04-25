@@ -57,7 +57,7 @@ function NotificationBell() {
   if (!isSignedIn) return null;
 
   return (
-    <div ref={ref} className="relative hidden md:block">
+    <div ref={ref} className="relative">
       <button
         onClick={handleOpen}
         className="relative w-9 h-9 flex items-center justify-center rounded-full bg-cream text-base hover:bg-border transition-colors"
@@ -72,7 +72,7 @@ function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-80 bg-surface rounded-2xl shadow-lg border border-border z-50 overflow-hidden">
+        <div className="absolute right-0 mt-2 w-[min(320px,calc(100vw-2rem))] bg-surface rounded-2xl shadow-lg border border-border z-50 overflow-hidden">
           <div className="px-4 py-3 border-b border-border">
             <p className="text-sm font-semibold text-ink">Notificaciones</p>
           </div>

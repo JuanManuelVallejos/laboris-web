@@ -370,6 +370,12 @@ export const deliverWork = (jobId: string, gt: () => Promise<string | null>) =>
 export const requestRework = (jobId: string, notes: string, gt: () => Promise<string | null>) =>
   jobPatch(jobId, "request-rework", { notes }, gt);
 
+export const submitReworkQuote = (jobId: string, amount: number, gt: () => Promise<string | null>) =>
+  jobPatch(jobId, "rework-quote", { amount }, gt);
+
+export const approveReworkQuote = (jobId: string, gt: () => Promise<string | null>) =>
+  jobPatch(jobId, "approve-rework-quote", null, gt);
+
 export const acceptRework = (jobId: string, gt: () => Promise<string | null>) =>
   jobPatch(jobId, "accept-rework", null, gt);
 

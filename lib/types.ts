@@ -20,6 +20,7 @@ export type JobStatus =
   | "work_in_progress"
   | "work_delivered"
   | "rework_requested"
+  | "rework_quoted"
   | "completed"
   | "cancelled";
 
@@ -46,6 +47,7 @@ export interface Job {
   workDescription?: string;
   reworkCount: number;
   reworkNotes?: string;
+  reworkQuoteAmount?: number;
   cancelReason?: string;
   completedAt?: string;
   cancelledAt?: string;

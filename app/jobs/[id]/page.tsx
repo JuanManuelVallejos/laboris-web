@@ -10,7 +10,8 @@ import {
   scheduleVisit, submitVisitQuote, skipVisit,
   payVisit, completeVisit, submitWorkQuote,
   approveWorkQuote, startWork, deliverWork,
-  requestRework, acceptRework, approveDelivery, cancelJob,
+  requestRework, submitReworkQuote, approveReworkQuote,
+  acceptRework, approveDelivery, cancelJob,
 } from "@/lib/api";
 import type { Job, Message } from "@/lib/types";
 
@@ -27,6 +28,7 @@ const STATUS_LABEL: Record<string, string> = {
   work_in_progress: "Trabajo en progreso",
   work_delivered:   "Trabajo entregado",
   rework_requested: "Correcciones solicitadas",
+  rework_quoted:    "Cotización de corrección enviada",
   completed:        "Completado",
   cancelled:        "Cancelado",
 };
@@ -42,6 +44,7 @@ const STATUS_COLOR: Record<string, string> = {
   work_in_progress: "bg-primary/10 text-primary",
   work_delivered:   "bg-purple-100 text-purple-700",
   rework_requested: "bg-orange-100 text-orange-700",
+  rework_quoted:    "bg-blue-100 text-blue-700",
   completed:        "bg-green-100 text-green-700",
   cancelled:        "bg-red-100 text-red-600",
 };
@@ -66,6 +69,7 @@ function stepIndex(status: string): number {
     visit_quoted:     2,
     work_quoted:      4,
     rework_requested: 6,
+    rework_quoted:    6,
   };
   return map[status] ?? 0;
 }
@@ -157,6 +161,7 @@ function ActionPanel({
   const [workAmount, setWorkAmount] = useState("");
   const [workDesc, setWorkDesc] = useState("");
   const [reworkNotes, setReworkNotes] = useState("");
+  const [reworkQuoteAmount, setReworkQuoteAmount] = useState("");
   const [cancelReason, setCancelReason] = useState("");
   const [showCancel, setShowCancel] = useState(false);
 
@@ -177,10 +182,10 @@ function ActionPanel({
       )}
       {job.visitQuoteAmount !== undefined &&
         ["visit_quoted","visit_paid","visit_completed","work_quoted","work_approved",
-         "work_in_progress","work_delivered","rework_requested","completed"].includes(s) && (
+         "work_in_progress","work_delivered","rework_requested","rework_quoted","completed"].includes(s) && (
         <InfoRow label="Cotización de visita" value={fmt(job.visitQuoteAmount)} />
       )}
-      {["work_quoted","work_approved","work_in_progress","work_delivered","rework_requested","completed"].includes(s) && (
+      {["work_quoted","work_approved","work_in_progress","work_delivered","rework_requested","rework_quoted","completed"].includes(s) && (
         <>
           {job.workQuoteAmount !== undefined && (
             <InfoRow label="Cotización del trabajo" value={fmt(job.workQuoteAmount)} />
@@ -190,10 +195,17 @@ function ActionPanel({
           )}
         </>
       )}
-      {s === "rework_requested" && job.reworkNotes && (
+      {["rework_requested","rework_quoted"].includes(s) && job.reworkNotes && (
         <InfoRow
           label={`Correcciones solicitadas (retrabajo #${job.reworkCount})`}
           value={job.reworkNotes}
+          highlight
+        />
+      )}
+      {s === "rework_quoted" && job.reworkQuoteAmount !== undefined && (
+        <InfoRow
+          label="Cotización de corrección"
+          value={fmt(job.reworkQuoteAmount)}
           highlight
         />
       )}
@@ -314,12 +326,30 @@ function ActionPanel({
           )}
 
           {s === "rework_requested" && (
-            <button
-              onClick={() => onAction(() => acceptRework(job.id, getToken))}
-              className="w-full text-sm font-semibold py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 transition-colors"
-            >
-              Aceptar correcciones y retomar
-            </button>
+            <div className="space-y-2 pt-1">
+              <button
+                onClick={() => onAction(() => acceptRework(job.id, getToken))}
+                className="w-full text-sm font-semibold py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 transition-colors"
+              >
+                Aceptar correcciones sin costo extra
+              </button>
+              <p className="text-xs text-muted text-center">— o cobrar por las correcciones —</p>
+              <input
+                type="number"
+                placeholder="Costo adicional de corrección ($)"
+                value={reworkQuoteAmount}
+                onChange={(e) => setReworkQuoteAmount(e.target.value)}
+                min="0"
+                className="w-full text-sm text-ink bg-cream border border-border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
+              />
+              <button
+                onClick={() => onAction(() => submitReworkQuote(job.id, parseFloat(reworkQuoteAmount), getToken))}
+                disabled={!reworkQuoteAmount || parseFloat(reworkQuoteAmount) <= 0}
+                className="w-full text-sm font-semibold py-2.5 rounded-xl border border-primary text-primary hover:bg-primary/5 disabled:opacity-40 transition-colors"
+              >
+                Enviar cotización de corrección
+              </button>
+            </div>
           )}
         </>
       )}
@@ -343,6 +373,15 @@ function ActionPanel({
               className="w-full text-sm font-semibold py-2.5 rounded-xl bg-green-600 text-white hover:bg-green-700 transition-colors"
             >
               Aprobar cotización {fmt(job.workQuoteAmount)}
+            </button>
+          )}
+
+          {s === "rework_quoted" && (
+            <button
+              onClick={() => onAction(() => approveReworkQuote(job.id, getToken))}
+              className="w-full text-sm font-semibold py-2.5 rounded-xl bg-green-600 text-white hover:bg-green-700 transition-colors"
+            >
+              Aprobar cotización de corrección {fmt(job.reworkQuoteAmount)}
             </button>
           )}
 

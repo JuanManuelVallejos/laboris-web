@@ -309,8 +309,10 @@ async function jobPatch(
     body: body ? JSON.stringify(body) : "{}",
   });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: "error desconocido" }));
-    throw new Error(err.error ?? "error desconocido");
+    const text = await res.text().catch(() => "");
+    let msg = `HTTP ${res.status}`;
+    try { const j = JSON.parse(text); msg = j.error ?? j.message ?? msg; } catch { if (text) msg = text; }
+    throw new Error(msg);
   }
   return res.json();
 }

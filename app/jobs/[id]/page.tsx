@@ -217,7 +217,7 @@ function ActionPanel({
                 className="w-full text-sm text-ink bg-cream border border-border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
               <button
-                onClick={() => onAction(() => scheduleVisit(job.id, visitDate, getToken))}
+                onClick={() => onAction(() => scheduleVisit(job.id, new Date(visitDate).toISOString(), getToken))}
                 disabled={!visitDate}
                 className="w-full text-sm font-semibold py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 disabled:opacity-40 transition-colors"
               >

@@ -13,7 +13,7 @@ import {
   requestRework, submitReworkQuote, approveReworkQuote,
   acceptRework, approveDelivery, cancelJob,
 } from "@/lib/api";
-import type { Job, Message } from "@/lib/types";
+import type { Job, Message, ReworkRecord } from "@/lib/types";
 
 // ─── Labels & styles ─────────────────────────────────────────────────────────
 
@@ -145,6 +145,35 @@ function InfoRow({
   );
 }
 
+// ─── Rework History ──────────────────────────────────────────────────────────
+
+function ReworkHistory({ records }: { records: ReworkRecord[] }) {
+  if (records.length === 0) return null;
+  return (
+    <div className="space-y-2">
+      <p className="text-xs font-semibold text-muted uppercase tracking-wide">Historial de retrabajos</p>
+      {records.map((rec) => (
+        <div key={rec.id} className="border-l-2 border-orange-300 pl-3 py-1 space-y-0.5">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-semibold text-orange-700">Retrabajo #{rec.cycleNumber}</span>
+            <span className="text-xs font-semibold text-ink">
+              {rec.quoteAmount !== undefined
+                ? fmt(rec.quoteAmount)
+                : <span className="text-muted font-normal">sin cargo extra</span>}
+            </span>
+          </div>
+          {rec.notes && <p className="text-xs text-ink leading-snug">{rec.notes}</p>}
+          <p className="text-[10px] text-muted">
+            {new Date(rec.createdAt).toLocaleDateString("es-AR", {
+              day: "numeric", month: "short", year: "numeric",
+            })}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ─── Action Panel ─────────────────────────────────────────────────────────────
 
 function ActionPanel({
@@ -195,19 +224,8 @@ function ActionPanel({
           )}
         </>
       )}
-      {["rework_requested","rework_quoted"].includes(s) && job.reworkNotes && (
-        <InfoRow
-          label={`Correcciones solicitadas (retrabajo #${job.reworkCount})`}
-          value={job.reworkNotes}
-          highlight
-        />
-      )}
-      {job.reworkQuoteAmount !== undefined &&
-        ["rework_quoted","work_in_progress","work_delivered","rework_requested","completed","cancelled"].includes(s) && (
-        <InfoRow
-          label="Cotización de corrección (retrabajo)"
-          value={fmt(job.reworkQuoteAmount)}
-        />
+      {job.reworkRecords?.length > 0 && (
+        <ReworkHistory records={job.reworkRecords} />
       )}
       {s === "cancelled" && (
         <InfoRow label="Motivo de cancelación" value={job.cancelReason || "—"} highlight />

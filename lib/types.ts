@@ -33,6 +33,15 @@ export interface Payment {
   provider: string;
 }
 
+export interface ReworkRecord {
+  id: string;
+  jobId: string;
+  cycleNumber: number;
+  notes?: string;
+  quoteAmount?: number;
+  createdAt: string;
+}
+
 export interface Job {
   id: string;
   requestId: string;
@@ -52,6 +61,7 @@ export interface Job {
   completedAt?: string;
   cancelledAt?: string;
   payments: Payment[];
+  reworkRecords: ReworkRecord[];
   createdAt: string;
   updatedAt: string;
 }

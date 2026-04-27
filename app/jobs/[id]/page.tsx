@@ -202,11 +202,11 @@ function ActionPanel({
           highlight
         />
       )}
-      {s === "rework_quoted" && job.reworkQuoteAmount !== undefined && (
+      {job.reworkQuoteAmount !== undefined &&
+        ["rework_quoted","work_in_progress","work_delivered","rework_requested","completed","cancelled"].includes(s) && (
         <InfoRow
-          label="Cotización de corrección"
+          label="Cotización de corrección (retrabajo)"
           value={fmt(job.reworkQuoteAmount)}
-          highlight
         />
       )}
       {s === "cancelled" && (

@@ -83,6 +83,12 @@ export default function PedidosPage() {
                 <p className="text-xs text-muted">
                   {new Date(req.createdAt).toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" })}
                 </p>
+                {req.status === "accepted" && req.jobId && (
+                  <Link href={`/jobs/${req.jobId}`}
+                    className="block text-center text-xs font-semibold py-2 rounded-xl bg-primary/10 text-primary hover:bg-primary/15 transition-colors">
+                    Ver trabajo →
+                  </Link>
+                )}
               </div>
             ))}
           </div>

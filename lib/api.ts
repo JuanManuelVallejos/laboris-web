@@ -1,4 +1,4 @@
-import type { Professional } from "./types";
+import type { Professional, Job, Message } from "./types";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
@@ -118,6 +118,7 @@ export interface Request {
   description: string;
   status: "pending" | "accepted" | "rejected";
   rejectionReason: string;
+  jobId?: string;
   createdAt: string;
 }
 
@@ -291,4 +292,122 @@ export async function updateRequestStatus(
     const body = await res.json().catch(() => ({ error: "error desconocido" }));
     throw new Error(body.error ?? "error desconocido");
   }
+}
+
+// ─── Job API ────────────────────────────────────────────────────────────────
+
+async function jobPatch(
+  jobId: string,
+  action: string,
+  body: Record<string, unknown> | null,
+  getToken: () => Promise<string | null>
+): Promise<Job> {
+  const token = await getToken();
+  const res = await fetch(`${BASE}/api/v1/jobs/${jobId}/${action}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: body ? JSON.stringify(body) : "{}",
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "error desconocido" }));
+    throw new Error(err.error ?? "error desconocido");
+  }
+  return res.json();
+}
+
+export async function getJob(
+  id: string,
+  getToken: () => Promise<string | null>
+): Promise<Job> {
+  const token = await getToken();
+  const res = await fetch(`${BASE}/api/v1/jobs/${id}`, {
+    cache: "no-store",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`Error ${res.status}`);
+  return res.json();
+}
+
+export async function listMyJobs(
+  getToken: () => Promise<string | null>
+): Promise<Job[]> {
+  const token = await getToken();
+  const res = await fetch(`${BASE}/api/v1/me/jobs`, {
+    cache: "no-store",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) return [];
+  return res.json();
+}
+
+export const scheduleVisit = (jobId: string, scheduledAt: string, gt: () => Promise<string | null>) =>
+  jobPatch(jobId, "schedule-visit", { scheduledAt }, gt);
+
+export const submitVisitQuote = (jobId: string, amount: number, gt: () => Promise<string | null>) =>
+  jobPatch(jobId, "visit-quote", { amount }, gt);
+
+export const skipVisit = (jobId: string, workAmount: number, workDescription: string, gt: () => Promise<string | null>) =>
+  jobPatch(jobId, "skip-visit", { workAmount, workDescription }, gt);
+
+export const payVisit = (jobId: string, gt: () => Promise<string | null>) =>
+  jobPatch(jobId, "pay-visit", null, gt);
+
+export const completeVisit = (jobId: string, gt: () => Promise<string | null>) =>
+  jobPatch(jobId, "complete-visit", null, gt);
+
+export const submitWorkQuote = (jobId: string, amount: number, description: string, gt: () => Promise<string | null>) =>
+  jobPatch(jobId, "work-quote", { amount, description }, gt);
+
+export const approveWorkQuote = (jobId: string, gt: () => Promise<string | null>) =>
+  jobPatch(jobId, "approve-work", null, gt);
+
+export const startWork = (jobId: string, gt: () => Promise<string | null>) =>
+  jobPatch(jobId, "start-work", null, gt);
+
+export const deliverWork = (jobId: string, gt: () => Promise<string | null>) =>
+  jobPatch(jobId, "deliver-work", null, gt);
+
+export const requestRework = (jobId: string, notes: string, gt: () => Promise<string | null>) =>
+  jobPatch(jobId, "request-rework", { notes }, gt);
+
+export const acceptRework = (jobId: string, gt: () => Promise<string | null>) =>
+  jobPatch(jobId, "accept-rework", null, gt);
+
+export const approveDelivery = (jobId: string, gt: () => Promise<string | null>) =>
+  jobPatch(jobId, "approve-delivery", null, gt);
+
+export const cancelJob = (jobId: string, reason: string, gt: () => Promise<string | null>) =>
+  jobPatch(jobId, "cancel", { reason }, gt);
+
+// ─── Message API ─────────────────────────────────────────────────────────────
+
+export async function getMessages(
+  requestId: string,
+  getToken: () => Promise<string | null>
+): Promise<Message[]> {
+  const token = await getToken();
+  const res = await fetch(`${BASE}/api/v1/requests/${requestId}/messages`, {
+    cache: "no-store",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) return [];
+  return res.json();
+}
+
+export async function sendMessage(
+  requestId: string,
+  content: string,
+  getToken: () => Promise<string | null>
+): Promise<Message> {
+  const token = await getToken();
+  const res = await fetch(`${BASE}/api/v1/requests/${requestId}/messages`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ content }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "error desconocido" }));
+    throw new Error(err.error ?? "error desconocido");
+  }
+  return res.json();
 }

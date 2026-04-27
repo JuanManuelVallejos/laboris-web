@@ -114,6 +114,13 @@ export default function ProPedidosPage() {
                   {new Date(req.createdAt).toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" })}
                 </p>
 
+                {req.status === "accepted" && req.jobId && (
+                  <Link href={`/jobs/${req.jobId}`}
+                    className="block text-center text-xs font-semibold py-2 rounded-xl bg-primary/10 text-primary hover:bg-primary/15 transition-colors">
+                    Ver trabajo →
+                  </Link>
+                )}
+
                 {req.status === "pending" && rejectingId !== req.id && (
                   <div className="flex gap-2 pt-1">
                     <button onClick={() => handleAccept(req.id)} disabled={updating === req.id}

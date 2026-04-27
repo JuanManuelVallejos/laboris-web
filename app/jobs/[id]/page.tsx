@@ -49,6 +49,28 @@ const STATUS_COLOR: Record<string, string> = {
   cancelled:        "bg-red-100 text-red-600",
 };
 
+// Mirrors backend domain.ValidTransitions — single source of truth for which
+// buttons are reachable from each state.
+const VALID_TRANSITIONS: Record<string, string[]> = {
+  pending_visit:    ["visit_scheduled", "work_quoted", "cancelled"],
+  visit_scheduled:  ["visit_quoted", "cancelled"],
+  visit_quoted:     ["visit_paid", "cancelled"],
+  visit_paid:       ["visit_completed", "cancelled"],
+  visit_completed:  ["work_quoted", "cancelled"],
+  work_quoted:      ["work_approved", "cancelled"],
+  work_approved:    ["work_in_progress", "cancelled"],
+  work_in_progress: ["work_delivered", "cancelled"],
+  work_delivered:   ["rework_requested", "completed"],   // no cancel here
+  rework_requested: ["rework_quoted", "work_in_progress", "cancelled"],
+  rework_quoted:    ["work_in_progress", "cancelled"],
+  completed:        [],
+  cancelled:        [],
+};
+
+function canDo(status: string, target: string): boolean {
+  return VALID_TRANSITIONS[status]?.includes(target) ?? false;
+}
+
 const STEPS = [
   { key: "pending_visit",    label: "Solicitud" },
   { key: "visit_scheduled",  label: "Visita" },
@@ -431,8 +453,8 @@ function ActionPanel({
         </>
       )}
 
-      {/* ── Cancel (both roles, non-terminal states) ── */}
-      {s !== "completed" && s !== "cancelled" && (
+      {/* ── Cancel (only when backend allows the transition) ── */}
+      {canDo(s, "cancelled") && (
         <div className="pt-1 border-t border-border">
           {!showCancel ? (
             <button

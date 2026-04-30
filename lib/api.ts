@@ -345,6 +345,12 @@ export async function listMyJobs(
 export const scheduleVisit = (jobId: string, scheduledAt: string, gt: () => Promise<string | null>) =>
   jobPatch(jobId, "schedule-visit", { scheduledAt }, gt);
 
+export const confirmVisit = (jobId: string, gt: () => Promise<string | null>) =>
+  jobPatch(jobId, "confirm-visit", null, gt);
+
+export const declineVisit = (jobId: string, gt: () => Promise<string | null>) =>
+  jobPatch(jobId, "decline-visit", null, gt);
+
 export const submitVisitQuote = (jobId: string, amount: number, gt: () => Promise<string | null>) =>
   jobPatch(jobId, "visit-quote", { amount }, gt);
 

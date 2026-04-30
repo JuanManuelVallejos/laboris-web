@@ -11,6 +11,7 @@ export interface Professional {
 
 export type JobStatus =
   | "pending_visit"
+  | "visit_proposed"
   | "visit_scheduled"
   | "visit_quoted"
   | "visit_paid"

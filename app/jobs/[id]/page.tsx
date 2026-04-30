@@ -7,7 +7,7 @@ import Topbar from "@/components/Topbar";
 import NavBottom from "@/components/NavBottom";
 import {
   getJob, getMessages, sendMessage,
-  scheduleVisit, submitVisitQuote, skipVisit,
+  scheduleVisit, confirmVisit, declineVisit, submitVisitQuote, skipVisit,
   payVisit, completeVisit, submitWorkQuote,
   approveWorkQuote, startWork, deliverWork,
   requestRework, submitReworkQuote, approveReworkQuote,
@@ -18,8 +18,9 @@ import type { Job, Message, ReworkRecord } from "@/lib/types";
 // ─── Labels & styles ─────────────────────────────────────────────────────────
 
 const STATUS_LABEL: Record<string, string> = {
-  pending_visit:    "Esperando agenda de visita",
-  visit_scheduled:  "Visita agendada",
+  pending_visit:    "Esperando fecha de visita",
+  visit_proposed:   "Fecha propuesta — pendiente confirmación",
+  visit_scheduled:  "Visita confirmada",
   visit_quoted:     "Cotización de visita enviada",
   visit_paid:       "Visita pagada",
   visit_completed:  "Visita realizada",
@@ -35,6 +36,7 @@ const STATUS_LABEL: Record<string, string> = {
 
 const STATUS_COLOR: Record<string, string> = {
   pending_visit:    "bg-amber-100 text-amber-700",
+  visit_proposed:   "bg-orange-100 text-orange-700",
   visit_scheduled:  "bg-blue-100 text-blue-700",
   visit_quoted:     "bg-blue-100 text-blue-700",
   visit_paid:       "bg-green-100 text-green-700",
@@ -52,7 +54,8 @@ const STATUS_COLOR: Record<string, string> = {
 // Mirrors backend domain.ValidTransitions — single source of truth for which
 // buttons are reachable from each state.
 const VALID_TRANSITIONS: Record<string, string[]> = {
-  pending_visit:    ["visit_scheduled", "work_quoted", "cancelled"],
+  pending_visit:    ["visit_proposed", "work_quoted", "cancelled"],
+  visit_proposed:   ["visit_scheduled", "pending_visit", "cancelled"],
   visit_scheduled:  ["visit_completed", "visit_quoted", "cancelled"],
   visit_quoted:     ["visit_paid", "cancelled"],
   visit_paid:       ["visit_completed", "cancelled"],
@@ -88,8 +91,9 @@ function stepIndex(status: string): number {
   const idx = STEP_ORDER.indexOf(status);
   if (idx !== -1) return idx;
   const map: Record<string, number> = {
-    visit_quoted:     2, // entre visit_scheduled y visit_completed (path pago)
-    visit_paid:       2, // mismo nivel que visit_completed (path pago)
+    visit_proposed:   1, // misma posición que visit_scheduled en el stepper
+    visit_quoted:     2,
+    visit_paid:       2,
     rework_requested: 6,
     rework_quoted:    6,
   };
@@ -224,11 +228,11 @@ function ActionPanel({
       <p className="text-xs font-semibold text-muted uppercase tracking-wide">Estado del trabajo</p>
 
       {/* Info rows per status */}
-      {s === "visit_scheduled" && job.visitScheduledAt && (
+      {(s === "visit_proposed" || s === "visit_scheduled") && job.visitScheduledAt && (
         <InfoRow
-          label="Visita agendada"
+          label={s === "visit_proposed" ? "Fecha propuesta" : "Visita confirmada"}
           value={new Date(job.visitScheduledAt).toLocaleString("es-AR", {
-            day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
+            weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit",
           })}
         />
       )}
@@ -297,7 +301,7 @@ function ActionPanel({
                     onClick={() => onAction(() => scheduleVisit(job.id, new Date(visitDate).toISOString(), getToken))}
                     className="w-full text-sm font-semibold py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 transition-colors"
                   >
-                    Confirmar visita
+                    Proponer esta fecha
                   </button>
                   <button
                     type="button"
@@ -328,6 +332,13 @@ function ActionPanel({
               >
                 Enviar cotización sin visita
               </button>
+            </div>
+          )}
+
+          {s === "visit_proposed" && (
+            <div className="bg-orange-50 border border-orange-200 rounded-xl px-3 py-2.5 text-center space-y-1">
+              <p className="text-xs font-semibold text-orange-700">Esperando confirmación del cliente</p>
+              <p className="text-xs text-orange-600">El cliente debe aceptar la fecha antes de que quede agendada.</p>
             </div>
           )}
 
@@ -445,6 +456,30 @@ function ActionPanel({
       {/* ── Client actions ── */}
       {isClient && (
         <>
+          {s === "visit_proposed" && (
+            <div className="space-y-2 pt-1">
+              <p className="text-xs font-medium text-ink">
+                El profesional propuso una visita. ¿Estás de acuerdo?
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => onAction(() => confirmVisit(job.id, getToken))}
+                  className="flex-1 text-sm font-semibold py-2.5 rounded-xl bg-green-600 text-white hover:bg-green-700 transition-colors"
+                >
+                  Confirmar visita
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onAction(() => declineVisit(job.id, getToken))}
+                  className="flex-1 text-sm font-semibold py-2.5 rounded-xl border border-orange-400 text-orange-600 hover:bg-orange-50 transition-colors"
+                >
+                  Pedir otra fecha
+                </button>
+              </div>
+            </div>
+          )}
+
           {s === "visit_quoted" && (
             <button
               type="button"

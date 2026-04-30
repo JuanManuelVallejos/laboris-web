@@ -208,6 +208,7 @@ function ActionPanel({
   onAction: (fn: () => Promise<Job>) => void;
 }) {
   const [visitDate, setVisitDate] = useState("");
+  const [reviewingVisit, setReviewingVisit] = useState(false);
   const [visitAmount, setVisitAmount] = useState("");
   const [workAmount, setWorkAmount] = useState("");
   const [workDesc, setWorkDesc] = useState("");
@@ -261,20 +262,52 @@ function ActionPanel({
         <>
           {s === "pending_visit" && (
             <div className="space-y-2 pt-1">
-              <p className="text-xs font-medium text-ink">Agendar visita</p>
-              <input
-                type="datetime-local"
-                value={visitDate}
-                onChange={(e) => setVisitDate(e.target.value)}
-                className="w-full text-sm text-ink bg-cream border border-border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
-              />
-              <button
-                onClick={() => onAction(() => scheduleVisit(job.id, new Date(visitDate).toISOString(), getToken))}
-                disabled={!visitDate}
-                className="w-full text-sm font-semibold py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 disabled:opacity-40 transition-colors"
-              >
-                Agendar visita
-              </button>
+              {!reviewingVisit ? (
+                <>
+                  <p className="text-xs font-medium text-ink">Agendar visita</p>
+                  <input
+                    type="datetime-local"
+                    value={visitDate}
+                    onChange={(e) => setVisitDate(e.target.value)}
+                    className="w-full text-sm text-ink bg-cream border border-border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setReviewingVisit(true)}
+                    disabled={!visitDate}
+                    className="w-full text-sm font-semibold py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 disabled:opacity-40 transition-colors"
+                  >
+                    Revisar fecha →
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="text-xs font-medium text-ink">Confirmar visita</p>
+                  <div className="bg-primary/5 border border-primary/20 rounded-xl px-3 py-2.5">
+                    <p className="text-xs text-muted mb-0.5">Fecha seleccionada</p>
+                    <p className="text-sm font-semibold text-ink">
+                      {new Date(visitDate).toLocaleString("es-AR", {
+                        weekday: "long", day: "numeric", month: "long",
+                        hour: "2-digit", minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onAction(() => scheduleVisit(job.id, new Date(visitDate).toISOString(), getToken))}
+                    className="w-full text-sm font-semibold py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 transition-colors"
+                  >
+                    Confirmar visita
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setReviewingVisit(false)}
+                    className="w-full text-sm font-semibold py-2 rounded-xl border border-border text-muted hover:bg-cream transition-colors"
+                  >
+                    Cambiar fecha
+                  </button>
+                </>
+              )}
               <p className="text-xs text-muted text-center">— o bien —</p>
               <p className="text-xs font-medium text-ink">Saltar visita y cotizar directo</p>
               <input
@@ -288,6 +321,7 @@ function ActionPanel({
                 className="w-full text-sm text-ink bg-cream border border-border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
               <button
+                type="button"
                 onClick={() => onAction(() => skipVisit(job.id, parseFloat(workAmount), workDesc, getToken))}
                 disabled={!workAmount || parseFloat(workAmount) <= 0}
                 className="w-full text-sm font-semibold py-2.5 rounded-xl border border-primary text-primary hover:bg-primary/5 disabled:opacity-40 transition-colors"
@@ -300,6 +334,7 @@ function ActionPanel({
           {s === "visit_scheduled" && (
             <div className="space-y-2 pt-1">
               <button
+                type="button"
                 onClick={() => onAction(() => completeVisit(job.id, getToken))}
                 className="w-full text-sm font-semibold py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 transition-colors"
               >
@@ -312,6 +347,7 @@ function ActionPanel({
                 className="w-full text-sm text-ink bg-cream border border-border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
               <button
+                type="button"
                 onClick={() => onAction(() => submitVisitQuote(job.id, parseFloat(visitAmount), getToken))}
                 disabled={!visitAmount || parseFloat(visitAmount) <= 0}
                 className="w-full text-sm font-semibold py-2.5 rounded-xl border border-primary text-primary hover:bg-primary/5 disabled:opacity-40 transition-colors"
@@ -323,6 +359,7 @@ function ActionPanel({
 
           {s === "visit_paid" && (
             <button
+              type="button"
               onClick={() => onAction(() => completeVisit(job.id, getToken))}
               className="w-full text-sm font-semibold py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 transition-colors"
             >
@@ -344,6 +381,7 @@ function ActionPanel({
                 className="w-full text-sm text-ink bg-cream border border-border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
               <button
+                type="button"
                 onClick={() => onAction(() => submitWorkQuote(job.id, parseFloat(workAmount), workDesc, getToken))}
                 disabled={!workAmount || parseFloat(workAmount) <= 0}
                 className="w-full text-sm font-semibold py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 disabled:opacity-40 transition-colors"
@@ -355,6 +393,7 @@ function ActionPanel({
 
           {s === "work_approved" && (
             <button
+              type="button"
               onClick={() => onAction(() => startWork(job.id, getToken))}
               className="w-full text-sm font-semibold py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 transition-colors"
             >
@@ -364,6 +403,7 @@ function ActionPanel({
 
           {s === "work_in_progress" && (
             <button
+              type="button"
               onClick={() => onAction(() => deliverWork(job.id, getToken))}
               className="w-full text-sm font-semibold py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 transition-colors"
             >
@@ -374,6 +414,7 @@ function ActionPanel({
           {s === "rework_requested" && (
             <div className="space-y-2 pt-1">
               <button
+                type="button"
                 onClick={() => onAction(() => acceptRework(job.id, getToken))}
                 className="w-full text-sm font-semibold py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 transition-colors"
               >
@@ -389,6 +430,7 @@ function ActionPanel({
                 className="w-full text-sm text-ink bg-cream border border-border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
               <button
+                type="button"
                 onClick={() => onAction(() => submitReworkQuote(job.id, parseFloat(reworkQuoteAmount), getToken))}
                 disabled={!reworkQuoteAmount || parseFloat(reworkQuoteAmount) <= 0}
                 className="w-full text-sm font-semibold py-2.5 rounded-xl border border-primary text-primary hover:bg-primary/5 disabled:opacity-40 transition-colors"
@@ -405,6 +447,7 @@ function ActionPanel({
         <>
           {s === "visit_quoted" && (
             <button
+              type="button"
               onClick={() => onAction(() => payVisit(job.id, getToken))}
               className="w-full text-sm font-semibold py-2.5 rounded-xl bg-green-600 text-white hover:bg-green-700 transition-colors"
             >
@@ -415,6 +458,7 @@ function ActionPanel({
 
           {s === "work_quoted" && (
             <button
+              type="button"
               onClick={() => onAction(() => approveWorkQuote(job.id, getToken))}
               className="w-full text-sm font-semibold py-2.5 rounded-xl bg-green-600 text-white hover:bg-green-700 transition-colors"
             >
@@ -424,6 +468,7 @@ function ActionPanel({
 
           {s === "rework_quoted" && (
             <button
+              type="button"
               onClick={() => onAction(() => approveReworkQuote(job.id, getToken))}
               className="w-full text-sm font-semibold py-2.5 rounded-xl bg-green-600 text-white hover:bg-green-700 transition-colors"
             >
@@ -434,6 +479,7 @@ function ActionPanel({
           {s === "work_delivered" && (
             <div className="space-y-2 pt-1">
               <button
+                type="button"
                 onClick={() => onAction(() => approveDelivery(job.id, getToken))}
                 className="w-full text-sm font-semibold py-2.5 rounded-xl bg-green-600 text-white hover:bg-green-700 transition-colors"
               >
@@ -448,6 +494,7 @@ function ActionPanel({
                 className="w-full text-sm text-ink bg-cream border border-border rounded-xl px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-orange-300 transition"
               />
               <button
+                type="button"
                 onClick={() => onAction(() => requestRework(job.id, reworkNotes, getToken))}
                 disabled={!reworkNotes.trim()}
                 className="w-full text-sm font-semibold py-2.5 rounded-xl border border-orange-400 text-orange-600 hover:bg-orange-50 disabled:opacity-40 transition-colors"
@@ -464,6 +511,7 @@ function ActionPanel({
         <div className="pt-1 border-t border-border">
           {!showCancel ? (
             <button
+              type="button"
               onClick={() => setShowCancel(true)}
               className="w-full text-xs text-muted hover:text-red-600 py-1 transition-colors"
             >
@@ -480,6 +528,7 @@ function ActionPanel({
               />
               <div className="flex gap-2">
                 <button
+                  type="button"
                   onClick={() => onAction(() => cancelJob(job.id, cancelReason, getToken))}
                   disabled={!cancelReason.trim()}
                   className="flex-1 text-sm font-semibold py-2 rounded-xl bg-red-600 text-white hover:bg-red-700 disabled:opacity-40 transition-colors"
@@ -487,6 +536,7 @@ function ActionPanel({
                   Confirmar cancelación
                 </button>
                 <button
+                  type="button"
                   onClick={() => setShowCancel(false)}
                   className="text-sm font-semibold py-2 px-3 rounded-xl border border-border text-muted hover:bg-cream transition-colors"
                 >

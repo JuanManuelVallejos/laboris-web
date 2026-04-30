@@ -10,20 +10,26 @@ import type { Request } from "@/lib/api";
 
 const statusLabel: Record<string, string> = {
   pending:  "Pendiente",
+  viewed:   "Vista",
   accepted: "Aceptada",
   rejected: "Rechazada",
+  expired:  "Vencida",
 };
 
 const statusColor: Record<string, string> = {
   pending:  "bg-amber-100 text-amber-700",
+  viewed:   "bg-blue-100 text-blue-700",
   accepted: "bg-green-100 text-green-700",
   rejected: "bg-red-100 text-red-600",
+  expired:  "bg-gray-100 text-gray-500",
 };
 
 function sortRequests(reqs: Request[]): Request[] {
   return [...reqs].sort((a, b) => {
-    if (a.status === "pending" && b.status !== "pending") return -1;
-    if (a.status !== "pending" && b.status === "pending") return 1;
+    const aActive = a.status === "pending" || a.status === "viewed";
+    const bActive = b.status === "pending" || b.status === "viewed";
+    if (aActive && !bActive) return -1;
+    if (!aActive && bActive) return 1;
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 }
@@ -121,7 +127,7 @@ export default function ProPedidosPage() {
                   </Link>
                 )}
 
-                {req.status === "pending" && rejectingId !== req.id && (
+                {(req.status === "pending" || req.status === "viewed") && rejectingId !== req.id && (
                   <div className="flex gap-2 pt-1">
                     <button onClick={() => handleAccept(req.id)} disabled={updating === req.id}
                       className="flex-1 text-xs font-semibold py-2 rounded-xl bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition-colors">
@@ -134,7 +140,7 @@ export default function ProPedidosPage() {
                   </div>
                 )}
 
-                {req.status === "pending" && rejectingId === req.id && (
+                {(req.status === "pending" || req.status === "viewed") && rejectingId === req.id && (
                   <div className="space-y-2 pt-1">
                     <textarea value={reason} onChange={(e) => setReason(e.target.value)}
                       placeholder="Motivo del rechazo (obligatorio)" rows={2}

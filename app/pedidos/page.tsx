@@ -11,14 +11,18 @@ import type { Request } from "@/lib/api";
 
 const statusLabel: Record<string, string> = {
   pending:  "Pendiente",
+  viewed:   "Vista",
   accepted: "Aceptada",
   rejected: "Rechazada",
+  expired:  "Vencida",
 };
 
 const statusColor: Record<string, string> = {
   pending:  "bg-amber-100 text-amber-700",
+  viewed:   "bg-blue-100 text-blue-700",
   accepted: "bg-green-100 text-green-700",
   rejected: "bg-red-100 text-red-600",
+  expired:  "bg-gray-100 text-gray-500",
 };
 
 export default function PedidosPage() {

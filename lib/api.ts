@@ -116,7 +116,7 @@ export interface Request {
   professionalId: string;
   professionalName: string;
   description: string;
-  status: "pending" | "accepted" | "rejected";
+  status: "pending" | "viewed" | "accepted" | "rejected" | "expired";
   rejectionReason: string;
   jobId?: string;
   createdAt: string;

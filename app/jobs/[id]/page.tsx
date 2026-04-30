@@ -53,7 +53,7 @@ const STATUS_COLOR: Record<string, string> = {
 // buttons are reachable from each state.
 const VALID_TRANSITIONS: Record<string, string[]> = {
   pending_visit:    ["visit_scheduled", "work_quoted", "cancelled"],
-  visit_scheduled:  ["visit_quoted", "cancelled"],
+  visit_scheduled:  ["visit_completed", "visit_quoted", "cancelled"],
   visit_quoted:     ["visit_paid", "cancelled"],
   visit_paid:       ["visit_completed", "cancelled"],
   visit_completed:  ["work_quoted", "cancelled"],
@@ -74,8 +74,8 @@ function canDo(status: string, target: string): boolean {
 const STEPS = [
   { key: "pending_visit",    label: "Solicitud" },
   { key: "visit_scheduled",  label: "Visita" },
-  { key: "visit_paid",       label: "Pagada" },
-  { key: "visit_completed",  label: "Evaluada" },
+  { key: "visit_completed",  label: "Visitada" },
+  { key: "work_quoted",      label: "Cotizado" },
   { key: "work_approved",    label: "Aprobado" },
   { key: "work_in_progress", label: "En curso" },
   { key: "work_delivered",   label: "Entregado" },
@@ -88,8 +88,8 @@ function stepIndex(status: string): number {
   const idx = STEP_ORDER.indexOf(status);
   if (idx !== -1) return idx;
   const map: Record<string, number> = {
-    visit_quoted:     2,
-    work_quoted:      4,
+    visit_quoted:     2, // entre visit_scheduled y visit_completed (path pago)
+    visit_paid:       2, // mismo nivel que visit_completed (path pago)
     rework_requested: 6,
     rework_quoted:    6,
   };
@@ -299,7 +299,13 @@ function ActionPanel({
 
           {s === "visit_scheduled" && (
             <div className="space-y-2 pt-1">
-              <p className="text-xs font-medium text-ink">Cotización de la visita</p>
+              <button
+                onClick={() => onAction(() => completeVisit(job.id, getToken))}
+                className="w-full text-sm font-semibold py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 transition-colors"
+              >
+                Confirmar que realicé la visita
+              </button>
+              <p className="text-xs text-muted text-center">— o cobrar por la visita —</p>
               <input
                 type="number" placeholder="Monto de la visita ($)" value={visitAmount}
                 onChange={(e) => setVisitAmount(e.target.value)} min="0"
@@ -308,7 +314,7 @@ function ActionPanel({
               <button
                 onClick={() => onAction(() => submitVisitQuote(job.id, parseFloat(visitAmount), getToken))}
                 disabled={!visitAmount || parseFloat(visitAmount) <= 0}
-                className="w-full text-sm font-semibold py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 disabled:opacity-40 transition-colors"
+                className="w-full text-sm font-semibold py-2.5 rounded-xl border border-primary text-primary hover:bg-primary/5 disabled:opacity-40 transition-colors"
               >
                 Enviar cotización de visita
               </button>

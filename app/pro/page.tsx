@@ -11,14 +11,18 @@ import type { Professional } from "@/lib/types";
 
 const statusLabel: Record<string, string> = {
   pending:  "Pendiente",
+  viewed:   "Vista",
   accepted: "Aceptada",
   rejected: "Rechazada",
+  expired:  "Vencida",
 };
 
 const statusColor: Record<string, string> = {
   pending:  "bg-amber-100 text-amber-700",
+  viewed:   "bg-blue-100 text-blue-700",
   accepted: "bg-green-100 text-green-700",
   rejected: "bg-red-100 text-red-600",
+  expired:  "bg-gray-100 text-gray-500",
 };
 
 export default function ProDashboard() {
@@ -138,9 +142,9 @@ export default function ProDashboard() {
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-semibold text-ink text-sm">
                 Pedidos pendientes
-                {requests.filter(r => r.status === "pending").length > 0 && (
+                {requests.filter(r => r.status === "pending" || r.status === "viewed").length > 0 && (
                   <span className="ml-2 text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
-                    {requests.filter(r => r.status === "pending").length}
+                    {requests.filter(r => r.status === "pending" || r.status === "viewed").length}
                   </span>
                 )}
               </h3>
@@ -151,7 +155,7 @@ export default function ProDashboard() {
               )}
             </div>
 
-            {requests.filter(r => r.status === "pending").length === 0 ? (
+            {requests.filter(r => r.status === "pending" || r.status === "viewed").length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <span className="text-3xl mb-2">📭</span>
                 <p className="text-sm font-medium text-ink">No tenés solicitudes aún</p>
@@ -159,7 +163,7 @@ export default function ProDashboard() {
               </div>
             ) : (
               <div className="space-y-3">
-                {requests.filter(r => r.status === "pending").map((req) => (
+                {requests.filter(r => r.status === "pending" || r.status === "viewed").map((req) => (
                   <div key={req.id} className="border border-border rounded-xl p-3 space-y-2">
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-sm font-semibold text-ink">{req.clientName}</p>
@@ -180,7 +184,7 @@ export default function ProDashboard() {
                       {new Date(req.createdAt).toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" })}
                     </p>
 
-                    {req.status === "pending" && rejectingId !== req.id && (
+                    {(req.status === "pending" || req.status === "viewed") && rejectingId !== req.id && (
                       <div className="flex gap-2 pt-1">
                         <button
                           onClick={() => handleAccept(req.id)}
@@ -199,7 +203,7 @@ export default function ProDashboard() {
                       </div>
                     )}
 
-                    {req.status === "pending" && rejectingId === req.id && (
+                    {(req.status === "pending" || req.status === "viewed") && rejectingId === req.id && (
                       <div className="space-y-2 pt-1">
                         <textarea
                           value={reason}

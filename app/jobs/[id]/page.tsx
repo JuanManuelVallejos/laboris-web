@@ -211,7 +211,8 @@ function ActionPanel({
   getToken: GetToken;
   onAction: (fn: () => Promise<Job>) => void;
 }) {
-  const [visitDate, setVisitDate] = useState("");
+  const [visitDay, setVisitDay] = useState("");
+  const [visitTime, setVisitTime] = useState("");
   const [reviewingVisit, setReviewingVisit] = useState(false);
   const [visitAmount, setVisitAmount] = useState("");
   const [workAmount, setWorkAmount] = useState("");
@@ -269,16 +270,24 @@ function ActionPanel({
               {!reviewingVisit ? (
                 <>
                   <p className="text-xs font-medium text-ink">Agendar visita</p>
-                  <input
-                    type="datetime-local"
-                    value={visitDate}
-                    onChange={(e) => setVisitDate(e.target.value)}
-                    className="w-full text-sm text-ink bg-cream border border-border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="date"
+                      value={visitDay}
+                      onChange={(e) => setVisitDay(e.target.value)}
+                      className="flex-1 text-sm text-ink bg-cream border border-border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                    <input
+                      type="time"
+                      value={visitTime}
+                      onChange={(e) => setVisitTime(e.target.value)}
+                      className="w-28 text-sm text-ink bg-cream border border-border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                  </div>
                   <button
                     type="button"
                     onClick={() => setReviewingVisit(true)}
-                    disabled={!visitDate}
+                    disabled={!visitDay || !visitTime}
                     className="w-full text-sm font-semibold py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 disabled:opacity-40 transition-colors"
                   >
                     Revisar fecha →
@@ -290,7 +299,7 @@ function ActionPanel({
                   <div className="bg-primary/5 border border-primary/20 rounded-xl px-3 py-2.5">
                     <p className="text-xs text-muted mb-0.5">Fecha seleccionada</p>
                     <p className="text-sm font-semibold text-ink">
-                      {new Date(visitDate).toLocaleString("es-AR", {
+                      {new Date(`${visitDay}T${visitTime}`).toLocaleString("es-AR", {
                         weekday: "long", day: "numeric", month: "long",
                         hour: "2-digit", minute: "2-digit",
                       })}
@@ -298,7 +307,7 @@ function ActionPanel({
                   </div>
                   <button
                     type="button"
-                    onClick={() => onAction(() => scheduleVisit(job.id, new Date(visitDate).toISOString(), getToken))}
+                    onClick={() => onAction(() => scheduleVisit(job.id, new Date(`${visitDay}T${visitTime}`).toISOString(), getToken))}
                     className="w-full text-sm font-semibold py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 transition-colors"
                   >
                     Proponer esta fecha

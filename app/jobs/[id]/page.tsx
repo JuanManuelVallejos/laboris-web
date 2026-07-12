@@ -241,8 +241,12 @@ function ActionPanel({
   const [reworkQuoteAmount, setReworkQuoteAmount] = useState("");
   const [cancelReason, setCancelReason] = useState("");
   const [showCancel, setShowCancel] = useState(false);
+  const [renderedAt] = useState(() => Date.now());
 
   const s = job.status;
+  const daysUntilAutoClose = job.autoCloseDeadline
+    ? Math.ceil((new Date(job.autoCloseDeadline).getTime() - renderedAt) / 86400000)
+    : null;
 
   return (
     <div className="bg-surface rounded-2xl p-4 shadow-sm space-y-3">
@@ -288,11 +292,33 @@ function ActionPanel({
       {job.reworkRecords?.length > 0 && (
         <ReworkHistory records={job.reworkRecords} />
       )}
+      {s === "work_delivered" && job.autoCloseDeadline && daysUntilAutoClose !== null && (
+        <div className="bg-orange-50 border border-orange-200 rounded-xl px-3 py-2.5 text-center space-y-1">
+          <p className="text-xs font-semibold text-orange-700">
+            {daysUntilAutoClose > 0
+              ? `Se cierra automáticamente en ${daysUntilAutoClose} día${daysUntilAutoClose === 1 ? "" : "s"}`
+              : "Se cierra automáticamente en cualquier momento"}
+          </p>
+          <p className="text-xs text-orange-600">
+            Si el cliente no confirma la entrega antes del{" "}
+            {new Date(job.autoCloseDeadline).toLocaleDateString("es-AR", {
+              day: "numeric", month: "long",
+            })}, el trabajo se va a marcar como Listo automáticamente.
+          </p>
+        </div>
+      )}
       {s === "cancelled" && (
         <InfoRow label="Motivo de cancelación" value={job.cancelReason || "—"} highlight />
       )}
       {s === "completed" && (
         <InfoRow label="Pago liberado" value={fmt(job.workQuoteAmount)} positive />
+      )}
+      {s === "completed" && job.autoCompleted && (
+        <InfoRow
+          label="Cierre automático"
+          value="Este trabajo se marcó como Listo automáticamente porque el cliente no confirmó la entrega a tiempo."
+          highlight
+        />
       )}
 
       {/* ── Professional actions ── */}

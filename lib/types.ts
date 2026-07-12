@@ -64,6 +64,9 @@ export interface Job {
   cancelReason?: string;
   completedAt?: string;
   cancelledAt?: string;
+  workDeliveredAt?: string;
+  autoCompleted: boolean;
+  autoCloseDeadline?: string;
   payments: Payment[];
   reworkRecords: ReworkRecord[];
   createdAt: string;

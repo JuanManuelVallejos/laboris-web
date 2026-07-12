@@ -11,7 +11,8 @@ import {
   payVisit, completeVisit, submitWorkQuote,
   approveWorkQuote, startWork, deliverWork,
   requestRework, submitReworkQuote, approveReworkQuote,
-  acceptRework, approveDelivery, cancelJob,
+  acceptRework, scheduleReworkVisit, confirmReworkVisit, declineReworkVisit,
+  approveDelivery, cancelJob,
 } from "@/lib/api";
 import type { Job, Message, ReworkRecord } from "@/lib/types";
 
@@ -28,8 +29,10 @@ const STATUS_LABEL: Record<string, string> = {
   work_approved:    "Cotización aprobada",
   work_in_progress: "Trabajo en progreso",
   work_delivered:   "Trabajo entregado",
-  rework_requested: "Correcciones solicitadas",
-  rework_quoted:    "Cotización de corrección enviada",
+  rework_requested:      "Correcciones solicitadas",
+  rework_quoted:         "Cotización de corrección enviada",
+  rework_accepted:       "Correcciones aceptadas — coordinando fecha",
+  rework_visit_proposed: "Fecha de retrabajo propuesta — pendiente confirmación",
   completed:        "Completado",
   cancelled:        "Cancelado",
 };
@@ -45,8 +48,10 @@ const STATUS_COLOR: Record<string, string> = {
   work_approved:    "bg-green-100 text-green-700",
   work_in_progress: "bg-primary/10 text-primary",
   work_delivered:   "bg-purple-100 text-purple-700",
-  rework_requested: "bg-orange-100 text-orange-700",
-  rework_quoted:    "bg-blue-100 text-blue-700",
+  rework_requested:      "bg-orange-100 text-orange-700",
+  rework_quoted:         "bg-blue-100 text-blue-700",
+  rework_accepted:       "bg-amber-100 text-amber-700",
+  rework_visit_proposed: "bg-orange-100 text-orange-700",
   completed:        "bg-green-100 text-green-700",
   cancelled:        "bg-red-100 text-red-600",
 };
@@ -64,8 +69,10 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
   work_approved:    ["work_in_progress", "cancelled"],
   work_in_progress: ["work_delivered", "cancelled"],
   work_delivered:   ["rework_requested", "completed"],   // no cancel here
-  rework_requested: ["rework_quoted", "work_in_progress", "cancelled"],
-  rework_quoted:    ["work_in_progress", "cancelled"],
+  rework_requested:      ["rework_quoted", "rework_accepted", "cancelled"],
+  rework_quoted:         ["rework_accepted", "cancelled"],
+  rework_accepted:       ["rework_visit_proposed", "cancelled"],
+  rework_visit_proposed: ["work_in_progress", "rework_accepted", "cancelled"],
   completed:        [],
   cancelled:        [],
 };
@@ -94,8 +101,10 @@ function stepIndex(status: string): number {
     visit_proposed:   1, // misma posición que visit_scheduled en el stepper
     visit_quoted:     2,
     visit_paid:       2,
-    rework_requested: 6,
-    rework_quoted:    6,
+    rework_requested:      6,
+    rework_quoted:         6,
+    rework_accepted:       6,
+    rework_visit_proposed: 6,
   };
   return map[status] ?? 0;
 }
@@ -189,6 +198,14 @@ function ReworkHistory({ records }: { records: ReworkRecord[] }) {
             </span>
           </div>
           {rec.notes && <p className="text-xs text-ink leading-snug">{rec.notes}</p>}
+          {rec.scheduledAt && (
+            <p className="text-[10px] text-orange-700">
+              Fecha acordada:{" "}
+              {new Date(rec.scheduledAt).toLocaleDateString("es-AR", {
+                day: "numeric", month: "short", year: "numeric",
+              })}
+            </p>
+          )}
           <p className="text-[10px] text-muted">
             {new Date(rec.createdAt).toLocaleDateString("es-AR", {
               day: "numeric", month: "short", year: "numeric",
@@ -214,6 +231,9 @@ function ActionPanel({
   const [visitDay, setVisitDay] = useState("");
   const [visitTime, setVisitTime] = useState("");
   const [reviewingVisit, setReviewingVisit] = useState(false);
+  const [reworkVisitDay, setReworkVisitDay] = useState("");
+  const [reworkVisitTime, setReworkVisitTime] = useState("");
+  const [reviewingReworkVisit, setReviewingReworkVisit] = useState(false);
   const [visitAmount, setVisitAmount] = useState("");
   const [workAmount, setWorkAmount] = useState("");
   const [workDesc, setWorkDesc] = useState("");
@@ -239,10 +259,12 @@ function ActionPanel({
       )}
       {job.visitQuoteAmount !== undefined &&
         ["visit_quoted","visit_paid","visit_completed","work_quoted","work_approved",
-         "work_in_progress","work_delivered","rework_requested","rework_quoted","completed"].includes(s) && (
+         "work_in_progress","work_delivered","rework_requested","rework_quoted",
+         "rework_accepted","rework_visit_proposed","completed"].includes(s) && (
         <InfoRow label="Cotización de visita" value={fmt(job.visitQuoteAmount)} />
       )}
-      {["work_quoted","work_approved","work_in_progress","work_delivered","rework_requested","rework_quoted","completed"].includes(s) && (
+      {["work_quoted","work_approved","work_in_progress","work_delivered","rework_requested",
+        "rework_quoted","rework_accepted","rework_visit_proposed","completed"].includes(s) && (
         <>
           {job.workQuoteAmount !== undefined && (
             <InfoRow label="Cotización del trabajo" value={fmt(job.workQuoteAmount)} />
@@ -252,6 +274,17 @@ function ActionPanel({
           )}
         </>
       )}
+      {s === "rework_visit_proposed" && (() => {
+        const currentCycle = job.reworkRecords?.find((r) => r.cycleNumber === job.reworkCount);
+        return currentCycle?.scheduledAt ? (
+          <InfoRow
+            label="Fecha propuesta para el retrabajo"
+            value={new Date(currentCycle.scheduledAt).toLocaleString("es-AR", {
+              weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit",
+            })}
+          />
+        ) : null;
+      })()}
       {job.reworkRecords?.length > 0 && (
         <ReworkHistory records={job.reworkRecords} />
       )}
@@ -459,6 +492,72 @@ function ActionPanel({
               </button>
             </div>
           )}
+
+          {s === "rework_accepted" && (
+            <div className="space-y-2 pt-1">
+              {!reviewingReworkVisit ? (
+                <>
+                  <p className="text-xs font-medium text-ink">Proponer fecha para el retrabajo</p>
+                  <div className="flex gap-2">
+                    <input
+                      type="date"
+                      value={reworkVisitDay}
+                      onChange={(e) => setReworkVisitDay(e.target.value)}
+                      className="flex-1 text-sm text-ink bg-cream border border-border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                    <input
+                      type="time"
+                      value={reworkVisitTime}
+                      onChange={(e) => setReworkVisitTime(e.target.value)}
+                      className="w-28 text-sm text-ink bg-cream border border-border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setReviewingReworkVisit(true)}
+                    disabled={!reworkVisitDay || !reworkVisitTime}
+                    className="w-full text-sm font-semibold py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 disabled:opacity-40 transition-colors"
+                  >
+                    Revisar fecha →
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="text-xs font-medium text-ink">Confirmar fecha del retrabajo</p>
+                  <div className="bg-primary/5 border border-primary/20 rounded-xl px-3 py-2.5">
+                    <p className="text-xs text-muted mb-0.5">Fecha seleccionada</p>
+                    <p className="text-sm font-semibold text-ink">
+                      {new Date(`${reworkVisitDay}T${reworkVisitTime}`).toLocaleString("es-AR", {
+                        weekday: "long", day: "numeric", month: "long",
+                        hour: "2-digit", minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onAction(() => scheduleReworkVisit(job.id, new Date(`${reworkVisitDay}T${reworkVisitTime}`).toISOString(), getToken))}
+                    className="w-full text-sm font-semibold py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 transition-colors"
+                  >
+                    Proponer esta fecha
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setReviewingReworkVisit(false)}
+                    className="w-full text-sm font-semibold py-2 rounded-xl border border-border text-muted hover:bg-cream transition-colors"
+                  >
+                    Cambiar fecha
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+
+          {s === "rework_visit_proposed" && (
+            <div className="bg-orange-50 border border-orange-200 rounded-xl px-3 py-2.5 text-center space-y-1">
+              <p className="text-xs font-semibold text-orange-700">Esperando confirmación del cliente</p>
+              <p className="text-xs text-orange-600">El cliente debe aceptar la fecha antes de retomar el trabajo.</p>
+            </div>
+          )}
         </>
       )}
 
@@ -518,6 +617,30 @@ function ActionPanel({
             >
               Aprobar cotización de corrección {fmt(job.reworkQuoteAmount)}
             </button>
+          )}
+
+          {s === "rework_visit_proposed" && (
+            <div className="space-y-2 pt-1">
+              <p className="text-xs font-medium text-ink">
+                El profesional propuso una fecha para el retrabajo. ¿Estás de acuerdo?
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => onAction(() => confirmReworkVisit(job.id, getToken))}
+                  className="flex-1 text-sm font-semibold py-2.5 rounded-xl bg-green-600 text-white hover:bg-green-700 transition-colors"
+                >
+                  Confirmar fecha
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onAction(() => declineReworkVisit(job.id, getToken))}
+                  className="flex-1 text-sm font-semibold py-2.5 rounded-xl border border-orange-400 text-orange-600 hover:bg-orange-50 transition-colors"
+                >
+                  Pedir otra fecha
+                </button>
+              </div>
+            </div>
           )}
 
           {s === "work_delivered" && (

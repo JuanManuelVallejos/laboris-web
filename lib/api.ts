@@ -387,6 +387,15 @@ export const approveReworkQuote = (jobId: string, gt: () => Promise<string | nul
 export const acceptRework = (jobId: string, gt: () => Promise<string | null>) =>
   jobPatch(jobId, "accept-rework", null, gt);
 
+export const scheduleReworkVisit = (jobId: string, scheduledAt: string, gt: () => Promise<string | null>) =>
+  jobPatch(jobId, "schedule-rework-visit", { scheduledAt }, gt);
+
+export const confirmReworkVisit = (jobId: string, gt: () => Promise<string | null>) =>
+  jobPatch(jobId, "confirm-rework-visit", null, gt);
+
+export const declineReworkVisit = (jobId: string, gt: () => Promise<string | null>) =>
+  jobPatch(jobId, "decline-rework-visit", null, gt);
+
 export const approveDelivery = (jobId: string, gt: () => Promise<string | null>) =>
   jobPatch(jobId, "approve-delivery", null, gt);
 

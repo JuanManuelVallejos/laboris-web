@@ -22,6 +22,8 @@ export type JobStatus =
   | "work_delivered"
   | "rework_requested"
   | "rework_quoted"
+  | "rework_accepted"
+  | "rework_visit_proposed"
   | "completed"
   | "cancelled";
 
@@ -40,6 +42,7 @@ export interface ReworkRecord {
   cycleNumber: number;
   notes?: string;
   quoteAmount?: number;
+  scheduledAt?: string;
   createdAt: string;
 }
 

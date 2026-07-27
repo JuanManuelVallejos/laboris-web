@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useClerk } from "@clerk/nextjs";
+import Button from "@/components/ui/Button";
 
 const links = [
   { href: "/admin/profesionales", label: "Profesionales" },
@@ -14,36 +15,37 @@ export default function AdminTopbar() {
   const { signOut } = useClerk();
 
   return (
-    <header className="bg-surface border-b border-border px-4 py-3 flex items-center justify-between">
-      <div className="flex items-center gap-6">
-        <div>
-          <span className="text-sm font-bold text-ink">Laboris</span>
-          <span className="ml-1.5 text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-            Admin
+    <header className="topbar">
+      <div className="topbar__in">
+        <div className="flex items-center gap-2">
+          <span className="wordmark" style={{ fontSize: "1.25rem" }}>
+            Labor<em>is</em>
           </span>
+          <span className="badge badge--info">Admin</span>
         </div>
+
         <nav className="flex items-center gap-1">
           {links.map((l) => (
             <Link
               key={l.href}
               href={l.href}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-colors ${
                 pathname.startsWith(l.href)
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted hover:text-ink hover:bg-cream"
+                  ? "bg-brand-light text-brand-mid"
+                  : "text-ink-mid hover:text-ink hover:bg-surface-3"
               }`}
             >
               {l.label}
             </Link>
           ))}
         </nav>
+
+        <div className="topbar__spacer" />
+
+        <Button variant="ghost" size="sm" onClick={() => signOut({ redirectUrl: "/" })}>
+          Salir
+        </Button>
       </div>
-      <button
-        onClick={() => signOut({ redirectUrl: "/" })}
-        className="text-sm text-muted hover:text-ink transition-colors"
-      >
-        Salir
-      </button>
     </header>
   );
 }

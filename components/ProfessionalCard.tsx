@@ -3,36 +3,29 @@ import type { Professional } from "@/lib/types";
 
 interface Props {
   professional: Professional;
+  className?: string;
 }
 
-export default function ProfessionalCard({ professional }: Props) {
+export default function ProfessionalCard({ professional, className }: Props) {
   return (
-    <Link
-      href={`/professionals/${professional.id}`}
-      className="flex items-center gap-3 bg-surface rounded-2xl px-4 py-3 shadow-sm hover:shadow-md transition-shadow"
-    >
-      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-        <span className="text-lg font-bold text-primary">
-          {professional.name[0]}
-        </span>
+    <Link href={`/professionals/${professional.id}`} className={["pro-card block", className].filter(Boolean).join(" ")}>
+      <div className="pro-av">{professional.name[0]?.toUpperCase()}</div>
+      <div className="pro-name">{professional.name}</div>
+      <div className="pro-role capitalize">{professional.trade}</div>
+      <div className="pro-rating">
+        {professional.rating > 0 ? (
+          <>
+            <span className="star">★</span>
+            <b>{professional.rating}</b>
+          </>
+        ) : (
+          <span style={{ color: "var(--ink-soft)", fontSize: "var(--t-xs)" }}>Nuevo</span>
+        )}
       </div>
-
-      <div className="flex-1 min-w-0">
-        <p className="font-semibold text-ink text-sm truncate">{professional.name}</p>
-        <p className="text-xs text-muted capitalize truncate">{professional.trade}</p>
-        <div className="flex items-center gap-2 mt-1">
-          <span className="text-xs text-amber-500 font-medium">
-            {professional.rating > 0 ? `★ ${professional.rating}` : "Sin calificación"}
-          </span>
-          {professional.verified && (
-            <span className="text-[10px] bg-verified/10 text-verified font-semibold px-2 py-0.5 rounded-full">
-              verificado
-            </span>
-          )}
-        </div>
+      <div className="pro-foot">
+        {professional.verified && <span className="badge badge--verif">✓ verif.</span>}
+        <span style={{ color: "var(--ink-soft)", fontSize: "var(--t-2xs)" }}>{professional.zone}</span>
       </div>
-
-      <span className="text-muted text-sm shrink-0">›</span>
     </Link>
   );
 }

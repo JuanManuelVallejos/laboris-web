@@ -5,24 +5,12 @@ import { useAuth } from "@clerk/nextjs";
 import Link from "next/link";
 import Topbar from "@/components/Topbar";
 import NavBottom from "@/components/NavBottom";
+import RequestCard from "@/components/RequestCard";
+import { AcceptRejectRow, RejectForm } from "@/components/RequestActions";
+import Button from "@/components/ui/Button";
+import Icon from "@/components/icons/Icon";
 import { getReceivedRequests, updateRequestStatus } from "@/lib/api";
 import type { Request } from "@/lib/api";
-
-const statusLabel: Record<string, string> = {
-  pending:  "Pendiente",
-  viewed:   "Vista",
-  accepted: "Aceptada",
-  rejected: "Rechazada",
-  expired:  "Vencida",
-};
-
-const statusColor: Record<string, string> = {
-  pending:  "bg-amber-100 text-amber-700",
-  viewed:   "bg-blue-100 text-blue-700",
-  accepted: "bg-green-100 text-green-700",
-  rejected: "bg-red-100 text-red-600",
-  expired:  "bg-gray-100 text-gray-500",
-};
 
 function sortRequests(reqs: Request[]): Request[] {
   return [...reqs].sort((a, b) => {
@@ -40,7 +28,6 @@ export default function ProPedidosPage() {
   const [loading, setLoading]   = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
-  const [reason, setReason]     = useState("");
   const [error, setError]       = useState("");
 
   useEffect(() => {
@@ -59,105 +46,75 @@ export default function ProPedidosPage() {
     } finally { setUpdating(null); }
   }
 
-  async function handleReject(id: string) {
+  async function handleReject(id: string, reason: string) {
     if (!reason.trim()) return;
     setUpdating(id); setError("");
     try {
       await updateRequestStatus(id, "rejected", getToken, reason.trim());
       setRequests((prev) => sortRequests(prev.map((r) => r.id === id ? { ...r, status: "rejected" as const, rejectionReason: reason.trim() } : r)));
-      setRejectingId(null); setReason("");
+      setRejectingId(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al rechazar");
     } finally { setUpdating(null); }
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-cream">
+    <div className="flex flex-col min-h-screen bg-page">
       <Topbar />
 
-      <main className="flex-1 px-4 pt-5 pb-24 max-w-lg mx-auto w-full space-y-4">
+      <main className="flex-1 px-4 pt-5 pb-24 md:pb-10 max-w-lg mx-auto w-full space-y-4">
         <div className="flex items-center gap-3">
-          <Link href="/pro" className="text-primary font-medium text-sm">←</Link>
-          <h2 className="text-lg font-bold text-ink">Historial de pedidos</h2>
+          <Link href="/pro" className="text-brand-vivid" aria-label="Volver">
+            <Icon name="arrow" style={{ transform: "rotate(180deg)", width: 18, height: 18 }} />
+          </Link>
+          <h2 className="serif text-lg font-bold text-ink">Historial de pedidos</h2>
         </div>
 
-        {error && <p className="text-sm text-red-600 bg-red-50 rounded-xl px-4 py-3">{error}</p>}
+        {error && (
+          <p className="text-sm rounded-xl px-4 py-3" style={{ background: "color-mix(in srgb, var(--brand-alert) 12%, transparent)", color: "var(--brand-alert)" }}>
+            {error}
+          </p>
+        )}
 
         {loading && (
           <div className="space-y-3">
-            {[1,2,3].map(i => <div key={i} className="bg-surface rounded-2xl p-4 shadow-sm animate-pulse h-24" />)}
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm animate-pulse h-24" />
+            ))}
           </div>
         )}
 
         {!loading && requests.length === 0 && (
-          <div className="bg-surface rounded-2xl p-8 shadow-sm flex flex-col items-center text-center">
-            <span className="text-3xl mb-2">📭</span>
+          <div className="bg-surface-2 border border-border rounded-2xl p-8 shadow-sm flex flex-col items-center text-center">
             <p className="text-sm font-medium text-ink">No tenés pedidos aún</p>
-            <p className="text-xs text-muted mt-1">Cuando alguien te contacte, aparecerá acá</p>
+            <p className="text-xs text-ink-soft mt-1">Cuando alguien te contacte, aparecerá acá</p>
           </div>
         )}
 
         {!loading && requests.length > 0 && (
           <div className="space-y-3">
             {requests.map((req) => (
-              <div key={req.id} className="bg-surface rounded-2xl p-4 shadow-sm space-y-2">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-semibold text-ink">{req.clientName}</p>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor[req.status]}`}>
-                    {statusLabel[req.status]}
-                  </span>
-                </div>
-
-                <p className="text-sm text-muted leading-relaxed">{req.description}</p>
-
-                {req.status === "rejected" && req.rejectionReason && (
-                  <p className="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">
-                    Motivo: {req.rejectionReason}
-                  </p>
-                )}
-
-                <p className="text-xs text-muted">
-                  {new Date(req.createdAt).toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" })}
-                </p>
-
+              <RequestCard key={req.id} title={req.clientName} request={req}>
                 {req.status === "accepted" && req.jobId && (
-                  <Link href={`/jobs/${req.jobId}`}
-                    className="block text-center text-xs font-semibold py-2 rounded-xl bg-primary/10 text-primary hover:bg-primary/15 transition-colors">
-                    Ver trabajo →
+                  <Link href={`/jobs/${req.jobId}`} className="block">
+                    <Button variant="secondary" size="sm" block>Ver trabajo →</Button>
                   </Link>
                 )}
-
                 {(req.status === "pending" || req.status === "viewed") && rejectingId !== req.id && (
-                  <div className="flex gap-2 pt-1">
-                    <button onClick={() => handleAccept(req.id)} disabled={updating === req.id}
-                      className="flex-1 text-xs font-semibold py-2 rounded-xl bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition-colors">
-                      {updating === req.id ? "..." : "Aceptar"}
-                    </button>
-                    <button onClick={() => { setRejectingId(req.id); setReason(""); }} disabled={updating === req.id}
-                      className="flex-1 text-xs font-semibold py-2 rounded-xl border border-red-300 text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors">
-                      Rechazar
-                    </button>
-                  </div>
+                  <AcceptRejectRow
+                    onAccept={() => handleAccept(req.id)}
+                    onReject={() => setRejectingId(req.id)}
+                    loading={updating === req.id}
+                  />
                 )}
-
                 {(req.status === "pending" || req.status === "viewed") && rejectingId === req.id && (
-                  <div className="space-y-2 pt-1">
-                    <textarea value={reason} onChange={(e) => setReason(e.target.value)}
-                      placeholder="Motivo del rechazo (obligatorio)" rows={2}
-                      className="w-full text-xs text-ink placeholder:text-muted bg-cream rounded-xl px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-red-300 border border-red-200 transition" />
-                    <div className="flex gap-2">
-                      <button onClick={() => handleReject(req.id)} disabled={!reason.trim() || updating === req.id}
-                        className="flex-1 text-xs font-semibold py-2 rounded-xl bg-red-600 text-white hover:bg-red-700 disabled:opacity-40 transition-colors">
-                        {updating === req.id ? "..." : "Confirmar rechazo"}
-                      </button>
-                      <button onClick={() => { setRejectingId(null); setReason(""); }}
-                        className="text-xs font-semibold py-2 px-3 rounded-xl border border-border text-muted hover:bg-cream transition-colors">
-                        Cancelar
-                      </button>
-                    </div>
-                  </div>
+                  <RejectForm
+                    onConfirm={(reason) => handleReject(req.id, reason)}
+                    onCancel={() => setRejectingId(null)}
+                    loading={updating === req.id}
+                  />
                 )}
-              </div>
+              </RequestCard>
             ))}
           </div>
         )}

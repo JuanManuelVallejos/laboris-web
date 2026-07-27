@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { Show, UserButton, SignInButton, useAuth } from "@clerk/nextjs";
 import { useEffect, useRef, useState } from "react";
+import Icon from "@/components/icons/Icon";
+import Button from "@/components/ui/Button";
+import { useTheme } from "@/lib/useTheme";
 import {
   getUnreadCount,
   getNotifications,
@@ -20,6 +23,20 @@ function notifHref(type: string): string {
   if (type === "new_request") return "/pro/pedidos";
   if (type === "request_accepted" || type === "request_rejected") return "/pedidos";
   return "/";
+}
+
+function ModeToggle() {
+  const { theme, toggle } = useTheme();
+  return (
+    <button type="button" className="mode-toggle" onClick={toggle} aria-label="Cambiar tema">
+      <span className={`seg ${theme === "light" ? "on" : ""}`}>
+        <Icon name="sun" className="ico" />
+      </span>
+      <span className={`seg ${theme === "dark" ? "on" : ""}`}>
+        <Icon name="moon" className="ico" />
+      </span>
+    </button>
+  );
 }
 
 function NotificationBell() {
@@ -66,24 +83,24 @@ function NotificationBell() {
     <div ref={ref} className="relative">
       <button
         onClick={handleOpen}
-        className="relative w-9 h-9 flex items-center justify-center rounded-full bg-cream text-base hover:bg-border transition-colors"
+        className="relative w-9 h-9 flex items-center justify-center rounded-full bg-surface-3 text-ink-mid hover:bg-border transition-colors"
         aria-label="Notificaciones"
       >
-        🔔
+        <Icon name="bell" className="ico" style={{ width: 17, height: 17 }} />
         {unread > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none">
+          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-brand-alert text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none">
             {unread > 9 ? "9+" : unread}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-[min(320px,calc(100vw-2rem))] bg-surface rounded-2xl shadow-lg border border-border z-50 overflow-hidden">
+        <div className="absolute right-0 mt-2 w-[min(320px,calc(100vw-2rem))] bg-surface-2 rounded-2xl shadow-lg border border-border z-50 overflow-hidden">
           <div className="px-4 py-3 border-b border-border">
             <p className="text-sm font-semibold text-ink">Notificaciones</p>
           </div>
           {notifications.length === 0 ? (
-            <div className="px-4 py-6 text-center text-sm text-muted">
+            <div className="px-4 py-6 text-center text-sm text-ink-soft">
               No tenés notificaciones
             </div>
           ) : (
@@ -93,10 +110,10 @@ function NotificationBell() {
                   <Link
                     href={notifHref(n.type)}
                     onClick={() => setOpen(false)}
-                    className="block px-4 py-3 hover:bg-cream transition-colors"
+                    className="block px-4 py-3 hover:bg-surface-3 transition-colors"
                   >
                     <p className="text-sm text-ink">{n.message}</p>
-                    <p className="text-xs text-muted mt-0.5">
+                    <p className="text-xs text-ink-soft mt-0.5">
                       {new Date(n.createdAt).toLocaleString("es-AR", {
                         day: "numeric",
                         month: "short",
@@ -117,50 +134,42 @@ function NotificationBell() {
 
 export default function Topbar() {
   return (
-    <header className="bg-surface px-4 pt-4 pb-3 flex items-center justify-between sticky top-0 z-10 border-b border-border">
-      <div className="flex items-center gap-8">
-        <div>
-          <h1 className="text-xl font-bold text-ink tracking-tight">Laboris</h1>
-          <p className="text-xs text-muted flex items-center gap-1 mt-0.5">
-            <span>📍</span>
-            <span>Buenos Aires</span>
-          </p>
-        </div>
+    <header className="topbar">
+      <div className="topbar__in">
+        <Link href="/" className="wordmark">
+          Labor<em>is</em>
+        </Link>
 
-        {/* Desktop nav links */}
         <nav className="hidden md:flex items-center gap-1">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="px-4 py-2 rounded-xl text-sm font-medium text-muted hover:text-ink hover:bg-cream transition-colors"
+              className="px-4 py-2 rounded-xl text-sm font-medium text-ink-mid hover:text-ink hover:bg-surface-3 transition-colors"
             >
               {link.label}
             </Link>
           ))}
         </nav>
-      </div>
 
-      {/* Auth + notifications */}
-      <div className="flex items-center gap-2 md:gap-3">
-        <NotificationBell />
+        <div className="topbar__spacer" />
 
-        <Show when="signed-out">
-          <SignInButton mode="modal">
-            <button className="text-sm font-medium text-primary px-3 py-1.5 rounded-xl border border-primary/30 hover:bg-primary/5 transition-colors md:hidden">
-              Ingresar
-            </button>
-          </SignInButton>
-          <SignInButton mode="modal">
-            <button className="hidden md:block text-sm font-semibold text-surface bg-primary px-4 py-2 rounded-xl hover:bg-primary/90 transition-colors">
-              Ingresar
-            </button>
-          </SignInButton>
-        </Show>
+        <div className="flex items-center gap-2">
+          <ModeToggle />
+          <NotificationBell />
 
-        <Show when="signed-in">
-          <UserButton />
-        </Show>
+          <Show when="signed-out">
+            <SignInButton mode="modal">
+              <Button variant="secondary" size="sm">
+                Ingresar
+              </Button>
+            </SignInButton>
+          </Show>
+
+          <Show when="signed-in">
+            <UserButton />
+          </Show>
+        </div>
       </div>
     </header>
   );

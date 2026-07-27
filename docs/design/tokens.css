@@ -1,0 +1,148 @@
+:root {
+  --radius-scale: 1;
+  --amber: #F59E0B;          /* estrellas / calificación */
+}
+
+/* ============================================================
+   MARCA — Verde (v4A, canónica)
+   ============================================================ */
+:root {
+  --brand-deep:        #0A3D2E;   /* hero, status bar, primario fuerte */
+  --brand-mid:         #0F5C42;
+  --brand-vivid:       #12A06B;   /* enlaces "ver todos", online */
+  --brand-light:       #E8F5EE;   /* tinte menta: avatares, badges */
+  --brand-pale:        #F2FAF6;
+  --brand-accent:      #3EC87A;   /* CTAs, chip urgente, "is" */
+  --brand-accent-text: #064728;   /* texto sobre acento */
+  --brand-alert:       #E84040;   /* urgente / destructivo */
+  --brand-grad:        linear-gradient(90deg, var(--brand-mid), var(--brand-accent));
+}
+
+/* ---------- MARCA — Azul (v4B, alterno) ---------- */
+:root[data-brand="azul"] {
+  --brand-deep:        #0B2E5A;
+  --brand-mid:         #1145A0;
+  --brand-vivid:       #2563EB;
+  --brand-light:       #EBF2FF;
+  --brand-pale:        #F4F8FF;
+  --brand-accent:      #38BDF8;
+  --brand-accent-text: #0B2E5A;
+  --brand-alert:       #EF4444;
+}
+
+/* ============================================================
+   NEUTRALES / SEMÁNTICOS — Claro
+   ============================================================ */
+:root {
+  --page:        #E8EAE6;   /* fondo de lienzo (fuera del teléfono) */
+  --surface:     #FAFAF7;   /* crema — cuerpo de app y tarjetas */
+  --surface-2:   #FFFFFF;   /* blanco puro — campos, tiles, pro-cards */
+  --surface-3:   #F2FAF6;   /* tinte muy suave */
+
+  --border:        #DDE8E1;
+  --border-light:  #EEF4F0;
+
+  --ink:        #111810;    /* texto principal */
+  --ink-mid:    #3D4A40;    /* texto secundario */
+  --ink-soft:   #7A8C7E;    /* texto terciario / placeholder */
+  --on-brand:   #FFFFFF;    /* texto sobre verde profundo */
+  --on-brand-soft: rgba(255,255,255,0.55);
+
+  --field-bg:   #FFFFFF;
+
+  --shadow-sm: 0 2px 8px rgba(17,24,16,0.05);
+  --shadow-md: 0 4px 16px rgba(17,24,16,0.10);
+  --shadow-lg: 0 20px 60px rgba(17,24,16,0.15);
+  /* sombra dura característica (offset sólido en verde profundo) */
+  --shadow-hard: 5px 5px 0 var(--brand-deep);
+}
+
+/* Azul ajusta también el matiz de neutrales en claro */
+:root[data-brand="azul"] {
+  --surface:    #F8FAFF;
+  --surface-3:  #F4F8FF;
+  --border:     #DBEAFE;
+  --border-light:#EFF6FF;
+  --ink:        #0F172A;
+  --ink-mid:    #334155;
+  --ink-soft:   #64748B;
+}
+
+/* ============================================================
+   NEUTRALES / SEMÁNTICOS — Oscuro (carbón verdoso cálido)
+   ============================================================ */
+:root[data-theme="dark"] {
+  --page:        #0B120E;
+  --surface:     #141B16;
+  --surface-2:   #1B241D;
+  --surface-3:   #10231A;
+
+  --border:        #283A30;
+  --border-light:  #1F2D24;
+
+  --ink:        #ECF3ED;
+  --ink-mid:    #AFC2B5;
+  --ink-soft:   #7E948A;
+  --on-brand:   #FFFFFF;
+  --on-brand-soft: rgba(255,255,255,0.6);
+
+  --field-bg:   #1B241D;
+
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.5);
+  --shadow-lg: 0 20px 60px rgba(0,0,0,0.6);
+  --shadow-hard: 5px 5px 0 #06150F;
+}
+:root[data-theme="dark"][data-brand="azul"] {
+  --page:       #080F1A;
+  --surface:    #0F1726;
+  --surface-2:  #15203359;
+  --surface-2:  #152033;
+  --surface-3:  #0C1626;
+  --border:     #243349;
+  --border-light:#1A2638;
+}
+
+/* ============================================================
+   RADIOS · escalables
+   ============================================================ */
+:root {
+  --r-sm:   calc(7px  * var(--radius-scale));
+  --r-md:   calc(10px * var(--radius-scale));
+  --r-lg:   calc(13px * var(--radius-scale));
+  --r-xl:   calc(15px * var(--radius-scale));
+  --r-2xl:  calc(20px * var(--radius-scale));
+  --r-phone:calc(44px * var(--radius-scale));
+  --r-pill: 999px;
+}
+
+/* ============================================================
+   ESPACIADO
+   ============================================================ */
+:root {
+  --s-1: 4px;  --s-2: 8px;  --s-3: 12px; --s-4: 16px;
+  --s-5: 20px; --s-6: 24px; --s-8: 32px; --s-10: 40px;
+  --s-12: 48px; --s-16: 64px;
+}
+
+/* ============================================================
+   TIPOGRAFÍA
+   ============================================================ */
+:root {
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-ui: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+
+  --t-display: 3rem;
+  --t-h1: 2.125rem;
+  --t-h2: 1.5rem;
+  --t-h3: 1.125rem;
+  --t-lg: 1.0625rem;
+  --t-body: 1rem;
+  --t-sm: 0.875rem;
+  --t-xs: 0.75rem;
+  --t-2xs: 0.6875rem;
+
+  --fw-reg: 400; --fw-med: 500; --fw-semi: 600; --fw-bold: 700; --fw-black: 900;
+}
+</style>

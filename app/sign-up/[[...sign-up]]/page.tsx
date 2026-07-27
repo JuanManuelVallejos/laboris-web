@@ -1,18 +1,13 @@
+import Link from "next/link";
 import { SignUp } from "@clerk/nextjs";
 
 export default function SignUpPage() {
   return (
-    <div className="flex min-h-screen bg-cream items-center justify-center px-4">
-      <SignUp
-        appearance={{
-          variables: {
-            colorPrimary: "#5C6B3A",
-            colorBackground: "#FFFFFF",
-            colorInputBackground: "#F7F3ED",
-            borderRadius: "1rem",
-          },
-        }}
-      />
+    <div className="flex flex-col min-h-screen bg-page items-center justify-center px-4 gap-6">
+      <Link href="/" className="wordmark text-3xl">
+        Labor<em>is</em>
+      </Link>
+      <SignUp />
     </div>
   );
 }

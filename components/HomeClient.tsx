@@ -1,129 +1,118 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
+import { useUser } from "@clerk/nextjs";
 import ProfessionalCard from "@/components/ProfessionalCard";
+import SearchBox from "@/components/ui/SearchBox";
+import LocationChip from "@/components/ui/LocationChip";
+import Chip from "@/components/ui/Chip";
+import CategoryGrid from "@/components/ui/CategoryGrid";
+import UrgencyCard from "@/components/ui/UrgencyCard";
+import { TRADES, ZONES } from "@/lib/catalog";
 import type { Professional } from "@/lib/types";
 
-const trades = [
-  { icon: "🔧", label: "Plomero",      value: "plomero" },
-  { icon: "🔥", label: "Gasista",      value: "gasista" },
-  { icon: "⚡", label: "Electricista", value: "electricista" },
-  { icon: "🔐", label: "Cerrajero",    value: "cerrajero" },
-  { icon: "🖌️", label: "Pintor",       value: "pintor" },
-  { icon: "❄️", label: "Aire acond.",  value: "aire acond." },
-  { icon: "🪚", label: "Carpintero",   value: "carpintero" },
-];
-
-const zones = ["Todas", "CABA", "Zona Norte", "Zona Sur", "Zona Oeste", "GBA"];
+const ALL_ZONES = "Todas";
 
 interface Props {
   professionals: Professional[];
 }
 
 export default function HomeClient({ professionals }: Props) {
+  const { user } = useUser();
   const [search,      setSearch]      = useState("");
   const [activeTrade, setActiveTrade] = useState<string | null>(null);
-  const [activeZone,  setActiveZone]  = useState("Todas");
+  const [activeZone,  setActiveZone]  = useState<string>(ALL_ZONES);
 
   const filtered = useMemo(() => {
     return professionals.filter((p) => {
       const matchName  = p.name.toLowerCase().includes(search.toLowerCase());
       const matchTrade = !activeTrade || p.trade.toLowerCase() === activeTrade;
-      const matchZone  = activeZone === "Todas" || p.zone === activeZone;
+      const matchZone  = activeZone === ALL_ZONES || p.zone === activeZone;
       return matchName && matchTrade && matchZone;
     });
   }, [professionals, search, activeTrade, activeZone]);
+
+  const isFiltering = Boolean(activeTrade || activeZone !== ALL_ZONES || search);
 
   function toggleTrade(value: string) {
     setActiveTrade((prev) => (prev === value ? null : value));
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
 
-      {/* Búsqueda */}
-      <div className="relative md:max-w-xl">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted text-sm">🔍</span>
-        <input
-          type="text"
+      {/* Hero */}
+      <div className="hero">
+        <p className="text-xs" style={{ color: "rgba(255,255,255,.55)" }}>
+          Hola{user?.firstName ? `, ${user.firstName}` : ""} · <strong style={{ color: "rgba(255,255,255,.92)" }}>¿qué necesitás hoy?</strong>
+        </p>
+        <SearchBox
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="¿Qué servicio necesitás?"
-          className="w-full bg-surface border border-border rounded-2xl pl-9 pr-4 py-3 text-sm text-ink placeholder:text-muted focus:outline-none focus:border-primary transition-colors"
+          placeholder="Plomero, electricista…"
+          containerClassName="mt-3"
         />
+        <LocationChip label="Buenos Aires" className="mt-3" />
       </div>
 
-      {/* Categorías */}
-      <section>
-        <h2 className="text-sm font-semibold text-ink mb-3">Servicios</h2>
-        <div className="grid grid-cols-4 md:grid-cols-7 gap-3">
-          {trades.map((t) => {
-            const active = activeTrade === t.value;
-            return (
-              <button
-                key={t.value}
-                onClick={() => toggleTrade(t.value)}
-                className={`flex flex-col items-center gap-1.5 rounded-2xl py-3 px-1 shadow-sm transition-all active:scale-95 ${
-                  active
-                    ? "bg-primary/10 ring-2 ring-primary shadow-none"
-                    : "bg-surface hover:shadow-md"
-                }`}
-              >
-                <span className="text-2xl">{t.icon}</span>
-                <span className={`text-[11px] font-medium text-center leading-tight ${active ? "text-primary" : "text-ink"}`}>
-                  {t.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Filtro zona */}
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-        {zones.map((z) => (
-          <button
-            key={z}
-            onClick={() => setActiveZone(z)}
-            className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-              activeZone === z
-                ? "bg-primary text-surface border-primary"
-                : "bg-surface text-muted border-border hover:border-primary hover:text-primary"
-            }`}
-          >
+      {/* Chips de zona */}
+      <div className="scrollx gap-2">
+        <Chip active={activeZone === ALL_ZONES} onClick={() => setActiveZone(ALL_ZONES)}>
+          {ALL_ZONES}
+        </Chip>
+        {ZONES.map((z) => (
+          <Chip key={z} active={activeZone === z} onClick={() => setActiveZone(z)}>
             {z}
-          </button>
+          </Chip>
         ))}
       </div>
 
-      {/* Resultados */}
+      {/* Servicios */}
       <section>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-ink">
-            {filtered.length === professionals.length
-              ? "Disponibles cerca tuyo"
-              : `${filtered.length} resultado${filtered.length !== 1 ? "s" : ""}`}
-          </h2>
-          {(activeTrade || activeZone !== "Todas" || search) && (
+        <div className="sec-head mb-3">
+          <span className="sec-title">Servicios</span>
+          {isFiltering && (
             <button
-              onClick={() => { setActiveTrade(null); setActiveZone("Todas"); setSearch(""); }}
-              className="text-xs text-primary font-medium hover:underline"
+              onClick={() => { setActiveTrade(null); setActiveZone(ALL_ZONES); setSearch(""); }}
+              className="sec-link"
             >
               Limpiar filtros
             </button>
           )}
         </div>
+        <CategoryGrid
+          items={TRADES}
+          activeValue={activeTrade}
+          onSelect={toggleTrade}
+        />
+      </section>
+
+      {/* Urgencia */}
+      <UrgencyCard />
+
+      {/* Resultados */}
+      <section>
+        <div className="sec-head mb-3">
+          <span className="sec-title">
+            {isFiltering ? `${filtered.length} resultado${filtered.length !== 1 ? "s" : ""}` : "Cerca tuyo"}
+          </span>
+        </div>
 
         {filtered.length === 0 ? (
           <div className="text-center py-12 space-y-2">
-            <p className="text-2xl">🔍</p>
             <p className="text-sm font-medium text-ink">Sin resultados</p>
-            <p className="text-xs text-muted">Probá con otro oficio o zona</p>
+            <p className="text-xs text-ink-soft">Probá con otro oficio o zona</p>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        ) : isFiltering ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {filtered.map((p) => (
               <ProfessionalCard key={p.id} professional={p} />
+            ))}
+          </div>
+        ) : (
+          <div className="scrollx gap-3">
+            {filtered.map((p) => (
+              <ProfessionalCard key={p.id} professional={p} className="w-[150px] shrink-0" />
             ))}
           </div>
         )}

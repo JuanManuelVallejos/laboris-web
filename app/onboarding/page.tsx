@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser, useAuth } from "@clerk/nextjs";
 import { completeOnboarding } from "@/lib/api";
+import { Field, TextInput } from "@/components/ui/Field";
+import Button from "@/components/ui/Button";
+import Icon from "@/components/icons/Icon";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -42,63 +45,74 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-cream items-center justify-center px-4">
+    <div className="flex flex-col min-h-screen bg-page items-center justify-center px-4">
       <div className="max-w-sm w-full space-y-6">
 
         {step === "name" ? (
           <>
             <div className="text-center space-y-1">
-              <h1 className="text-2xl font-bold text-ink">¿Cómo te llamás?</h1>
-              <p className="text-sm text-muted">Así te van a ver los demás usuarios</p>
+              <h1 className="serif text-2xl font-bold text-ink">¿Cómo te llamás?</h1>
+              <p className="text-sm text-ink-soft">Así te van a ver los demás usuarios</p>
             </div>
 
-            <input
-              type="text"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder="Ej: Juan Vallejo"
-              className="w-full bg-surface border border-border rounded-2xl px-4 py-3 text-sm text-ink placeholder:text-muted focus:outline-none focus:border-primary transition-colors"
-              autoFocus
-            />
+            <Field>
+              <TextInput
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Ej: Juan Vallejo"
+                autoFocus
+              />
+            </Field>
 
-            <button
+            <Button
+              variant="accent"
+              size="lg"
+              block
               onClick={() => setStep("role")}
               disabled={!fullName.trim()}
-              className="w-full bg-primary text-surface font-semibold py-3.5 rounded-2xl shadow-md disabled:opacity-40 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors"
             >
               Continuar
-            </button>
+            </Button>
           </>
         ) : (
           <>
             <div className="text-center space-y-1">
-              <h1 className="text-2xl font-bold text-ink">¿Cómo vas a usar Laboris?</h1>
-              <p className="text-sm text-muted">Podés cambiar esto después desde tu perfil</p>
+              <h1 className="serif text-2xl font-bold text-ink">¿Cómo vas a usar Laboris?</h1>
+              <p className="text-sm text-ink-soft">Podés cambiar esto después desde tu perfil</p>
             </div>
 
             {error && (
-              <p className="text-sm text-red-600 bg-red-50 rounded-xl px-4 py-3 text-center">{error}</p>
+              <p
+                className="text-sm rounded-xl px-4 py-3 text-center"
+                style={{ background: "color-mix(in srgb, var(--brand-alert) 12%, transparent)", color: "var(--brand-alert)" }}
+              >
+                {error}
+              </p>
             )}
 
             <div className="space-y-3">
               <button
                 onClick={() => handleRole("client")}
                 disabled={loading}
-                className="w-full bg-surface border-2 border-border rounded-2xl p-5 text-left hover:border-primary hover:shadow-md transition-all active:scale-95 disabled:opacity-50"
+                className="w-full bg-surface-2 border-2 border-border rounded-2xl p-5 text-left hover:border-brand-vivid hover:shadow-md transition-all active:scale-95 disabled:opacity-50"
               >
-                <div className="text-3xl mb-2">🏠</div>
-                <p className="font-semibold text-ink text-base">Busco servicios</p>
-                <p className="text-sm text-muted mt-0.5">Necesito contratar un profesional para mi hogar</p>
+                <span className="cat-icon" style={{ marginBottom: "var(--s-2)" }}>
+                  <Icon name="home" className="ico" />
+                </span>
+                <p className="font-semibold text-ink text-base mt-3">Busco servicios</p>
+                <p className="text-sm text-ink-soft mt-0.5">Necesito contratar un profesional para mi hogar</p>
               </button>
 
               <button
                 onClick={() => handleRole("professional")}
                 disabled={loading}
-                className="w-full bg-surface border-2 border-border rounded-2xl p-5 text-left hover:border-primary hover:shadow-md transition-all active:scale-95 disabled:opacity-50"
+                className="w-full bg-surface-2 border-2 border-border rounded-2xl p-5 text-left hover:border-brand-vivid hover:shadow-md transition-all active:scale-95 disabled:opacity-50"
               >
-                <div className="text-3xl mb-2">🔧</div>
-                <p className="font-semibold text-ink text-base">Soy profesional</p>
-                <p className="text-sm text-muted mt-0.5">Ofrezco servicios y quiero conseguir clientes</p>
+                <span className="cat-icon" style={{ marginBottom: "var(--s-2)" }}>
+                  <Icon name="hammer" className="ico" />
+                </span>
+                <p className="font-semibold text-ink text-base mt-3">Soy profesional</p>
+                <p className="text-sm text-ink-soft mt-0.5">Ofrezco servicios y quiero conseguir clientes</p>
               </button>
             </div>
           </>

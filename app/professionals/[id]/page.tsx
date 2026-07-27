@@ -1,5 +1,7 @@
 import Link from "next/link";
 import NavBottom from "@/components/NavBottom";
+import Button from "@/components/ui/Button";
+import Icon from "@/components/icons/Icon";
 import { getProfessional } from "@/lib/api";
 
 export default async function ProfessionalPage({ params }: { params: Promise<{ id: string }> }) {
@@ -8,23 +10,29 @@ export default async function ProfessionalPage({ params }: { params: Promise<{ i
 
   if (!professional) {
     return (
-      <div className="flex flex-col min-h-screen bg-cream">
+      <div className="flex flex-col min-h-screen bg-page">
         <div className="px-4 pt-5 pb-24 max-w-lg mx-auto w-full">
-          <Link href="/" className="text-primary text-sm font-medium">← Volver</Link>
-          <p className="text-muted mt-6 text-center">Profesional no encontrado.</p>
+          <Link href="/" className="text-brand-vivid text-sm font-medium">← Volver</Link>
+          <p className="text-ink-soft mt-6 text-center">Profesional no encontrado.</p>
         </div>
         <NavBottom />
       </div>
     );
   }
 
+  const ratingText = professional.rating > 0 ? `★ ${professional.rating}` : "Sin calificación";
+
   return (
-    <div className="flex flex-col min-h-screen bg-cream">
+    <div className="flex flex-col min-h-screen bg-page">
 
       {/* Header */}
-      <header className="bg-surface px-4 pt-4 pb-3 flex items-center gap-3 sticky top-0 z-10 border-b border-border">
-        <Link href="/" className="text-primary font-medium text-sm">←</Link>
-        <h1 className="text-base font-semibold text-ink truncate">{professional.name}</h1>
+      <header className="topbar">
+        <div className="topbar__in">
+          <Link href="/" className="text-brand-vivid" aria-label="Volver">
+            <Icon name="arrow" style={{ transform: "rotate(180deg)", width: 18, height: 18 }} />
+          </Link>
+          <h1 className="text-base font-semibold text-ink truncate">{professional.name}</h1>
+        </div>
       </header>
 
       <main className="flex-1 px-4 pt-5 pb-32 md:pb-8 max-w-5xl mx-auto w-full">
@@ -35,41 +43,37 @@ export default async function ProfessionalPage({ params }: { params: Promise<{ i
           {/* Left column */}
           <div className="space-y-4">
             {/* Avatar + info principal */}
-            <div className="bg-surface rounded-2xl p-5 shadow-sm flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                <span className="text-2xl font-bold text-primary">{professional.name[0]}</span>
+            <div className="bg-surface-2 border border-border rounded-2xl p-5 shadow-sm flex items-center gap-4">
+              <div className="pro-av" style={{ width: 64, height: 64, fontSize: "var(--t-h2)", marginBottom: 0 }}>
+                {professional.name[0]?.toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-lg font-bold text-ink">{professional.name}</h2>
-                  {professional.verified && (
-                    <span className="text-[11px] bg-verified/10 text-verified font-semibold px-2 py-0.5 rounded-full">
-                      verificado ✓
-                    </span>
-                  )}
+                  <h2 className="serif text-lg font-bold text-ink">{professional.name}</h2>
+                  {professional.verified && <span className="badge badge--verif">✓ verificado</span>}
                 </div>
-                <p className="text-sm text-muted capitalize mt-0.5">{professional.trade} · {professional.zone}</p>
-                <p className="text-sm text-amber-500 font-medium mt-1">{professional.rating > 0 ? `★ ${professional.rating}` : "Sin calificación"}</p>
+                <p className="text-sm text-ink-soft capitalize mt-0.5">{professional.trade} · {professional.zone}</p>
+                <p className="text-sm font-medium mt-1" style={{ color: "var(--amber)" }}>{ratingText}</p>
               </div>
             </div>
 
             {/* Sobre mí */}
             {professional.bio && (
-              <div className="bg-surface rounded-2xl p-5 shadow-sm">
+              <div className="bg-surface-2 border border-border rounded-2xl p-5 shadow-sm">
                 <h3 className="text-sm font-semibold text-ink mb-2">Sobre mí</h3>
-                <p className="text-sm text-muted leading-relaxed">{professional.bio}</p>
+                <p className="text-sm text-ink-mid leading-relaxed">{professional.bio}</p>
               </div>
             )}
 
             {/* Stats */}
             <div className="grid grid-cols-3 gap-3">
               {[
-                { label: "Calificación", value: professional.rating > 0 ? `★ ${professional.rating}` : "Sin calificación" },
+                { label: "Calificación", value: ratingText },
                 { label: "Zona", value: professional.zone },
                 { label: "Estado", value: professional.verified ? "Verificado" : "No verificado" },
               ].map((stat) => (
-                <div key={stat.label} className="bg-surface rounded-2xl p-3 shadow-sm text-center">
-                  <p className="text-xs text-muted mb-1">{stat.label}</p>
+                <div key={stat.label} className="bg-surface-2 border border-border rounded-2xl p-3 shadow-sm text-center">
+                  <p className="text-xs text-ink-soft mb-1">{stat.label}</p>
                   <p className="text-xs font-semibold text-ink leading-tight">{stat.value}</p>
                 </div>
               ))}
@@ -78,17 +82,14 @@ export default async function ProfessionalPage({ params }: { params: Promise<{ i
 
           {/* Right column — sticky CTA on desktop */}
           <div className="hidden md:block">
-            <div className="sticky top-20 bg-surface rounded-2xl p-5 shadow-sm space-y-4">
+            <div className="sticky top-20 bg-surface-2 border border-border rounded-2xl p-5 shadow-sm space-y-4">
               <div>
                 <p className="text-sm font-semibold text-ink">{professional.name}</p>
-                <p className="text-xs text-muted capitalize">{professional.trade} · {professional.zone}</p>
-                <p className="text-sm text-amber-500 font-medium mt-1">{professional.rating > 0 ? `★ ${professional.rating}` : "Sin calificación"}</p>
+                <p className="text-xs text-ink-soft capitalize">{professional.trade} · {professional.zone}</p>
+                <p className="text-sm font-medium mt-1" style={{ color: "var(--amber)" }}>{ratingText}</p>
               </div>
-              <Link
-                href={`/professionals/${id}/request`}
-                className="block w-full bg-primary text-surface text-center font-semibold py-3.5 rounded-2xl shadow-md hover:bg-primary/90 transition-colors"
-              >
-                Solicitar presupuesto
+              <Link href={`/professionals/${id}/request`} className="block">
+                <Button variant="accent" size="lg" block>Solicitar presupuesto</Button>
               </Link>
             </div>
           </div>
@@ -97,13 +98,15 @@ export default async function ProfessionalPage({ params }: { params: Promise<{ i
       </main>
 
       {/* Mobile CTA fijo */}
-      <div className="md:hidden fixed bottom-16 left-0 right-0 px-4 pb-2 bg-gradient-to-t from-cream via-cream/90 to-transparent pt-4">
+      <div
+        className="md:hidden fixed bottom-16 left-0 right-0 px-4 pb-2 pt-4"
+        style={{ background: "linear-gradient(to top, var(--page), color-mix(in srgb, var(--page) 90%, transparent), transparent)" }}
+      >
         <div className="max-w-lg mx-auto">
-          <Link
-            href={`/professionals/${id}/request`}
-            className="block w-full bg-primary text-surface text-center font-semibold py-3.5 rounded-2xl shadow-md active:scale-95 transition-transform"
-          >
-            Solicitar presupuesto
+          <Link href={`/professionals/${id}/request`} className="block">
+            <Button variant="accent" size="lg" block className="active:scale-95 transition-transform">
+              Solicitar presupuesto
+            </Button>
           </Link>
         </div>
       </div>

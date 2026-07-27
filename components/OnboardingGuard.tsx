@@ -21,6 +21,6 @@ export default function OnboardingGuard() {
     setReady(true);
   }, [isLoaded, user, router]);
 
-  if (!ready) return <div className="fixed inset-0 bg-cream z-50" />;
+  if (!ready) return <div className="fixed inset-0 bg-page z-50" />;
   return null;
 }

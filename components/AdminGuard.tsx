@@ -18,6 +18,6 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
       .catch(() => router.replace("/"));
   }, [isLoaded, isSignedIn, getToken, router]);
 
-  if (!ready) return <div className="fixed inset-0 bg-cream z-50" />;
+  if (!ready) return <div className="fixed inset-0 bg-page z-50" />;
   return <>{children}</>;
 }

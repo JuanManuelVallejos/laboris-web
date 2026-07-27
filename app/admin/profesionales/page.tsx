@@ -10,6 +10,8 @@ import {
   type PaginatedResponse,
 } from "@/lib/api";
 import type { Professional } from "@/lib/types";
+import { Badge } from "@/components/ui/Badge";
+import Button from "@/components/ui/Button";
 
 export default function AdminProfesionalesPage() {
   const { getToken } = useAuth();
@@ -53,94 +55,75 @@ export default function AdminProfesionalesPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-bold text-ink">Profesionales</h1>
+        <h1 className="serif text-xl font-bold text-ink">Profesionales</h1>
         {data && (
-          <p className="text-sm text-muted">{data.total} en total</p>
+          <p className="text-sm text-ink-soft">{data.total} en total</p>
         )}
       </div>
 
-      <div className="bg-surface rounded-2xl border border-border overflow-hidden">
+      <div className="bg-surface-2 rounded-2xl border border-border overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-border bg-cream">
-              <th className="text-left px-4 py-3 text-xs font-semibold text-muted uppercase tracking-wide">Nombre</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-muted uppercase tracking-wide">Oficio</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-muted uppercase tracking-wide">Zona</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-muted uppercase tracking-wide">Rating</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-muted uppercase tracking-wide">Estado</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-muted uppercase tracking-wide">Verificado</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-muted uppercase tracking-wide">Acciones</th>
+            <tr className="border-b border-border bg-surface-3">
+              <th className="text-left px-4 py-3 text-xs font-semibold text-ink-soft uppercase tracking-wide">Nombre</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-ink-soft uppercase tracking-wide">Oficio</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-ink-soft uppercase tracking-wide">Zona</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-ink-soft uppercase tracking-wide">Rating</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-ink-soft uppercase tracking-wide">Estado</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-ink-soft uppercase tracking-wide">Verificado</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-ink-soft uppercase tracking-wide">Acciones</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {loading ? (
               <tr>
-                <td colSpan={7} className="px-4 py-10 text-center text-muted">Cargando...</td>
+                <td colSpan={7} className="px-4 py-10 text-center text-ink-soft">Cargando...</td>
               </tr>
             ) : data?.items.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-10 text-center text-muted">No hay profesionales</td>
+                <td colSpan={7} className="px-4 py-10 text-center text-ink-soft">No hay profesionales</td>
               </tr>
             ) : (
               data?.items.map((p) => {
                 const busy = actionLoading === p.id;
                 return (
-                  <tr key={p.id} className={`transition-colors ${p.status === "suspended" ? "bg-red-50/50" : "hover:bg-cream/50"}`}>
+                  <tr
+                    key={p.id}
+                    className="transition-colors hover:bg-surface-3"
+                    style={p.status === "suspended" ? { background: "color-mix(in srgb, var(--brand-alert) 6%, transparent)" } : undefined}
+                  >
                     <td className="px-4 py-3 font-medium text-ink">{p.name}</td>
-                    <td className="px-4 py-3 text-muted capitalize">{p.trade}</td>
-                    <td className="px-4 py-3 text-muted">{p.zone}</td>
-                    <td className="px-4 py-3 text-muted">
+                    <td className="px-4 py-3 text-ink-soft capitalize">{p.trade}</td>
+                    <td className="px-4 py-3 text-ink-soft">{p.zone}</td>
+                    <td className="px-4 py-3 text-ink-soft">
                       {p.rating > 0 ? `★ ${p.rating.toFixed(1)}` : "—"}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                        p.status === "active"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}>
+                      <Badge tone={p.status === "active" ? "verif" : "alert"}>
                         {p.status === "active" ? "Activo" : "Suspendido"}
-                      </span>
+                      </Badge>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                        p.verified
-                          ? "bg-blue-100 text-blue-700"
-                          : "bg-gray-100 text-gray-500"
-                      }`}>
+                      <Badge tone={p.verified ? "verif" : "neutral"}>
                         {p.verified ? "✓ Verificado" : "Sin verificar"}
-                      </span>
+                      </Badge>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => toggleVerify(p)}
-                          disabled={busy}
-                          className="text-xs px-2.5 py-1 rounded-lg border border-border hover:bg-cream transition-colors disabled:opacity-50"
-                        >
+                        <Button variant="secondary" size="sm" onClick={() => toggleVerify(p)} disabled={busy}>
                           {p.verified ? "Desverificar" : "Verificar"}
-                        </button>
-                        <button
-                          onClick={() => toggleStatus(p)}
-                          disabled={busy}
-                          className={`text-xs px-2.5 py-1 rounded-lg border transition-colors disabled:opacity-50 ${
-                            p.status === "active"
-                              ? "border-orange-200 text-orange-600 hover:bg-orange-50"
-                              : "border-green-200 text-green-600 hover:bg-green-50"
-                          }`}
-                        >
+                        </Button>
+                        <Button variant="secondary" size="sm" onClick={() => toggleStatus(p)} disabled={busy}>
                           {p.status === "active" ? "Suspender" : "Reactivar"}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant={deleteConfirm === p.id ? "alert" : "secondary"}
+                          size="sm"
                           onClick={() => handleDelete(p)}
                           disabled={busy}
-                          className={`text-xs px-2.5 py-1 rounded-lg border transition-colors disabled:opacity-50 ${
-                            deleteConfirm === p.id
-                              ? "border-red-400 bg-red-500 text-white"
-                              : "border-red-200 text-red-500 hover:bg-red-50"
-                          }`}
                         >
                           {deleteConfirm === p.id ? "¿Confirmar?" : "Eliminar"}
-                        </button>
+                        </Button>
                       </div>
                     </td>
                   </tr>
@@ -153,23 +136,15 @@ export default function AdminProfesionalesPage() {
 
       {data && data.totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 mt-6">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-            className="px-4 py-2 text-sm rounded-xl border border-border bg-surface hover:bg-cream disabled:opacity-40 transition-colors"
-          >
+          <Button variant="secondary" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
             ← Anterior
-          </button>
-          <span className="text-sm text-muted">
+          </Button>
+          <span className="text-sm text-ink-soft">
             Página {page} de {data.totalPages}
           </span>
-          <button
-            onClick={() => setPage((p) => Math.min(data.totalPages, p + 1))}
-            disabled={page === data.totalPages}
-            className="px-4 py-2 text-sm rounded-xl border border-border bg-surface hover:bg-cream disabled:opacity-40 transition-colors"
-          >
+          <Button variant="secondary" size="sm" onClick={() => setPage((p) => Math.min(data.totalPages, p + 1))} disabled={page === data.totalPages}>
             Siguiente →
-          </button>
+          </Button>
         </div>
       )}
     </div>

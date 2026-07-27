@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="es" data-theme="light">
+<head><meta charset="utf-8"><title>Laboris design system markup reference</title></head>
+<!--
+  CORRECCIÓN (no presente en design-system-reference.html original): los usos de
+  <svg class="ico"><use href="#i-*"></use></svg> no tenían viewBox="0 0 24 24", lo
+  que recorta el ícono porque el sistema de coordenadas del <svg> pasa a ser el
+  tamaño en píxeles de su caja en vez de las 24 unidades en las que están dibujados
+  los paths del sprite. Se agregó viewBox="0 0 24 24" a cada instancia de ícono
+  abajo y en components/icons/Icon.tsx (fuente real de la app).
+-->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <g id="i-droplet" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 10a6 6 0 0 1-12 0c0-3 3-6 6-10z"></path></g>
+  <g id="i-zap" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"></path></g>
+  <g id="i-flame" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c1 3 4 5 4 9a4 4 0 0 1-8 0c0-1 .4-2 1-3 .3 1 1 1.5 1.5 1.5C10 8 11 5 12 3z"></path></g>
+  <g id="i-key" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="16" r="4"></circle><path d="m10.8 13.2 8.2-8.2M16 8l3-3M14 6l3-3"></path></g>
+  <g id="i-paint" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13.5V19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-1h2v1a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-5.5"></path><path d="M3 13.5A5.5 5.5 0 0 1 8.5 8h7A5.5 5.5 0 0 1 21 13.5"></path><path d="M17 3l-2.5 5h5L17 3z"></path></g>
+  <g id="i-wind" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="7" rx="2"></rect><path d="M7 11v8m5-8v8m5-8v8"></path></g>
+  <g id="i-alert" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16h.01"></path></g>
+  <g id="i-more" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="6" cy="6" r="1.6"></circle><circle cx="12" cy="6" r="1.6"></circle><circle cx="18" cy="6" r="1.6"></circle><circle cx="6" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="18" cy="12" r="1.6"></circle><circle cx="6" cy="18" r="1.6"></circle><circle cx="12" cy="18" r="1.6"></circle><circle cx="18" cy="18" r="1.6"></circle></g>
+  <g id="i-bell" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></g>
+  <g id="i-mic" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></g>
+  <g id="i-search" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></g>
+  <g id="i-home" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1Z"></path></g>
+  <g id="i-clip" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"></rect><path d="M9 4h6v3H9zM9 11h6M9 15h4"></path></g>
+  <g id="i-user" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"></path></g>
+  <g id="i-sun" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"></path></g>
+  <g id="i-moon" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"></path></g>
+  <g id="i-arrow" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></g>
+</defs></svg>
+
+<!-- TOP BAR -->
+<header class="topbar"><div class="topbar__in">
+  <span class="wordmark">Labor<em>is</em></span>
+  <small>Sistema de diseño</small>
+  <div class="topbar__spacer"></div>
+  <button class="mode-toggle" id="modeToggle" aria-label="Tema">
+    <span class="seg" data-seg="light"><svg class="ico" viewBox="0 0 24 24"><use href="#i-sun"></use></svg></span>
+    <span class="seg" data-seg="dark"><svg class="ico" viewBox="0 0 24 24"><use href="#i-moon"></use></svg></span>
+  </button>
+</div></header>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="eyebrow">v4A · Verde · borrador para revisión</div>
+    <h1>El sistema de <em>Laboris</em>, la app de oficios.</h1>
+    <p>Tokens, tipografía y los componentes reales que arman la app: tiles de servicios, tarjetas de profesionales, chips de filtro y la barra inferior. Cálido, confiable y del barrio — con el azul alterno a un clic en Tweaks.</p>
+    <div class="meta">
+      <span class="badge">Fraunces + Plus Jakarta Sans</span>
+      <span class="badge">Verde menta · #3EC87A</span>
+      <span class="badge">Claro / oscuro</span>
+      <span class="badge">Quilmes, BA</span>
+    </div>
+  </div>
+
+  <!-- 00 RAZONAMIENTO -->
+  <section class="block">
+    <div class="block__head"><span class="block__num">00</span><h2>Decisiones</h2><p>El porqué detrás del sistema, tomado de tus variantes v4.</p></div>
+    <div class="notes">
+      <div class="note panel"><h4>Verde profundo = confianza</h4><p>#0A3D2E ancla la marca con un tono premium y cálido que la diferencia de las fintech azules. El acento menta #3EC87A aporta energía sin caer en el fluor.</p></div>
+      <div class="note panel"><h4>Fraunces para la voz</h4><p>La serif (negra 900, italic) da carácter artesanal al wordmark y a los títulos de sección. Plus Jakarta Sans mantiene la UI clara y neutra.</p></div>
+      <div class="note panel"><h4>Detalles que se repiten</h4><p>Barra de acento inferior en los tiles, barra degradada superior en las pro-cards y la sombra dura 5px. Son la firma visual del sistema.</p></div>
+      <div class="note panel"><h4>Verde o azul, sin reescribir</h4><p>Toda la marca vive en tokens. El toggle Verde/Azul de Tweaks reproduce tu comparación v4A vs v4B en vivo.</p></div>
+    </div>
+  </section>
+
+  <!-- 01 COLOR -->
+  <section class="block">
+    <div class="block__head"><span class="block__num">01</span><h2>Color</h2><p>Marca verde y neutrales crema. El esquema azul es el alterno (Tweaks).</p></div>
+
+    <div class="sub">Marca — verde (de profundo a menta)</div>
+    <div class="brandbar">
+      <div class="c" style="background:var(--brand-deep);color:#fff">deep</div>
+      <div class="c" style="background:var(--brand-mid);color:#fff">mid</div>
+      <div class="c" style="background:var(--brand-vivid);color:#fff">vivid</div>
+      <div class="c" style="background:var(--brand-accent);color:var(--brand-accent-text)">accent</div>
+      <div class="c" style="background:var(--brand-light);color:var(--brand-mid)">light</div>
+    </div>
+
+    <div class="sub">Neutrales y estado</div>
+    <div class="swrow">
+      <div class="sw"><div class="cap" style="background:var(--page)"></div><div class="meta"><b>Lienzo</b><code>--page</code></div></div>
+      <div class="sw"><div class="cap" style="background:var(--surface)"></div><div class="meta"><b>Superficie</b><code>--surface</code></div></div>
+      <div class="sw"><div class="cap" style="background:var(--surface-2)"></div><div class="meta"><b>Blanco</b><code>--surface-2</code></div></div>
+      <div class="sw"><div class="cap" style="background:var(--ink)"></div><div class="meta"><b>Tinta</b><code>--ink</code></div></div>
+      <div class="sw"><div class="cap" style="background:var(--ink-mid)"></div><div class="meta"><b>Tinta media</b><code>--ink-mid</code></div></div>
+      <div class="sw"><div class="cap" style="background:var(--ink-soft)"></div><div class="meta"><b>Tinta suave</b><code>--ink-soft</code></div></div>
+      <div class="sw"><div class="cap" style="background:var(--brand-alert)"></div><div class="meta"><b>Alerta</b><code>--brand-alert</code></div></div>
+      <div class="sw"><div class="cap" style="background:var(--amber)"></div><div class="meta"><b>Estrella</b><code>--amber</code></div></div>
+    </div>
+  </section>
+
+  <!-- 02 TIPOGRAFÍA -->
+  <section class="block">
+    <div class="block__head"><span class="block__num">02</span><h2>Tipografía</h2><p>Fraunces para marca y títulos · Plus Jakarta Sans para toda la UI.</p></div>
+    <div class="type-spec"><span class="lab">Fraunces · Display</span><span class="ex serif" style="font-size:var(--t-display);font-weight:900">¿Qué necesitás?</span></div>
+    <div class="type-spec"><span class="lab">Fraunces · Título</span><span class="ex serif" style="font-size:var(--t-h2);font-weight:700">Servicios cerca tuyo</span></div>
+    <div class="type-spec"><span class="lab">Fraunces · Sección</span><span class="ex serif" style="font-size:var(--t-h3);font-weight:700">Disponibles ahora</span></div>
+    <div class="type-spec"><span class="lab">Jakarta · Cuerpo</span><span class="ex" style="font-size:var(--t-body);max-width:54ch">Plus Jakarta Sans mantiene listados, etiquetas y descripciones legibles a tamaños chicos en pantalla móvil.</span></div>
+    <div class="type-spec"><span class="lab">Jakarta · Small 14</span><span class="ex" style="font-size:var(--t-sm);color:var(--ink-mid)">Plomero · 1.2 km — verificado</span></div>
+    <div class="type-spec"><span class="lab">Jakarta · Micro 11</span><span class="ex" style="font-size:var(--t-2xs);font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em">Inicio · Buscar · Pedidos</span></div>
+  </section>
+
+  <!-- 03 ESPACIADO / RADIOS / SOMBRA -->
+  <section class="block">
+    <div class="block__head"><span class="block__num">03</span><h2>Espaciado, radios y elevación</h2><p>Escala de 4px, radios escalables y la sombra dura característica.</p></div>
+    <div class="sub">Espaciado</div>
+    <div class="space-demo" id="spaceDemo"></div>
+    <div class="sub">Radios</div>
+    <div class="box-grid">
+      <div class="box-cell" style="border-radius:var(--r-sm)">sm</div>
+      <div class="box-cell" style="border-radius:var(--r-md)">md</div>
+      <div class="box-cell" style="border-radius:var(--r-lg)">lg · tile</div>
+      <div class="box-cell" style="border-radius:var(--r-xl)">xl · card</div>
+      <div class="box-cell" style="border-radius:var(--r-2xl)">2xl</div>
+    </div>
+    <div class="sub">Elevación</div>
+    <div class="box-grid">
+      <div class="box-cell" style="box-shadow:var(--shadow-sm);border-radius:var(--r-lg)">sm</div>
+      <div class="box-cell" style="box-shadow:var(--shadow-md);border-radius:var(--r-lg)">md</div>
+      <div class="box-cell" style="box-shadow:var(--shadow-lg);border-radius:var(--r-lg)">lg</div>
+      <div class="box-cell" style="box-shadow:var(--shadow-hard);border-radius:var(--r-lg);border-color:var(--ink)">hard · firma</div>
+    </div>
+  </section>
+
+  <!-- 04 BOTONES -->
+  <section class="block">
+    <div class="block__head"><span class="block__num">04</span><h2>Botones y CTAs</h2><p>El acento menta es el CTA principal; el verde sólido y el secundario lo acompañan.</p></div>
+    <div class="demo">
+      <button class="btn btn--accent">Llamar ya</button>
+      <button class="btn btn--deep">Pedir presupuesto</button>
+      <button class="btn btn--secondary">Ver perfil</button>
+      <button class="btn btn--ghost">Cancelar</button>
+      <button class="btn btn--alert">Urgente</button>
+    </div>
+    <div class="demo" style="margin-top:var(--s-4)">
+      <button class="btn btn--accent btn--sm">Pequeño</button>
+      <button class="btn btn--accent">Mediano</button>
+      <button class="btn btn--accent btn--lg">Grande</button>
+      <button class="btn btn--deep btn--pill">Continuar<svg class="ico" viewBox="0 0 24 24"><use href="#i-arrow"></use></svg></button>
+      <button class="btn btn--accent" disabled="">Deshabilitado</button>
+    </div>
+  </section>
+
+  <!-- 05 CHIPS + BÚSQUEDA -->
+  <section class="block">
+    <div class="block__head"><span class="block__num">05</span><h2>Filtros y búsqueda</h2><p>Chips de filtro, campo de búsqueda con dictado y campos de formulario.</p></div>
+    <div class="sub">Chips</div>
+    <div class="demo">
+      <span class="chip chip--on">Todos</span>
+      <span class="chip chip--hi">⚡ Urgente</span>
+      <span class="chip">Zona sur</span>
+      <span class="chip">Top calificados</span>
+      <span class="chip">Verificados</span>
+    </div>
+    <div class="sub">Búsqueda + campos</div>
+    <div class="grid-auto">
+      <div class="panel stack">
+        <div class="searchbox">
+          <svg class="s-ico"><use href="#i-search"></use></svg>
+          <input placeholder="Plomero, electricista…">
+          <button class="mic-btn"><svg class="ico" viewBox="0 0 24 24"><use href="#i-mic"></use></svg></button>
+        </div>
+        <div class="field"><label class="field__label">Dirección</label><input class="input" placeholder="Calle y altura"></div>
+        <div class="field"><label class="field__label">Servicio</label><select class="select"><option>Plomería</option><option>Electricidad</option><option>Gas</option></select></div>
+      </div>
+      <div class="panel stack">
+        <div class="field"><label class="field__label">Describí el trabajo</label><textarea class="textarea" placeholder="Pérdida de agua bajo la pileta…"></textarea></div>
+        <div class="row"><span style="font-size:var(--t-xs);color:var(--ink-soft)">Chip de ubicación (sobre verde):</span></div>
+        <div style="background:var(--brand-deep);padding:var(--s-4);border-radius:var(--r-lg)"><span class="loc-chip"><span class="dot"></span>Quilmes, Buenos Aires ›</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 CATEGORÍAS -->
+  <section class="block">
+    <div class="block__head"><span class="block__num">06</span><h2>Tiles de servicio</h2><p>Grilla 4 columnas. Ícono verde, barra de acento inferior; la urgente vira a alerta.</p></div>
+    <div class="cats">
+      <div class="cat-tile"><div class="cat-icon"><svg class="ico" viewBox="0 0 24 24"><use href="#i-droplet"></use></svg></div><span class="cat-label">Plomero</span></div>
+      <div class="cat-tile"><div class="cat-icon"><svg class="ico" viewBox="0 0 24 24"><use href="#i-zap"></use></svg></div><span class="cat-label">Electricista</span></div>
+      <div class="cat-tile"><div class="cat-icon"><svg class="ico" viewBox="0 0 24 24"><use href="#i-flame"></use></svg></div><span class="cat-label">Gasista</span></div>
+      <div class="cat-tile"><div class="cat-icon"><svg class="ico" viewBox="0 0 24 24"><use href="#i-key"></use></svg></div><span class="cat-label">Cerrajero</span></div>
+      <div class="cat-tile"><div class="cat-icon"><svg class="ico" viewBox="0 0 24 24"><use href="#i-paint"></use></svg></div><span class="cat-label">Pintor</span></div>
+      <div class="cat-tile"><div class="cat-icon"><svg class="ico" viewBox="0 0 24 24"><use href="#i-wind"></use></svg></div><span class="cat-label">Aire acond.</span></div>
+      <div class="cat-tile"><div class="cat-icon cat-icon--urgent"><svg class="ico" viewBox="0 0 24 24"><use href="#i-alert"></use></svg></div><span class="cat-label">Urgente 24h</span></div>
+      <div class="cat-tile"><div class="cat-icon"><svg class="ico" viewBox="0 0 24 24"><use href="#i-more"></use></svg></div><span class="cat-label">Ver todos</span></div>
+    </div>
+  </section>
+
+  <!-- 07 PRO CARDS + URGENCIA + BADGES -->
+  <section class="block">
+    <div class="block__head"><span class="block__num">07</span><h2>Profesionales y estados</h2><p>Tarjeta de profesional, tarjeta de urgencia y badges de confianza.</p></div>
+    <div class="sub">Tarjetas de profesional</div>
+    <div class="demo">
+      <div class="pro-card"><div class="pro-av">MG</div><div class="pro-name">Martín G.</div><div class="pro-role">Plomero · 1.2 km</div><div class="pro-rating"><span class="star">★</span><b>4.8</b></div><div class="pro-foot"><span class="badge badge--verif">✓ verif.</span><span class="online">online</span></div></div>
+      <div class="pro-card"><div class="pro-av">LR</div><div class="pro-name">Laura R.</div><div class="pro-role">Electricista · 2 km</div><div class="pro-rating"><span class="star">★</span><b>4.9</b></div><div class="pro-foot"><span class="badge badge--verif">✓ verif.</span><span class="online">online</span></div></div>
+      <div class="pro-card"><div class="pro-av">JF</div><div class="pro-name">Jorge F.</div><div class="pro-role">Gasista · 3.1 km</div><div class="pro-rating"><span class="star">★</span><b>4.7</b></div><div class="pro-foot"><span class="badge badge--verif">✓ verif.</span><span class="online">online</span></div></div>
+    </div>
+    <div class="sub">Tarjeta de urgencia</div>
+    <div style="max-width:360px"><div class="urg-card"><span class="badge badge--alert">24h</span><div class="urg-text"><div class="urg-title">¿Es urgente?</div><div class="urg-sub">Profesionales disponibles ahora</div></div><button class="btn btn--accent btn--sm">Llamar ya</button></div></div>
+    <div class="sub">Badges</div>
+    <div class="demo">
+      <span class="badge badge--verif">✓ verificado</span>
+      <span class="online">online</span>
+      <span class="badge badge--alert">24h</span>
+      <span class="badge badge--neutral">1.2 km</span>
+    </div>
+  </section>
+
+  <!-- 08 NAVEGACIÓN -->
+  <section class="block">
+    <div class="block__head"><span class="block__num">08</span><h2>Navegación</h2><p>Barra inferior persistente, status bar y encabezados de sección.</p></div>
+    <div class="sub">Bottom nav</div>
+    <div class="panel" style="max-width:360px;padding:0;overflow:hidden">
+      <div class="bnav">
+        <div class="bn bn--active"><svg class="ico" viewBox="0 0 24 24"><use href="#i-home"></use></svg><span>inicio</span></div>
+        <div class="bn"><svg class="ico" viewBox="0 0 24 24"><use href="#i-search"></use></svg><span>buscar</span></div>
+        <div class="bn"><svg class="ico" viewBox="0 0 24 24"><use href="#i-clip"></use></svg><span>pedidos</span></div>
+        <div class="bn"><svg class="ico" viewBox="0 0 24 24"><use href="#i-user"></use></svg><span>perfil</span></div>
+      </div>
+    </div>
+    <div class="sub">Encabezado de sección + status bar</div>
+    <div class="grid-auto">
+      <div class="panel"><div class="sec-head"><span class="sec-title">Cerca tuyo</span><span class="sec-link">ver más →</span></div></div>
+      <div class="panel" style="padding:0;overflow:hidden;border-radius:var(--r-lg)"><div class="statusbar"><span>9:41</span><span style="display:inline-flex;gap:5px;align-items:center"><span class="sig"><i style="height:4px"></i><i style="height:7px"></i><i style="height:10px;opacity:.4"></i></span><span class="batt"></span></span></div></div>
+    </div>
+  </section>
+
+  <!-- 09 SHOWCASE -->
+  <section class="block" style="border-bottom:none">
+    <div class="block__head"><span class="block__num">09</span><h2>El sistema, armado</h2><p>La pantalla de inicio reconstruida con los componentes de arriba.</p></div>
+    <div class="showcase">
+      <div class="phone">
+        <div class="statusbar"><span>9:41</span><span style="display:inline-flex;gap:5px;align-items:center"><span class="sig"><i style="height:4px"></i><i style="height:7px"></i><i style="height:10px;opacity:.4"></i></span><span class="batt"></span></span></div>
+        <div class="hero" style="margin:0;border-radius:0;padding:13px 16px 18px">
+          <div class="row" style="justify-content:space-between;align-items:flex-start">
+            <span class="wordmark on-deep" style="font-size:24px">Labor<em>is</em></span>
+            <span class="notif-btn"><svg class="ico" viewBox="0 0 24 24"><use href="#i-bell"></use></svg><span class="pip"></span></span>
+          </div>
+          <div style="font-size:12px;color:rgba(255,255,255,.55);margin:14px 0 0">Hola, <strong style="color:rgba(255,255,255,.92)">¿qué necesitás hoy?</strong></div>
+          <div class="searchbox" style="margin-top:11px">
+            <svg class="s-ico"><use href="#i-search"></use></svg>
+            <input placeholder="Plomero, electricista…">
+            <button class="mic-btn"><svg class="ico" viewBox="0 0 24 24"><use href="#i-mic"></use></svg></button>
+          </div>
+          <div style="margin-top:11px"><span class="loc-chip"><span class="dot"></span>Quilmes, Buenos Aires ›</span></div>
+        </div>
+        <div class="body">
+          <div class="scrollx" style="gap:6px;padding:13px 15px 0">
+            <span class="chip chip--on">Todos</span><span class="chip chip--hi">⚡ Urgente</span><span class="chip">Zona sur</span><span class="chip">Top calificados</span>
+          </div>
+          <div class="sec-head" style="padding:16px 15px 9px"><span class="sec-title" style="font-size:15px">Servicios</span><span class="sec-link">ver todos →</span></div>
+          <div class="cats" style="grid-template-columns:repeat(4,1fr);gap:7px;padding:0 15px;max-width:none">
+            <div class="cat-tile"><div class="cat-icon" style="width:50px;height:50px"><svg class="ico" style="width:20px;height:20px"><use href="#i-droplet"></use></svg></div><span class="cat-label">Plomero</span></div>
+            <div class="cat-tile"><div class="cat-icon" style="width:50px;height:50px"><svg class="ico" style="width:20px;height:20px"><use href="#i-zap"></use></svg></div><span class="cat-label">Electric.</span></div>
+            <div class="cat-tile"><div class="cat-icon" style="width:50px;height:50px"><svg class="ico" style="width:20px;height:20px"><use href="#i-flame"></use></svg></div><span class="cat-label">Gasista</span></div>
+            <div class="cat-tile"><div class="cat-icon" style="width:50px;height:50px"><svg class="ico" style="width:20px;height:20px"><use href="#i-key"></use></svg></div><span class="cat-label">Cerrajero</span></div>
+            <div class="cat-tile"><div class="cat-icon" style="width:50px;height:50px"><svg class="ico" style="width:20px;height:20px"><use href="#i-paint"></use></svg></div><span class="cat-label">Pintor</span></div>
+            <div class="cat-tile"><div class="cat-icon" style="width:50px;height:50px"><svg class="ico" style="width:20px;height:20px"><use href="#i-wind"></use></svg></div><span class="cat-label">Aire</span></div>
+            <div class="cat-tile"><div class="cat-icon cat-icon--urgent" style="width:50px;height:50px"><svg class="ico" style="width:20px;height:20px"><use href="#i-alert"></use></svg></div><span class="cat-label">Urgente</span></div>
+            <div class="cat-tile"><div class="cat-icon" style="width:50px;height:50px"><svg class="ico" style="width:20px;height:20px"><use href="#i-more"></use></svg></div><span class="cat-label">Ver todos</span></div>
+          </div>
+          <div style="padding:14px 15px 2px"><div class="urg-card"><span class="badge badge--alert">24h</span><div class="urg-text"><div class="urg-title">¿Es urgente?</div><div class="urg-sub">Profesionales disponibles ahora</div></div><button class="btn btn--accent btn--sm">Llamar ya</button></div></div>
+          <div class="sec-head" style="padding:16px 15px 9px"><span class="sec-title" style="font-size:15px">Cerca tuyo</span><span class="sec-link">ver más →</span></div>
+          <div class="scrollx" style="gap:9px;padding:0 15px 16px">
+            <div class="pro-card" style="width:132px"><div class="pro-av">MG</div><div class="pro-name">Martín G.</div><div class="pro-role">Plomero · 1.2 km</div><div class="pro-rating"><span class="star">★</span><b>4.8</b></div><div class="pro-foot"><span class="badge badge--verif">✓</span><span class="online">online</span></div></div>
+            <div class="pro-card" style="width:132px"><div class="pro-av">LR</div><div class="pro-name">Laura R.</div><div class="pro-role">Electric. · 2 km</div><div class="pro-rating"><span class="star">★</span><b>4.9</b></div><div class="pro-foot"><span class="badge badge--verif">✓</span><span class="online">online</span></div></div>
+            <div class="pro-card" style="width:132px"><div class="pro-av">JF</div><div class="pro-name">Jorge F.</div><div class="pro-role">Gasista · 3.1 km</div><div class="pro-rating"><span class="star">★</span><b>4.7</b></div><div class="pro-foot"><span class="badge badge--verif">✓</span><span class="online">online</span></div></div>
+          </div>
+          <div class="bnav">
+            <div class="bn bn--active"><svg class="ico" viewBox="0 0 24 24"><use href="#i-home"></use></svg><span>inicio</span></div>
+            <div class="bn"><svg class="ico" viewBox="0 0 24 24"><use href="#i-search"></use></svg><span>buscar</span></div>
+            <div class="bn"><svg class="ico" viewBox="0 0 24 24"><use href="#i-clip"></use></svg><span>pedidos</span></div>
+            <div class="bn"><svg class="ico" viewBox="0 0 24 24"><use href="#i-user"></use></svg><span>perfil</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="legend panel">
+        <div class="item"><span class="n">①</span><div><b>Hero verde + búsqueda</b><p>Wordmark Fraunces, saludo, búsqueda con dictado y chip de zona.</p></div></div>
+        <div class="item"><span class="n">②</span><div><b>Chips de filtro</b><p>Activo en verde profundo, urgente en acento menta.</p></div></div>
+        <div class="item"><span class="n">③</span><div><b>Tiles de servicio</b><p>8 oficios, barra de acento inferior, urgente en alerta.</p></div></div>
+        <div class="item"><span class="n">④</span><div><b>Tarjeta de urgencia</b><p>Banda verde con CTA menta para el camino rápido 24h.</p></div></div>
+        <div class="item"><span class="n">⑤</span><div><b>Profesionales cercanos</b><p>Pro-cards con rating, verificación y estado online.</p></div></div>
+        <div class="item"><span class="n">⑥</span><div><b>Bottom nav</b><p>Inicio · Buscar · Pedidos · Perfil, persistente.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p>Sistema de diseño de Laboris · v4A Verde — reconstruido fielmente desde tu proyecto de Figma Make. Usá el toggle de tema (arriba) y el botón <b>Tweaks</b> para cambiar entre marca Verde y Azul (v4A/v4B) y ajustar la redondez. Próximos pasos posibles: pantallas de detalle de profesional, flujo de pedido y perfil; o exportar los tokens a CSS/Tailwind para el equipo.</p>
+  </footer>
+
+</div>
+
+<div id="tweaks-root"></div>
+
+<script>
+(function () {
+  const root = document.documentElement;
+  root.setAttribute('data-theme', localStorage.getItem('lab-theme') || 'light');
+  const tog = document.getElementById('modeToggle');
+  function paint(){ const c = root.getAttribute('data-theme'); tog.querySelectorAll('.seg').forEach(s => s.classList.toggle('on', s.dataset.seg === c)); }
+  paint();
+  tog.addEventListener('click', () => {
+    const n = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', n); localStorage.setItem('lab-theme', n); paint();
+  });
+})();
+(function () {
+  const sizes = [['s-1',4],['s-2',8],['s-3',12],['s-4',16],['s-6',24],['s-8',32],['s-12',48],['s-16',64]];
+  const wrap = document.getElementById('spaceDemo');
+  sizes.forEach(([n,px]) => { const r = document.createElement('div'); r.className='r'; r.innerHTML = '<span class="lab">--'+n+' · '+px+'px</span><span class="bar" style="width:'+px+'px"></span>'; wrap.appendChild(r); });
+})();
+</script>
+
+<script src="c6dd7632-cf74-4606-8abf-f60860414eef" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="582414a3-6374-484f-84d2-d978d29342a3" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="5204c9e9-38bf-4e3c-b61f-52a1dd051b65" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="e0d14235-4da4-447a-bf1c-71320467c3de"></script>
+<script type="text/babel" src="5b84697a-7ad4-468b-bc8b-cff3d4b8e499"></script>
+
+
+
+</body></html>"
+  </script>
+</body>
+</html</body></html>

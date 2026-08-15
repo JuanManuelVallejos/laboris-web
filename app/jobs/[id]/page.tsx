@@ -236,9 +236,11 @@ function ActionPanel({
   const [visitTime, setVisitTime] = useState("");
   const [chargeForVisit, setChargeForVisit] = useState(false);
   const [reviewingVisit, setReviewingVisit] = useState(false);
+  const [visitFormError, setVisitFormError] = useState("");
   const [reworkVisitDay, setReworkVisitDay] = useState("");
   const [reworkVisitTime, setReworkVisitTime] = useState("");
   const [reviewingReworkVisit, setReviewingReworkVisit] = useState(false);
+  const [reworkVisitFormError, setReworkVisitFormError] = useState("");
   const [visitAmount, setVisitAmount] = useState("");
   const [workAmount, setWorkAmount] = useState("");
   const [workDesc, setWorkDesc] = useState("");
@@ -337,16 +339,19 @@ function ActionPanel({
                   <div className="flex gap-2">
                     <TextInput
                       type="date" value={visitDay} min={new Date().toISOString().slice(0, 10)}
-                      onChange={(e) => setVisitDay(e.target.value)} className="flex-1"
+                      onChange={(e) => { setVisitDay(e.target.value); setVisitFormError(""); }} className="flex-1"
                     />
-                    <TextInput type="time" value={visitTime} onChange={(e) => setVisitTime(e.target.value)} className="w-28" />
+                    <TextInput
+                      type="time" value={visitTime}
+                      onChange={(e) => { setVisitTime(e.target.value); setVisitFormError(""); }} className="w-28"
+                    />
                   </div>
                   <div className="mode-toggle" style={{ display: "flex", width: "100%" }}>
                     <button
                       type="button"
                       className={`seg ${!chargeForVisit ? "on" : ""}`}
                       style={{ flex: 1, height: 30, fontSize: 12, fontWeight: 600 }}
-                      onClick={() => setChargeForVisit(false)}
+                      onClick={() => { setChargeForVisit(false); setVisitFormError(""); }}
                     >
                       Sin cotización
                     </button>
@@ -354,7 +359,7 @@ function ActionPanel({
                       type="button"
                       className={`seg ${chargeForVisit ? "on" : ""}`}
                       style={{ flex: 1, height: 30, fontSize: 12, fontWeight: 600 }}
-                      onClick={() => setChargeForVisit(true)}
+                      onClick={() => { setChargeForVisit(true); setVisitFormError(""); }}
                     >
                       Con cotización
                     </button>
@@ -362,19 +367,31 @@ function ActionPanel({
                   {chargeForVisit && (
                     <TextInput
                       type="number" placeholder="Monto de la visita ($)"
-                      value={visitAmount} onChange={(e) => setVisitAmount(e.target.value)} min="0"
+                      value={visitAmount}
+                      onChange={(e) => { setVisitAmount(e.target.value); setVisitFormError(""); }}
+                      min="0"
                     />
                   )}
                   <Button
                     variant="deep" size="sm" block
-                    onClick={() => setReviewingVisit(true)}
-                    disabled={
-                      !isFutureDateTime(visitDay, visitTime) ||
-                      (chargeForVisit && (!visitAmount || parseFloat(visitAmount) <= 0))
-                    }
+                    onClick={() => {
+                      if (!isFutureDateTime(visitDay, visitTime)) {
+                        setVisitFormError("Elegí una fecha y hora futuras para continuar.");
+                        return;
+                      }
+                      if (chargeForVisit && (!visitAmount || parseFloat(visitAmount) <= 0)) {
+                        setVisitFormError("Ingresá un monto válido para la cotización.");
+                        return;
+                      }
+                      setVisitFormError("");
+                      setReviewingVisit(true);
+                    }}
                   >
                     Revisar fecha →
                   </Button>
+                  {visitFormError && (
+                    <p className="text-xs text-center" style={{ color: "var(--brand-alert)" }}>{visitFormError}</p>
+                  )}
                 </>
               ) : (
                 <>
@@ -508,17 +525,29 @@ function ActionPanel({
                   <div className="flex gap-2">
                     <TextInput
                       type="date" value={reworkVisitDay} min={new Date().toISOString().slice(0, 10)}
-                      onChange={(e) => setReworkVisitDay(e.target.value)} className="flex-1"
+                      onChange={(e) => { setReworkVisitDay(e.target.value); setReworkVisitFormError(""); }} className="flex-1"
                     />
-                    <TextInput type="time" value={reworkVisitTime} onChange={(e) => setReworkVisitTime(e.target.value)} className="w-28" />
+                    <TextInput
+                      type="time" value={reworkVisitTime}
+                      onChange={(e) => { setReworkVisitTime(e.target.value); setReworkVisitFormError(""); }} className="w-28"
+                    />
                   </div>
                   <Button
                     variant="deep" size="sm" block
-                    onClick={() => setReviewingReworkVisit(true)}
-                    disabled={!isFutureDateTime(reworkVisitDay, reworkVisitTime)}
+                    onClick={() => {
+                      if (!isFutureDateTime(reworkVisitDay, reworkVisitTime)) {
+                        setReworkVisitFormError("Elegí una fecha y hora futuras para continuar.");
+                        return;
+                      }
+                      setReworkVisitFormError("");
+                      setReviewingReworkVisit(true);
+                    }}
                   >
                     Revisar fecha →
                   </Button>
+                  {reworkVisitFormError && (
+                    <p className="text-xs text-center" style={{ color: "var(--brand-alert)" }}>{reworkVisitFormError}</p>
+                  )}
                 </>
               ) : (
                 <>
@@ -700,7 +729,7 @@ function Chat({
     setSending(true);
     try {
       const msg = await sendMessage(requestId, input.trim(), getToken);
-      setMessages((prev) => [...prev, msg]);
+      setMessages((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
       setInput("");
     } finally {
       setSending(false);

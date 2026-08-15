@@ -11,7 +11,7 @@ import { TextInput, Textarea } from "@/components/ui/Field";
 import Icon from "@/components/icons/Icon";
 import { JOB_STATUS_TONE } from "@/lib/status";
 import {
-  getJob, getMessages, sendMessage,
+  getJob, getMessages, sendMessage, messagesStreamUrl,
   scheduleVisit, confirmVisit, declineVisit, submitVisitQuote, skipVisit,
   payVisit, completeVisit, submitWorkQuote,
   approveWorkQuote, startWork, deliverWork,
@@ -19,6 +19,7 @@ import {
   acceptRework, scheduleReworkVisit, confirmReworkVisit, declineReworkVisit,
   approveDelivery, cancelJob,
 } from "@/lib/api";
+import { useEventStream } from "@/lib/useEventStream";
 import type { Job, JobStatus, Message, ReworkRecord } from "@/lib/types";
 
 // ─── Labels ──────────────────────────────────────────────────────────────────
@@ -378,9 +379,9 @@ function ActionPanel({
               ) : (
                 <>
                   <p className="text-xs font-medium text-ink">Confirmar visita</p>
-                  <div className="rounded-xl px-3 py-2.5 space-y-1" style={{ background: "var(--brand-light)" }}>
+                  <div className="review-box rounded-xl px-3 py-2.5 space-y-1">
                     <div>
-                      <p className="text-xs mb-0.5" style={{ color: "var(--brand-mid)" }}>Fecha seleccionada</p>
+                      <p className="review-box__label text-xs mb-0.5">Fecha seleccionada</p>
                       <p className="text-sm font-semibold text-ink">
                         {new Date(`${visitDay}T${visitTime}`).toLocaleString("es-AR", {
                           weekday: "long", day: "numeric", month: "long",
@@ -389,7 +390,7 @@ function ActionPanel({
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs mb-0.5" style={{ color: "var(--brand-mid)" }}>Cotización</p>
+                      <p className="review-box__label text-xs mb-0.5">Cotización</p>
                       <p className="text-sm font-semibold text-ink">
                         {chargeForVisit ? fmt(parseFloat(visitAmount)) : "Sin cotización"}
                       </p>
@@ -522,8 +523,8 @@ function ActionPanel({
               ) : (
                 <>
                   <p className="text-xs font-medium text-ink">Confirmar fecha del retrabajo</p>
-                  <div className="rounded-xl px-3 py-2.5" style={{ background: "var(--brand-light)" }}>
-                    <p className="text-xs mb-0.5" style={{ color: "var(--brand-mid)" }}>Fecha seleccionada</p>
+                  <div className="review-box rounded-xl px-3 py-2.5">
+                    <p className="review-box__label text-xs mb-0.5">Fecha seleccionada</p>
                     <p className="text-sm font-semibold text-ink">
                       {new Date(`${reworkVisitDay}T${reworkVisitTime}`).toLocaleString("es-AR", {
                         weekday: "long", day: "numeric", month: "long",
@@ -680,6 +681,15 @@ function Chat({
   useEffect(() => {
     getMessages(requestId, getToken).then(setMessages);
   }, [requestId, getToken]);
+
+  useEventStream<Message>(
+    messagesStreamUrl(requestId),
+    getToken,
+    (msg) => {
+      setMessages((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
+    },
+    { pauseWhenHidden: false }
+  );
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });

@@ -6,10 +6,12 @@ import { useEffect, useRef, useState } from "react";
 import Icon from "@/components/icons/Icon";
 import Button from "@/components/ui/Button";
 import { useTheme } from "@/lib/useTheme";
+import { useEventStream } from "@/lib/useEventStream";
 import {
   getUnreadCount,
   getNotifications,
   markAllNotificationsRead,
+  notificationsStreamUrl,
   type Notification,
 } from "@/lib/api";
 
@@ -49,10 +51,25 @@ function NotificationBell() {
 
   useEffect(() => {
     if (!isSignedIn) return;
-    const fetchCount = () =>
+    getUnreadCount(getToken).then(setUnread).catch(() => {});
+  }, [isSignedIn, getToken]);
+
+  useEventStream<Notification>(
+    isSignedIn ? notificationsStreamUrl() : null,
+    getToken,
+    () => {
+      setUnread((c) => c + 1);
+    },
+    { pauseWhenHidden: true }
+  );
+
+  // Fallback de baja frecuencia por si el stream queda trabado — ya no es el
+  // mecanismo principal, solo una red de seguridad.
+  useEffect(() => {
+    if (!isSignedIn) return;
+    const interval = setInterval(() => {
       getUnreadCount(getToken).then(setUnread).catch(() => {});
-    fetchCount();
-    const interval = setInterval(fetchCount, 30_000);
+    }, 120_000);
     return () => clearInterval(interval);
   }, [isSignedIn, getToken]);
 

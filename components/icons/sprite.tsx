@@ -3,9 +3,9 @@ export const ICON_NAMES = [
   "zap",
   "flame",
   "key",
-  "paint",
-  "wind",
   "hammer",
+  "wind",
+  "saw",
   "alert",
   "more",
   "bell",
@@ -42,19 +42,20 @@ export default function IconSprite() {
           <circle cx="8" cy="16" r="4" />
           <path d="m10.8 13.2 8.2-8.2M16 8l3-3M14 6l3-3" />
         </g>
-        <g id="i-paint" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M3 13.5V19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-1h2v1a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-5.5" />
-          <path d="M3 13.5A5.5 5.5 0 0 1 8.5 8h7A5.5 5.5 0 0 1 21 13.5" />
-          <path d="M17 3l-2.5 5h5L17 3z" />
-        </g>
         <g id="i-wind" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
           <rect x="3" y="4" width="18" height="7" rx="2" />
           <path d="M7 11v8m5-8v8m5-8v8" />
         </g>
-        {/* Extensión propia de Laboris — no existe en el sprite original del design system, agregado para el oficio "Carpintero" con el mismo estilo de trazo */}
+        {/* Extensión propia de Laboris — no existe en el sprite original del design system, agregado para el oficio "Pintor" con el mismo estilo de trazo */}
         <g id="i-hammer" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
           <rect x="10" y="3" width="10" height="6" rx="1.5" transform="rotate(45 15 6)" />
           <path d="M12 9 5 21" />
+        </g>
+        {/* Extensión propia de Laboris — no existe en el sprite original del design system, agregado para el oficio "Carpintero" con el mismo estilo de trazo */}
+        <g id="i-saw" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M6 18a2.5 2.5 0 1 1 3-2.5" />
+          <path d="M6 18 21 4" />
+          <path d="M6 18 8 16 7.5 14.5 10 12.5 9.5 11 12 9 11.5 7.5 14 5.5 21 4" />
         </g>
         <g id="i-alert" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="9" />

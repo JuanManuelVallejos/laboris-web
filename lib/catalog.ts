@@ -13,9 +13,9 @@ export const TRADES: Trade[] = [
   { label: "Electricista", value: "electricista", icon: "zap" },
   { label: "Gasista",      value: "gasista",      icon: "flame" },
   { label: "Cerrajero",    value: "cerrajero",    icon: "key" },
-  { label: "Pintor",       value: "pintor",       icon: "paint" },
+  { label: "Pintor",       value: "pintor",       icon: "hammer" },
   { label: "Aire acond.",  value: "aire acond.",  icon: "wind" },
-  { label: "Carpintero",   value: "carpintero",   icon: "hammer" },
+  { label: "Carpintero",   value: "carpintero",   icon: "saw" },
 ];
 
 /** Opción libre disponible en los formularios de alta/edición de profesional, sin ícono de categoría en el home. */

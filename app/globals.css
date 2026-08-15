@@ -360,6 +360,12 @@ h1, h2, h3, h4 { margin: 0; line-height: 1.5; color: var(--ink); }
   [data-theme="dark"] .mode-toggle .seg.on { background: rgba(62,200,122,.16); color: var(--brand-accent); }
   .mode-toggle .ico { width: 15px; height: 15px; }
 
+  /* ---------- Review box (confirmar fecha/cotización antes de proponer) ---------- */
+  .review-box { background: var(--brand-light); }
+  [data-theme="dark"] .review-box { background: rgba(62,200,122,.14); }
+  .review-box__label { color: var(--brand-mid); }
+  [data-theme="dark"] .review-box__label { color: var(--brand-accent); }
+
   /* ---------- Hero band ---------- */
   .hero { background: var(--brand-deep); color: var(--on-brand); border-radius: var(--r-2xl); padding: var(--s-6) var(--s-4); position: relative; overflow: hidden; }
   .hero::after { content: ""; position: absolute; top: -80px; right: -80px; width: 280px; height: 280px; border-radius: 50%; background: rgba(255,255,255,.04); }

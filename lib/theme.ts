@@ -3,29 +3,34 @@
  * en JS, no a través de la cascada CSS, así que no puede consumir var(--token).
  * Esta es la única fuente de verdad para theming de Clerk — no duplicar hex
  * en otros archivos (antes vivía repetido en layout.tsx, sign-in y sign-up).
+ *
+ * Importante: usar `colorInput`/`colorInputForeground` (no las claves
+ * `colorInputBackground`/`colorInputText`, deprecadas y ya ignoradas por la
+ * versión instalada de @clerk/themes) — si no, el fondo del input cae al
+ * default de Clerk y el texto queda ilegible en modo oscuro.
  */
 
 export const clerkThemeLight = {
-  colorPrimary: "#3EC87A",        // --brand-accent
-  colorBackground: "#FFFFFF",     // --surface-2
-  colorInputBackground: "#FAFAF7",// --surface
-  colorInputText: "#111810",      // --ink
-  colorText: "#111810",           // --ink
-  colorTextSecondary: "#3D4A40",  // --ink-mid
-  colorNeutral: "#7A8C7E",        // --ink-soft
-  colorDanger: "#E84040",         // --brand-alert
-  borderRadius: "13px",           // --r-lg
+  colorPrimary: "#3EC87A",           // --brand-accent
+  colorBackground: "#FFFFFF",        // --surface-2
+  colorInput: "#FAFAF7",             // --surface
+  colorInputForeground: "#111810",   // --ink
+  colorText: "#111810",              // --ink
+  colorTextSecondary: "#3D4A40",     // --ink-mid
+  colorNeutral: "#7A8C7E",           // --ink-soft
+  colorDanger: "#E84040",            // --brand-alert
+  borderRadius: "13px",              // --r-lg
   fontFamily: "var(--font-ui)",
 } as const;
 
 export const clerkThemeDark = {
   ...clerkThemeLight,
-  colorBackground: "#1B241D",     // --surface-2 (dark)
-  colorInputBackground: "#1B241D",// --field-bg (dark)
-  colorInputText: "#ECF3ED",      // --ink (dark)
+  colorBackground: "#1B241D",        // --surface-2 (dark)
+  colorInput: "#1B241D",             // --field-bg (dark)
+  colorInputForeground: "#ECF3ED",   // --ink (dark)
   colorText: "#ECF3ED",
-  colorTextSecondary: "#AFC2B5",  // --ink-mid (dark)
-  colorNeutral: "#7E948A",        // --ink-soft (dark)
+  colorTextSecondary: "#AFC2B5",     // --ink-mid (dark)
+  colorNeutral: "#7E948A",           // --ink-soft (dark)
 } as const;
 
 export const clerkElements = {
@@ -39,7 +44,7 @@ export const clerkElements = {
   socialButtonsBlockButtonText: "!text-ink",
   formFieldLabel: "!text-ink",
   formButtonPrimary: "bg-brand-accent hover:brightness-95 text-[color:var(--brand-accent-text)] transition-colors",
-  formFieldInput: "bg-surface border-border !text-ink",
+  formFieldInput: "!bg-surface border-border !text-ink",
   identityPreviewText: "!text-ink",
   identityPreviewEditButton: "!text-brand-vivid",
   dividerLine: "bg-border",

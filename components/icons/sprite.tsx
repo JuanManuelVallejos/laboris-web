@@ -53,9 +53,8 @@ export default function IconSprite() {
         </g>
         {/* Extensión propia de Laboris — no existe en el sprite original del design system, agregado para el oficio "Carpintero" con el mismo estilo de trazo */}
         <g id="i-hammer" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M14 4 20 10 17.5 12.5 11.5 6.5z" />
-          <path d="M12.5 8 4 16.5" />
-          <path d="M4 16.5 3 21l4.5-1" />
+          <rect x="10" y="3" width="10" height="6" rx="1.5" transform="rotate(45 15 6)" />
+          <path d="M12 9 5 21" />
         </g>
         <g id="i-alert" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="9" />

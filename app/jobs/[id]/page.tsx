@@ -46,7 +46,7 @@ const STATUS_LABEL: Record<JobStatus, string> = {
 // buttons are reachable from each state.
 const VALID_TRANSITIONS: Record<string, string[]> = {
   pending_visit:    ["visit_proposed", "work_quoted", "cancelled"],
-  visit_proposed:   ["visit_scheduled", "pending_visit", "cancelled"],
+  visit_proposed:   ["visit_scheduled", "visit_quoted", "pending_visit", "cancelled"],
   visit_scheduled:  ["visit_completed", "visit_quoted", "cancelled"],
   visit_quoted:     ["visit_paid", "cancelled"],
   visit_paid:       ["visit_completed", "cancelled"],
@@ -70,7 +70,7 @@ function canDo(status: string, target: string): boolean {
 const STEPS = [
   { key: "pending_visit",    label: "Solicitud" },
   { key: "visit_scheduled",  label: "Visita" },
-  { key: "visit_completed",  label: "Visitada" },
+  { key: "visit_completed",  label: "Visitado" },
   { key: "work_quoted",      label: "Cotizado" },
   { key: "work_approved",    label: "Aprobado" },
   { key: "work_in_progress", label: "En curso" },
@@ -99,6 +99,11 @@ function fmt(n?: number) {
   return n !== undefined
     ? `$${n.toLocaleString("es-AR", { minimumFractionDigits: 2 })}`
     : "—";
+}
+
+function isFutureDateTime(day: string, time: string): boolean {
+  if (!day || !time) return false;
+  return new Date(`${day}T${time}`).getTime() > Date.now();
 }
 
 type GetToken = () => Promise<string | null>;
@@ -190,7 +195,9 @@ function ReworkHistory({ records }: { records: ReworkRecord[] }) {
             <span className="text-xs font-semibold text-ink">
               {rec.quoteAmount !== undefined
                 ? fmt(rec.quoteAmount)
-                : <span className="text-ink-soft font-normal">sin cargo extra</span>}
+                : rec.noCharge
+                ? <span className="text-ink-soft font-normal">Sin cargo extra</span>
+                : <span className="text-ink-soft font-normal">Pendiente de cotización</span>}
             </span>
           </div>
           {rec.notes && <p className="text-xs text-ink leading-snug">{rec.notes}</p>}
@@ -226,6 +233,7 @@ function ActionPanel({
 }) {
   const [visitDay, setVisitDay] = useState("");
   const [visitTime, setVisitTime] = useState("");
+  const [chargeForVisit, setChargeForVisit] = useState(false);
   const [reviewingVisit, setReviewingVisit] = useState(false);
   const [reworkVisitDay, setReworkVisitDay] = useState("");
   const [reworkVisitTime, setReworkVisitTime] = useState("");
@@ -258,10 +266,13 @@ function ActionPanel({
         />
       )}
       {job.visitQuoteAmount !== undefined &&
-        ["visit_quoted","visit_paid","visit_completed","work_quoted","work_approved",
+        ["visit_proposed","visit_quoted","visit_paid","visit_completed","work_quoted","work_approved",
          "work_in_progress","work_delivered","rework_requested","rework_quoted",
          "rework_accepted","rework_visit_proposed","completed"].includes(s) && (
-        <InfoRow label="Cotización de visita" value={fmt(job.visitQuoteAmount)} />
+        <InfoRow
+          label={s === "visit_proposed" ? "Cotización propuesta" : "Cotización de visita"}
+          value={fmt(job.visitQuoteAmount)}
+        />
       )}
       {["work_quoted","work_approved","work_in_progress","work_delivered","rework_requested",
         "rework_quoted","rework_accepted","rework_visit_proposed","completed"].includes(s) && (
@@ -293,7 +304,11 @@ function ActionPanel({
           title={daysUntilAutoClose > 0
             ? `Se cierra automáticamente en ${daysUntilAutoClose} día${daysUntilAutoClose === 1 ? "" : "s"}`
             : "Se cierra automáticamente en cualquier momento"}
-          body={`Si el cliente no confirma la entrega antes del ${new Date(job.autoCloseDeadline).toLocaleDateString("es-AR", { day: "numeric", month: "long" })}, el trabajo se va a marcar como Listo automáticamente.`}
+          body={
+            isClient
+              ? `Tenés hasta el ${new Date(job.autoCloseDeadline).toLocaleDateString("es-AR", { day: "numeric", month: "long" })} para confirmar la entrega. Si no lo hacés a tiempo, el trabajo se va a marcar como Listo automáticamente.`
+              : `El cliente tiene hasta el ${new Date(job.autoCloseDeadline).toLocaleDateString("es-AR", { day: "numeric", month: "long" })} para confirmar la entrega. Si no lo hace a tiempo, el trabajo se va a marcar como Listo automáticamente.`
+          }
         />
       )}
       {s === "cancelled" && (
@@ -319,33 +334,80 @@ function ActionPanel({
                 <>
                   <p className="text-xs font-medium text-ink">Agendar visita</p>
                   <div className="flex gap-2">
-                    <TextInput type="date" value={visitDay} onChange={(e) => setVisitDay(e.target.value)} className="flex-1" />
+                    <TextInput
+                      type="date" value={visitDay} min={new Date().toISOString().slice(0, 10)}
+                      onChange={(e) => setVisitDay(e.target.value)} className="flex-1"
+                    />
                     <TextInput type="time" value={visitTime} onChange={(e) => setVisitTime(e.target.value)} className="w-28" />
                   </div>
-                  <Button variant="deep" size="sm" block onClick={() => setReviewingVisit(true)} disabled={!visitDay || !visitTime}>
+                  <div className="mode-toggle" style={{ display: "flex", width: "100%" }}>
+                    <button
+                      type="button"
+                      className={`seg ${!chargeForVisit ? "on" : ""}`}
+                      style={{ flex: 1, height: 30, fontSize: 12, fontWeight: 600 }}
+                      onClick={() => setChargeForVisit(false)}
+                    >
+                      Sin cotización
+                    </button>
+                    <button
+                      type="button"
+                      className={`seg ${chargeForVisit ? "on" : ""}`}
+                      style={{ flex: 1, height: 30, fontSize: 12, fontWeight: 600 }}
+                      onClick={() => setChargeForVisit(true)}
+                    >
+                      Con cotización
+                    </button>
+                  </div>
+                  {chargeForVisit && (
+                    <TextInput
+                      type="number" placeholder="Monto de la visita ($)"
+                      value={visitAmount} onChange={(e) => setVisitAmount(e.target.value)} min="0"
+                    />
+                  )}
+                  <Button
+                    variant="deep" size="sm" block
+                    onClick={() => setReviewingVisit(true)}
+                    disabled={
+                      !isFutureDateTime(visitDay, visitTime) ||
+                      (chargeForVisit && (!visitAmount || parseFloat(visitAmount) <= 0))
+                    }
+                  >
                     Revisar fecha →
                   </Button>
                 </>
               ) : (
                 <>
                   <p className="text-xs font-medium text-ink">Confirmar visita</p>
-                  <div className="rounded-xl px-3 py-2.5" style={{ background: "var(--brand-light)" }}>
-                    <p className="text-xs mb-0.5" style={{ color: "var(--brand-mid)" }}>Fecha seleccionada</p>
-                    <p className="text-sm font-semibold text-ink">
-                      {new Date(`${visitDay}T${visitTime}`).toLocaleString("es-AR", {
-                        weekday: "long", day: "numeric", month: "long",
-                        hour: "2-digit", minute: "2-digit",
-                      })}
-                    </p>
+                  <div className="rounded-xl px-3 py-2.5 space-y-1" style={{ background: "var(--brand-light)" }}>
+                    <div>
+                      <p className="text-xs mb-0.5" style={{ color: "var(--brand-mid)" }}>Fecha seleccionada</p>
+                      <p className="text-sm font-semibold text-ink">
+                        {new Date(`${visitDay}T${visitTime}`).toLocaleString("es-AR", {
+                          weekday: "long", day: "numeric", month: "long",
+                          hour: "2-digit", minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs mb-0.5" style={{ color: "var(--brand-mid)" }}>Cotización</p>
+                      <p className="text-sm font-semibold text-ink">
+                        {chargeForVisit ? fmt(parseFloat(visitAmount)) : "Sin cotización"}
+                      </p>
+                    </div>
                   </div>
                   <Button
                     variant="deep" size="sm" block
-                    onClick={() => onAction(() => scheduleVisit(job.id, new Date(`${visitDay}T${visitTime}`).toISOString(), getToken))}
+                    onClick={() => onAction(() => scheduleVisit(
+                      job.id,
+                      new Date(`${visitDay}T${visitTime}`).toISOString(),
+                      chargeForVisit ? parseFloat(visitAmount) : undefined,
+                      getToken
+                    ))}
                   >
-                    Proponer esta fecha
+                    Proponer al cliente
                   </Button>
                   <Button variant="ghost" size="sm" block onClick={() => setReviewingVisit(false)}>
-                    Cambiar fecha
+                    Cambiar fecha o cotización
                   </Button>
                 </>
               )}
@@ -443,13 +505,16 @@ function ActionPanel({
                 <>
                   <p className="text-xs font-medium text-ink">Proponer fecha para el retrabajo</p>
                   <div className="flex gap-2">
-                    <TextInput type="date" value={reworkVisitDay} onChange={(e) => setReworkVisitDay(e.target.value)} className="flex-1" />
+                    <TextInput
+                      type="date" value={reworkVisitDay} min={new Date().toISOString().slice(0, 10)}
+                      onChange={(e) => setReworkVisitDay(e.target.value)} className="flex-1"
+                    />
                     <TextInput type="time" value={reworkVisitTime} onChange={(e) => setReworkVisitTime(e.target.value)} className="w-28" />
                   </div>
                   <Button
                     variant="deep" size="sm" block
                     onClick={() => setReviewingReworkVisit(true)}
-                    disabled={!reworkVisitDay || !reworkVisitTime}
+                    disabled={!isFutureDateTime(reworkVisitDay, reworkVisitTime)}
                   >
                     Revisar fecha →
                   </Button>
@@ -492,7 +557,11 @@ function ActionPanel({
           {s === "visit_proposed" && (
             <div className="space-y-2 pt-1">
               <p className="text-xs font-medium text-ink">
-                El profesional propuso una visita. ¿Estás de acuerdo?
+                El profesional propuso una visita
+                {job.visitQuoteAmount !== undefined
+                  ? ` con un costo de ${fmt(job.visitQuoteAmount)}`
+                  : ", sin costo"}
+                . ¿Estás de acuerdo?
               </p>
               <div className="flex gap-2">
                 <Button variant="accent" size="sm" block onClick={() => onAction(() => confirmVisit(job.id, getToken))}>

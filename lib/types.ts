@@ -42,6 +42,7 @@ export interface ReworkRecord {
   cycleNumber: number;
   notes?: string;
   quoteAmount?: number;
+  noCharge: boolean;
   scheduledAt?: string;
   createdAt: string;
 }

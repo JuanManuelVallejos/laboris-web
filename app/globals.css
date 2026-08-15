@@ -5,6 +5,8 @@
    Fuente: docs/design/tokens.css (verde canónico, v4A)
    ============================================================ */
 :root {
+  color-scheme: light;
+
   --amber: #F59E0B;
 
   --brand-deep:        #0A3D2E;
@@ -69,6 +71,8 @@
 
 /* ---------- Oscuro (carbón verdoso cálido) ---------- */
 [data-theme="dark"] {
+  color-scheme: dark;
+
   --page:        #0B120E;
   --surface:     #141B16;
   --surface-2:   #1B241D;

@@ -5,10 +5,10 @@ export type BadgeTone = "neutral" | "info" | "verif" | "alert";
 /** Estados de un Request (pedido) — pantallas "Mis pedidos" / "Pedidos recibidos". */
 export const REQUEST_STATUS: Record<string, { label: string; tone: BadgeTone }> = {
   pending:  { label: "Pendiente",  tone: "neutral" },
-  viewed:   { label: "Vista",      tone: "info" },
-  accepted: { label: "Aceptada",   tone: "verif" },
-  rejected: { label: "Rechazada",  tone: "alert" },
-  expired:  { label: "Vencida",    tone: "neutral" },
+  viewed:   { label: "Visto",      tone: "info" },
+  accepted: { label: "Aceptado",   tone: "verif" },
+  rejected: { label: "Rechazado",  tone: "alert" },
+  expired:  { label: "Vencido",    tone: "neutral" },
 };
 
 /**

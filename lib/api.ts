@@ -153,6 +153,7 @@ export interface Notification {
   userId: string;
   type: string;
   message: string;
+  entityId?: string;
   read: boolean;
   createdAt: string;
 }
@@ -342,8 +343,8 @@ export async function listMyJobs(
   return res.json();
 }
 
-export const scheduleVisit = (jobId: string, scheduledAt: string, gt: () => Promise<string | null>) =>
-  jobPatch(jobId, "schedule-visit", { scheduledAt }, gt);
+export const scheduleVisit = (jobId: string, scheduledAt: string, quoteAmount: number | undefined, gt: () => Promise<string | null>) =>
+  jobPatch(jobId, "schedule-visit", { scheduledAt, quoteAmount: quoteAmount ?? null }, gt);
 
 export const confirmVisit = (jobId: string, gt: () => Promise<string | null>) =>
   jobPatch(jobId, "confirm-visit", null, gt);

@@ -19,9 +19,10 @@ const navLinks = [
   { href: "/perfil",  label: "Perfil" },
 ];
 
-function notifHref(type: string): string {
-  if (type === "new_request") return "/pro/pedidos";
-  if (type === "request_accepted" || type === "request_rejected") return "/pedidos";
+function notifHref(n: Notification): string {
+  if (n.type === "new_request") return "/pro/pedidos";
+  if (n.entityId) return `/jobs/${n.entityId}`;
+  if (n.type === "request_accepted" || n.type === "request_rejected") return "/pedidos";
   return "/";
 }
 
@@ -108,7 +109,7 @@ function NotificationBell() {
               {notifications.map((n) => (
                 <li key={n.id}>
                   <Link
-                    href={notifHref(n.type)}
+                    href={notifHref(n)}
                     onClick={() => setOpen(false)}
                     className="block px-4 py-3 hover:bg-surface-3 transition-colors"
                   >

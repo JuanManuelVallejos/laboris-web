@@ -11,7 +11,7 @@ import { TextInput, Textarea } from "@/components/ui/Field";
 import Icon from "@/components/icons/Icon";
 import { JOB_STATUS_TONE } from "@/lib/status";
 import {
-  getJob, getMessages, sendMessage, messagesStreamUrl,
+  getJob, getMessages, sendMessage, messagesStreamUrl, jobStreamUrl,
   scheduleVisit, confirmVisit, declineVisit, submitVisitQuote, skipVisit,
   payVisit, completeVisit, submitWorkQuote,
   approveWorkQuote, startWork, deliverWork,
@@ -813,6 +813,13 @@ export default function JobPage() {
       .catch(() => router.replace("/"))
       .finally(() => setLoading(false));
   }, [id, getToken, isLoaded, router]);
+
+  useEventStream<Job>(
+    id ? jobStreamUrl(id) : null,
+    getToken,
+    (updatedJob) => setJob(updatedJob),
+    { pauseWhenHidden: false }
+  );
 
   async function handleAction(fn: () => Promise<Job>) {
     setActionLoading(true);

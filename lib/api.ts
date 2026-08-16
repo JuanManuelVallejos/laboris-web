@@ -405,6 +405,10 @@ export const cancelJob = (jobId: string, reason: string, gt: () => Promise<strin
 
 // ─── Message API ─────────────────────────────────────────────────────────────
 
+export function jobStreamUrl(jobId: string): string {
+  return `${BASE}/api/v1/jobs/${jobId}/stream`;
+}
+
 export function messagesStreamUrl(requestId: string): string {
   return `${BASE}/api/v1/requests/${requestId}/messages/stream`;
 }

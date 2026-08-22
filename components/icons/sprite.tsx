@@ -17,6 +17,7 @@ export const ICON_NAMES = [
   "sun",
   "moon",
   "arrow",
+  "edit",
 ] as const;
 
 export type IconName = (typeof ICON_NAMES)[number];
@@ -104,6 +105,11 @@ export default function IconSprite() {
         </g>
         <g id="i-arrow" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M5 12h14M13 6l6 6-6 6" />
+        </g>
+        {/* Extensión propia de Laboris — no existe en el sprite original del design system, agregado para el botón de "editar perfil" con el mismo estilo de trazo */}
+        <g id="i-edit" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M14.5 4.5 19.5 9.5 8 21H3v-5z" />
+          <path d="M12.5 6.5 17.5 11.5" />
         </g>
       </defs>
     </svg>

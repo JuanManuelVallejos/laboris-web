@@ -2,7 +2,7 @@ import Link from "next/link";
 import NavBottom from "@/components/NavBottom";
 import Button from "@/components/ui/Button";
 import Icon from "@/components/icons/Icon";
-import PhotoGallery from "@/components/ui/PhotoGallery";
+import ProfessionalProfileView from "@/components/ProfessionalProfileView";
 import { getProfessional } from "@/lib/api";
 
 export default async function ProfessionalPage({ params }: { params: Promise<{ id: string }> }) {
@@ -43,50 +43,7 @@ export default async function ProfessionalPage({ params }: { params: Promise<{ i
 
           {/* Left column */}
           <div className="space-y-4">
-            {/* Avatar + info principal */}
-            <div className="bg-surface-2 border border-border rounded-2xl p-5 shadow-sm flex items-center gap-4">
-              <div className="pro-av" style={{ width: 64, height: 64, fontSize: "var(--t-h2)", marginBottom: 0 }}>
-                {professional.name[0]?.toUpperCase()}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="serif text-lg font-bold text-ink">{professional.name}</h2>
-                  {professional.verified && <span className="badge badge--verif">✓ verificado</span>}
-                </div>
-                <p className="text-sm text-ink-soft capitalize mt-0.5">{professional.trade} · {professional.zone}</p>
-                <p className="text-sm font-medium mt-1" style={{ color: "var(--amber)" }}>{ratingText}</p>
-              </div>
-            </div>
-
-            {/* Sobre mí */}
-            {professional.bio && (
-              <div className="bg-surface-2 border border-border rounded-2xl p-5 shadow-sm">
-                <h3 className="text-sm font-semibold text-ink mb-2">Sobre mí</h3>
-                <p className="text-sm text-ink-mid leading-relaxed">{professional.bio}</p>
-              </div>
-            )}
-
-            {/* Portfolio */}
-            {professional.portfolioPhotos && professional.portfolioPhotos.length > 0 && (
-              <div className="bg-surface-2 border border-border rounded-2xl p-5 shadow-sm">
-                <h3 className="text-sm font-semibold text-ink mb-2">Portfolio</h3>
-                <PhotoGallery photos={professional.portfolioPhotos} />
-              </div>
-            )}
-
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { label: "Calificación", value: ratingText },
-                { label: "Zona", value: professional.zone },
-                { label: "Estado", value: professional.verified ? "Verificado" : "No verificado" },
-              ].map((stat) => (
-                <div key={stat.label} className="bg-surface-2 border border-border rounded-2xl p-3 shadow-sm text-center">
-                  <p className="text-xs text-ink-soft mb-1">{stat.label}</p>
-                  <p className="text-xs font-semibold text-ink leading-tight">{stat.value}</p>
-                </div>
-              ))}
-            </div>
+            <ProfessionalProfileView professional={professional} />
           </div>
 
           {/* Right column — sticky CTA on desktop */}

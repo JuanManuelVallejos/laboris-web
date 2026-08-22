@@ -6,6 +6,7 @@ import Link from "next/link";
 import Topbar from "@/components/Topbar";
 import NavBottom from "@/components/NavBottom";
 import RequestCard from "@/components/RequestCard";
+import ProfessionalProfileView from "@/components/ProfessionalProfileView";
 import Button from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { getMyProfessional, getReceivedRequests } from "@/lib/api";
@@ -57,27 +58,7 @@ export default function ProDashboard() {
         )}
 
         {!loading && profile && (
-          <div className="pro-card w-full">
-            <div className="flex items-start gap-4">
-              <div className="pro-av" style={{ width: 56, height: 56, fontSize: "var(--t-h3)" }}>
-                {profile.name[0]?.toUpperCase()}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="pro-name whitespace-normal">{profile.name}</p>
-                <p className="pro-role capitalize">{profile.trade} · {profile.zone}</p>
-                <div className="flex items-center gap-2 mt-1.5">
-                  <span style={{ color: "var(--amber)", fontSize: "var(--t-sm)", fontWeight: "var(--fw-med)" }}>
-                    ★ {profile.rating > 0 ? profile.rating.toFixed(1) : "Sin reviews"}
-                  </span>
-                  {profile.verified && <Badge tone="verif">Verificado</Badge>}
-                </div>
-                {profile.bio && <p className="text-sm text-ink-mid mt-2 line-clamp-2">{profile.bio}</p>}
-                <Link href="/pro/edit" className="mt-3 inline-block">
-                  <Button variant="secondary" size="sm">Editar perfil →</Button>
-                </Link>
-              </div>
-            </div>
-          </div>
+          <ProfessionalProfileView professional={profile} editHref="/pro/edit" />
         )}
 
         {/* Solicitudes */}

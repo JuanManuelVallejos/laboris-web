@@ -4,10 +4,11 @@ import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { getProfessional, createRequest } from "@/lib/api";
+import { getProfessional, createRequest, uploadRequestPhoto } from "@/lib/api";
 import { Field, Textarea } from "@/components/ui/Field";
 import Button from "@/components/ui/Button";
 import Icon from "@/components/icons/Icon";
+import LocalPhotoPicker from "@/components/ui/LocalPhotoPicker";
 
 export default function RequestPage() {
   const router = useRouter();
@@ -17,6 +18,7 @@ export default function RequestPage() {
 
   const [professionalName, setProfessionalName] = useState("");
   const [description, setDescription] = useState("");
+  const [photos, setPhotos] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -30,7 +32,14 @@ export default function RequestPage() {
     setLoading(true);
     setError("");
     try {
-      await createRequest(id, description.trim(), getToken);
+      const request = await createRequest(id, description.trim(), getToken);
+      for (const photo of photos) {
+        try {
+          await uploadRequestPhoto(request.id, photo, getToken);
+        } catch {
+          // las fotos son una mejora, no bloquean el envío de la solicitud
+        }
+      }
       router.push("/request-sent");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al enviar la solicitud");
@@ -69,6 +78,11 @@ export default function RequestPage() {
                 required
               />
             </Field>
+          </div>
+
+          <div className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm">
+            <span className="field__label block mb-2">Fotos (opcional)</span>
+            <LocalPhotoPicker files={photos} onChange={setPhotos} />
           </div>
 
           {error && (

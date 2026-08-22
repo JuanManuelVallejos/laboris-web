@@ -6,10 +6,9 @@ import Link from "next/link";
 import Topbar from "@/components/Topbar";
 import NavBottom from "@/components/NavBottom";
 import RequestCard from "@/components/RequestCard";
-import { AcceptRejectRow, RejectForm } from "@/components/RequestActions";
 import Button from "@/components/ui/Button";
 import Icon from "@/components/icons/Icon";
-import { getReceivedRequests, updateRequestStatus } from "@/lib/api";
+import { getReceivedRequests } from "@/lib/api";
 import type { Request } from "@/lib/api";
 
 function sortRequests(reqs: Request[]): Request[] {
@@ -26,37 +25,12 @@ export default function ProPedidosPage() {
   const { getToken } = useAuth();
   const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading]   = useState(true);
-  const [updating, setUpdating] = useState<string | null>(null);
-  const [rejectingId, setRejectingId] = useState<string | null>(null);
-  const [error, setError]       = useState("");
 
   useEffect(() => {
     getReceivedRequests(getToken)
       .then((reqs) => setRequests(sortRequests(reqs)))
       .finally(() => setLoading(false));
   }, [getToken]);
-
-  async function handleAccept(id: string) {
-    setUpdating(id); setError("");
-    try {
-      await updateRequestStatus(id, "accepted", getToken);
-      setRequests((prev) => sortRequests(prev.map((r) => r.id === id ? { ...r, status: "accepted" as const } : r)));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Error al aceptar");
-    } finally { setUpdating(null); }
-  }
-
-  async function handleReject(id: string, reason: string) {
-    if (!reason.trim()) return;
-    setUpdating(id); setError("");
-    try {
-      await updateRequestStatus(id, "rejected", getToken, reason.trim());
-      setRequests((prev) => sortRequests(prev.map((r) => r.id === id ? { ...r, status: "rejected" as const, rejectionReason: reason.trim() } : r)));
-      setRejectingId(null);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Error al rechazar");
-    } finally { setUpdating(null); }
-  }
 
   return (
     <div className="flex flex-col min-h-screen bg-page">
@@ -69,12 +43,6 @@ export default function ProPedidosPage() {
           </Link>
           <h2 className="serif text-lg font-bold text-ink">Historial de pedidos</h2>
         </div>
-
-        {error && (
-          <p className="text-sm rounded-xl px-4 py-3" style={{ background: "color-mix(in srgb, var(--brand-alert) 12%, transparent)", color: "var(--brand-alert)" }}>
-            {error}
-          </p>
-        )}
 
         {loading && (
           <div className="space-y-3">
@@ -100,19 +68,10 @@ export default function ProPedidosPage() {
                     <Button variant="secondary" size="sm" block>Ver trabajo →</Button>
                   </Link>
                 )}
-                {(req.status === "pending" || req.status === "viewed") && rejectingId !== req.id && (
-                  <AcceptRejectRow
-                    onAccept={() => handleAccept(req.id)}
-                    onReject={() => setRejectingId(req.id)}
-                    loading={updating === req.id}
-                  />
-                )}
-                {(req.status === "pending" || req.status === "viewed") && rejectingId === req.id && (
-                  <RejectForm
-                    onConfirm={(reason) => handleReject(req.id, reason)}
-                    onCancel={() => setRejectingId(null)}
-                    loading={updating === req.id}
-                  />
+                {(req.status === "pending" || req.status === "viewed") && (
+                  <Link href={`/pro/pedidos/${req.id}`} className="block">
+                    <Button variant="deep" size="sm" block>Ver solicitud →</Button>
+                  </Link>
                 )}
               </RequestCard>
             ))}

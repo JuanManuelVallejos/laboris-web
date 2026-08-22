@@ -6,10 +6,9 @@ import Link from "next/link";
 import Topbar from "@/components/Topbar";
 import NavBottom from "@/components/NavBottom";
 import RequestCard from "@/components/RequestCard";
-import { AcceptRejectRow, RejectForm } from "@/components/RequestActions";
 import Button from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { getMyProfessional, getReceivedRequests, updateRequestStatus } from "@/lib/api";
+import { getMyProfessional, getReceivedRequests } from "@/lib/api";
 import type { Request } from "@/lib/api";
 import type { Professional } from "@/lib/types";
 
@@ -19,9 +18,6 @@ export default function ProDashboard() {
   const [requests, setRequests]         = useState<Request[]>([]);
   const [profileError, setProfileError] = useState("");
   const [loading, setLoading]           = useState(true);
-  const [updating, setUpdating]         = useState<string | null>(null);
-  const [actionError, setActionError]   = useState("");
-  const [rejectingId, setRejectingId]   = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -33,34 +29,6 @@ export default function ProDashboard() {
     }).finally(() => setLoading(false));
   }, [getToken]);
 
-  async function handleAccept(id: string) {
-    setUpdating(id);
-    setActionError("");
-    try {
-      await updateRequestStatus(id, "accepted", getToken);
-      setRequests((prev) => prev.map((r) => r.id === id ? { ...r, status: "accepted" as const } : r));
-    } catch (e) {
-      setActionError(e instanceof Error ? e.message : "Error al aceptar");
-    } finally {
-      setUpdating(null);
-    }
-  }
-
-  async function handleReject(id: string, reason: string) {
-    if (!reason.trim()) return;
-    setUpdating(id);
-    setActionError("");
-    try {
-      await updateRequestStatus(id, "rejected", getToken, reason.trim());
-      setRequests((prev) => prev.map((r) => r.id === id ? { ...r, status: "rejected" as const, rejectionReason: reason.trim() } : r));
-      setRejectingId(null);
-    } catch (e) {
-      setActionError(e instanceof Error ? e.message : "Error al rechazar");
-    } finally {
-      setUpdating(null);
-    }
-  }
-
   const pending = requests.filter((r) => r.status === "pending" || r.status === "viewed");
 
   return (
@@ -69,12 +37,6 @@ export default function ProDashboard() {
 
       <main className="flex-1 px-4 pt-5 pb-24 md:pb-10 max-w-lg mx-auto w-full space-y-4">
         <h2 className="serif text-lg font-bold text-ink">Mi panel</h2>
-
-        {actionError && (
-          <p className="text-sm rounded-xl px-4 py-3" style={{ background: "color-mix(in srgb, var(--brand-alert) 12%, transparent)", color: "var(--brand-alert)" }}>
-            {actionError}
-          </p>
-        )}
 
         {loading && (
           <div className="space-y-4">
@@ -144,19 +106,9 @@ export default function ProDashboard() {
               <div className="space-y-3">
                 {pending.map((req) => (
                   <RequestCard key={req.id} title={req.clientName} request={req}>
-                    {rejectingId !== req.id ? (
-                      <AcceptRejectRow
-                        onAccept={() => handleAccept(req.id)}
-                        onReject={() => setRejectingId(req.id)}
-                        loading={updating === req.id}
-                      />
-                    ) : (
-                      <RejectForm
-                        onConfirm={(reason) => handleReject(req.id, reason)}
-                        onCancel={() => setRejectingId(null)}
-                        loading={updating === req.id}
-                      />
-                    )}
+                    <Link href={`/pro/pedidos/${req.id}`} className="block">
+                      <Button variant="deep" size="sm" block>Ver solicitud →</Button>
+                    </Link>
                   </RequestCard>
                 ))}
               </div>

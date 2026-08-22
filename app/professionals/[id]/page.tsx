@@ -2,7 +2,7 @@ import Link from "next/link";
 import NavBottom from "@/components/NavBottom";
 import Button from "@/components/ui/Button";
 import Icon from "@/components/icons/Icon";
-import ProfessionalPortfolioGallery from "@/components/ProfessionalPortfolioGallery";
+import PhotoGallery from "@/components/ui/PhotoGallery";
 import { getProfessional } from "@/lib/api";
 
 export default async function ProfessionalPage({ params }: { params: Promise<{ id: string }> }) {
@@ -70,7 +70,7 @@ export default async function ProfessionalPage({ params }: { params: Promise<{ i
             {professional.portfolioPhotos && professional.portfolioPhotos.length > 0 && (
               <div className="bg-surface-2 border border-border rounded-2xl p-5 shadow-sm">
                 <h3 className="text-sm font-semibold text-ink mb-2">Portfolio</h3>
-                <ProfessionalPortfolioGallery photos={professional.portfolioPhotos} />
+                <PhotoGallery photos={professional.portfolioPhotos} />
               </div>
             )}
 

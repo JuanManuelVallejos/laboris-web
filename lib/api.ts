@@ -127,7 +127,7 @@ export async function createRequest(
   professionalId: string,
   description: string,
   getToken: () => Promise<string | null>
-): Promise<void> {
+): Promise<Request> {
   const token = await getToken();
   const res = await fetch(`${BASE}/api/v1/requests`, {
     method: "POST",
@@ -141,6 +141,43 @@ export async function createRequest(
     const body = await res.json().catch(() => ({ error: "error desconocido" }));
     throw new Error(body.error ?? "error desconocido");
   }
+  return res.json();
+}
+
+export async function uploadRequestPhoto(
+  requestId: string,
+  file: File,
+  getToken: () => Promise<string | null>
+): Promise<Attachment> {
+  const token = await getToken();
+  const formData = new FormData();
+  formData.append("photo", file);
+  const res = await fetch(`${BASE}/api/v1/requests/${requestId}/photos`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: "error desconocido" }));
+    throw new Error(body.error ?? "error desconocido");
+  }
+  return res.json();
+}
+
+export async function getRequestDetail(
+  id: string,
+  getToken: () => Promise<string | null>
+): Promise<Request> {
+  const token = await getToken();
+  const res = await fetch(`${BASE}/api/v1/requests/${id}`, {
+    cache: "no-store",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: "error desconocido" }));
+    throw new Error(body.error ?? "error desconocido");
+  }
+  return res.json();
 }
 
 export interface Request {
@@ -153,6 +190,7 @@ export interface Request {
   status: "pending" | "viewed" | "accepted" | "rejected" | "expired";
   rejectionReason: string;
   jobId?: string;
+  photos?: Attachment[];
   createdAt: string;
 }
 
@@ -313,7 +351,7 @@ export async function updateRequestStatus(
   status: "accepted" | "rejected",
   getToken: () => Promise<string | null>,
   rejectionReason?: string
-): Promise<void> {
+): Promise<Request> {
   const token = await getToken();
   const res = await fetch(`${BASE}/api/v1/requests/${id}`, {
     method: "PATCH",
@@ -327,6 +365,7 @@ export async function updateRequestStatus(
     const body = await res.json().catch(() => ({ error: "error desconocido" }));
     throw new Error(body.error ?? "error desconocido");
   }
+  return res.json();
 }
 
 // ─── Job API ────────────────────────────────────────────────────────────────

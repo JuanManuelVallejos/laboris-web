@@ -58,9 +58,11 @@ export default function PhotoLightbox({ photos, initialIndex, onClose }: PhotoLi
         type="button"
         onClick={onClose}
         aria-label="Cerrar"
-        className="absolute top-4 right-4 w-9 h-9 rounded-full bg-surface-2 text-ink text-lg font-bold flex items-center justify-center leading-none shadow-sm"
+        className="absolute top-4 right-4 w-9 h-9 rounded-full bg-surface-2 text-ink flex items-center justify-center shadow-sm"
       >
-        ×
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+          <path d="M5 5 19 19M19 5 5 19" />
+        </svg>
       </button>
 
       {hasMultiple && (

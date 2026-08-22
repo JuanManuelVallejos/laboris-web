@@ -66,10 +66,12 @@ export default function PhotoUploader({ photos, onUpload, onDelete, maxPhotos = 
               onClick={() => handleDelete(photo.id)}
               disabled={deletingId === photo.id}
               aria-label="Eliminar foto"
-              className="absolute top-1 right-1 w-5 h-5 rounded-full bg-surface-2 text-ink text-xs font-bold flex items-center justify-center leading-none shadow-sm"
+              className="absolute top-1 right-1 w-5 h-5 rounded-full bg-surface-2 text-ink flex items-center justify-center shadow-sm"
               style={{ opacity: deletingId === photo.id ? 0.5 : 1 }}
             >
-              ×
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                <path d="M5 5 19 19M19 5 5 19" />
+              </svg>
             </button>
           </div>
         ))}

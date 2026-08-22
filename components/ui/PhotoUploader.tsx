@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import PhotoLightbox from "@/components/ui/PhotoLightbox";
 import type { Attachment } from "@/lib/types";
 
 interface PhotoUploaderProps {
@@ -20,6 +21,7 @@ export default function PhotoUploader({ photos, onUpload, onDelete, maxPhotos = 
   const [uploading, setUploading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   async function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -51,15 +53,20 @@ export default function PhotoUploader({ photos, onUpload, onDelete, maxPhotos = 
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap gap-2">
-        {photos.map((photo) => (
+        {photos.map((photo, i) => (
           <div key={photo.id} className="relative w-20 h-20 rounded-xl overflow-hidden border border-border">
-            <img src={photo.url} alt="Foto de portfolio" className="w-full h-full object-cover" />
+            <img
+              src={photo.url}
+              alt="Foto de portfolio"
+              className="w-full h-full object-cover cursor-pointer"
+              onClick={() => setOpenIndex(i)}
+            />
             <button
               type="button"
               onClick={() => handleDelete(photo.id)}
               disabled={deletingId === photo.id}
               aria-label="Eliminar foto"
-              className="absolute top-1 right-1 w-5 h-5 rounded-full bg-surface-2 text-ink text-xs font-bold flex items-center justify-center shadow-sm"
+              className="absolute top-1 right-1 w-5 h-5 rounded-full bg-surface-2 text-ink text-xs font-bold flex items-center justify-center leading-none shadow-sm"
               style={{ opacity: deletingId === photo.id ? 0.5 : 1 }}
             >
               ×
@@ -71,7 +78,7 @@ export default function PhotoUploader({ photos, onUpload, onDelete, maxPhotos = 
             type="button"
             onClick={() => inputRef.current?.click()}
             disabled={uploading}
-            className="w-20 h-20 rounded-xl border-2 border-dashed border-border flex items-center justify-center text-2xl text-ink-soft"
+            className="w-20 h-20 rounded-xl border-2 border-dashed border-border flex items-center justify-center leading-none text-2xl text-ink-soft"
             aria-label="Agregar foto"
           >
             {uploading ? "…" : "+"}
@@ -86,6 +93,9 @@ export default function PhotoUploader({ photos, onUpload, onDelete, maxPhotos = 
         />
       </div>
       {error && <p className="text-xs" style={{ color: "var(--brand-alert)" }}>{error}</p>}
+      {openIndex !== null && (
+        <PhotoLightbox photos={photos} initialIndex={openIndex} onClose={() => setOpenIndex(null)} />
+      )}
     </div>
   );
 }

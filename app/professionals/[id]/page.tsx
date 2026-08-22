@@ -2,6 +2,7 @@ import Link from "next/link";
 import NavBottom from "@/components/NavBottom";
 import Button from "@/components/ui/Button";
 import Icon from "@/components/icons/Icon";
+import ProfessionalPortfolioGallery from "@/components/ProfessionalPortfolioGallery";
 import { getProfessional } from "@/lib/api";
 
 export default async function ProfessionalPage({ params }: { params: Promise<{ id: string }> }) {
@@ -69,13 +70,7 @@ export default async function ProfessionalPage({ params }: { params: Promise<{ i
             {professional.portfolioPhotos && professional.portfolioPhotos.length > 0 && (
               <div className="bg-surface-2 border border-border rounded-2xl p-5 shadow-sm">
                 <h3 className="text-sm font-semibold text-ink mb-2">Portfolio</h3>
-                <div className="flex flex-wrap gap-2">
-                  {professional.portfolioPhotos.map((photo) => (
-                    <div key={photo.id} className="w-20 h-20 rounded-xl overflow-hidden border border-border">
-                      <img src={photo.url} alt="Foto de portfolio" className="w-full h-full object-cover" />
-                    </div>
-                  ))}
-                </div>
+                <ProfessionalPortfolioGallery photos={professional.portfolioPhotos} />
               </div>
             )}
 

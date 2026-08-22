@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getMyProfessional, updateMyProfessional } from "@/lib/api";
+import { getMyProfessional, updateMyProfessional, uploadPortfolioPhoto, deletePortfolioPhoto } from "@/lib/api";
 import { TRADES, OTHER_TRADE_LABEL, ZONES } from "@/lib/catalog";
 import { Field, Textarea } from "@/components/ui/Field";
 import Chip from "@/components/ui/Chip";
 import Button from "@/components/ui/Button";
 import Icon from "@/components/icons/Icon";
+import PhotoUploader from "@/components/ui/PhotoUploader";
+import type { Attachment } from "@/lib/types";
 
 const TRADE_OPTIONS = [...TRADES.map((t) => t.label), OTHER_TRADE_LABEL];
 
@@ -20,6 +22,7 @@ export default function EditProPage() {
   const [trade, setTrade] = useState("");
   const [zone,  setZone]  = useState("");
   const [bio,   setBio]   = useState("");
+  const [photos, setPhotos] = useState<Attachment[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [saving,   setSaving]   = useState(false);
   const [error,    setError]    = useState("");
@@ -30,10 +33,21 @@ export default function EditProPage() {
         setTrade(p.trade);
         setZone(p.zone);
         setBio(p.bio ?? "");
+        setPhotos(p.portfolioPhotos ?? []);
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [getToken]);
+
+  async function handleUploadPhoto(file: File) {
+    const photo = await uploadPortfolioPhoto(file, getToken);
+    setPhotos((prev) => [...prev, photo]);
+  }
+
+  async function handleDeletePhoto(id: string) {
+    await deletePortfolioPhoto(id, getToken);
+    setPhotos((prev) => prev.filter((p) => p.id !== id));
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -101,6 +115,11 @@ export default function EditProPage() {
                   rows={4}
                 />
               </Field>
+            </div>
+
+            <div className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm">
+              <span className="field__label block mb-2">Fotos de tu portfolio</span>
+              <PhotoUploader photos={photos} onUpload={handleUploadPhoto} onDelete={handleDeletePhoto} />
             </div>
 
             {error && (

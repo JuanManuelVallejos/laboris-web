@@ -1,4 +1,4 @@
-import type { Professional, Job, Message } from "./types";
+import type { Professional, Job, Message, Attachment } from "./types";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
@@ -87,6 +87,40 @@ export async function updateMyProfessional(
     throw new Error(`${res.status}: ${body}`);
   }
   return res.json();
+}
+
+export async function uploadPortfolioPhoto(
+  file: File,
+  getToken: () => Promise<string | null>
+): Promise<Attachment> {
+  const token = await getToken();
+  const formData = new FormData();
+  formData.append("photo", file);
+  const res = await fetch(`${BASE}/api/v1/me/professional/portfolio-photos`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: "error desconocido" }));
+    throw new Error(body.error ?? "error desconocido");
+  }
+  return res.json();
+}
+
+export async function deletePortfolioPhoto(
+  id: string,
+  getToken: () => Promise<string | null>
+): Promise<void> {
+  const token = await getToken();
+  const res = await fetch(`${BASE}/api/v1/me/professional/portfolio-photos/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: "error desconocido" }));
+    throw new Error(body.error ?? "error desconocido");
+  }
 }
 
 export async function createRequest(

@@ -1,3 +1,12 @@
+// Nombrado deliberadamente distinto de `File`, el tipo nativo del browser
+// (el objeto que sale de un <input type="file">) — mismo nombre que
+// domain.Attachment en el backend.
+export interface Attachment {
+  id: string;
+  url: string;
+  createdAt: string;
+}
+
 export interface Professional {
   id: string;
   name: string;
@@ -7,6 +16,7 @@ export interface Professional {
   rating: number;
   verified: boolean;
   status: "active" | "suspended";
+  portfolioPhotos?: Attachment[];
 }
 
 export type JobStatus =

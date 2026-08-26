@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // Carga el script de Google Maps una sola vez por sesión de navegador,
 // aunque se monten varios AddressAutocomplete en la misma página o en
@@ -8,14 +8,14 @@ import { useEffect, useRef } from "react";
 let mapsLoader: Promise<void> | null = null;
 
 function loadGoogleMaps(apiKey: string): Promise<void> {
-  if (window.google?.maps) return Promise.resolve();
+  if (typeof window.google?.maps?.importLibrary === "function") return Promise.resolve();
   if (mapsLoader) return mapsLoader;
   mapsLoader = new Promise<void>((resolve, reject) => {
     const script = document.createElement("script");
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&loading=async`;
     script.async = true;
     script.onload = () => resolve();
-    script.onerror = () => reject(new Error("No se pudo cargar Google Maps"));
+    script.onerror = () => reject(new Error("No se pudo cargar el script de Google Maps"));
     document.head.appendChild(script);
   });
   return mapsLoader;
@@ -39,29 +39,37 @@ export default function AddressAutocomplete({ currentValue, onSelect }: AddressA
   const containerRef = useRef<HTMLDivElement>(null);
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
+  const [error, setError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     if (!apiKey) {
-      console.error("Falta configurar NEXT_PUBLIC_GOOGLE_MAPS_API_KEY");
+      setError("Falta configurar la clave de Google Maps.");
       return;
     }
 
-    loadGoogleMaps(apiKey).then(async () => {
-      if (cancelled || !containerRef.current || !window.google) return;
+    loadGoogleMaps(apiKey)
+      .then(async () => {
+        if (cancelled || !containerRef.current || !window.google) return;
 
-      const { PlaceAutocompleteElement } = await window.google.maps.importLibrary("places");
-      const el = new PlaceAutocompleteElement({ includedRegionCodes: ["ar"] });
+        const { PlaceAutocompleteElement } = await window.google.maps.importLibrary("places");
+        const el = new PlaceAutocompleteElement({ includedRegionCodes: ["ar"] });
 
-      el.addEventListener("gmp-select", async (event: google.maps.places.PlacePredictionSelectEvent) => {
-        const place = event.placePrediction.toPlace();
-        await place.fetchFields({ fields: ["formattedAddress"] });
-        if (place.formattedAddress) onSelectRef.current(place.formattedAddress);
+        el.addEventListener("gmp-select", async (event: google.maps.places.PlacePredictionSelectEvent) => {
+          const place = event.placePrediction.toPlace();
+          await place.fetchFields({ fields: ["formattedAddress"] });
+          if (place.formattedAddress) onSelectRef.current(place.formattedAddress);
+        });
+
+        containerRef.current.replaceChildren(el);
+      })
+      .catch((err) => {
+        // Si el mensaje real de Google quedó en un console.error propio (ej.
+        // key inválida/restringida), va a aparecer arriba de este log.
+        console.error("No se pudo inicializar el autocompletado de Google:", err);
+        if (!cancelled) setError("No se pudo cargar el buscador de direcciones. Recargá la página o probá de nuevo en un momento.");
       });
-
-      containerRef.current.replaceChildren(el);
-    });
 
     return () => {
       cancelled = true;
@@ -77,6 +85,9 @@ export default function AddressAutocomplete({ currentValue, onSelect }: AddressA
         </p>
       )}
       <div ref={containerRef} />
+      {error && (
+        <p className="text-xs mt-1" style={{ color: "var(--brand-alert)" }}>{error}</p>
+      )}
     </div>
   );
 }

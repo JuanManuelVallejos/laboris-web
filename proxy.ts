@@ -11,7 +11,6 @@ export default clerkMiddleware(
   },
   {
     contentSecurityPolicy: {
-      strict: true,
       directives: {
         "connect-src": ["https://laboris-api.onrender.com", "https://*.supabase.co", "https://*.googleapis.com", "https://*.gstatic.com"],
         "img-src": ["https://*.supabase.co", "https://*.gstatic.com", "https://*.googleapis.com", "data:"],

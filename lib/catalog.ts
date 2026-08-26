@@ -20,5 +20,3 @@ export const TRADES: Trade[] = [
 
 /** Opción libre disponible en los formularios de alta/edición de profesional, sin ícono de categoría en el home. */
 export const OTHER_TRADE_LABEL = "Otro";
-
-export const ZONES = ["CABA", "Zona Norte", "Zona Sur", "Zona Oeste", "GBA"] as const;

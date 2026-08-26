@@ -12,7 +12,10 @@ export interface Professional {
   name: string;
   avatarUrl?: string;
   trade: string;
-  zone: string;
+  homeAddress?: string;
+  radiusKm?: number;
+  /** Distancia al domicilio de quien pide el listado, en km — la calcula el backend, nunca se expone la ubicación exacta. */
+  distanceKm?: number;
   bio: string;
   rating: number;
   verified: boolean;

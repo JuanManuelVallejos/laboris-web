@@ -8,7 +8,8 @@ import { Field, TextInput, Textarea } from "@/components/ui/Field";
 import Chip from "@/components/ui/Chip";
 import Button from "@/components/ui/Button";
 import Icon from "@/components/icons/Icon";
-import { TRADES, OTHER_TRADE_LABEL, ZONES } from "@/lib/catalog";
+import DistanceSlider from "@/components/ui/DistanceSlider";
+import { TRADES, OTHER_TRADE_LABEL } from "@/lib/catalog";
 
 const TRADE_OPTIONS = [...TRADES.map((t) => t.label), OTHER_TRADE_LABEL];
 
@@ -16,14 +17,15 @@ export default function ProfessionalOnboardingPage() {
   const { user } = useUser();
   const { getToken } = useAuth();
 
-  const [fullName, setFullName] = useState(user?.fullName ?? "");
-  const [trade,    setTrade]    = useState("");
-  const [zone,     setZone]     = useState("");
-  const [bio,      setBio]      = useState("");
-  const [loading,  setLoading]  = useState(false);
-  const [error,    setError]    = useState("");
+  const [fullName,    setFullName]    = useState(user?.fullName ?? "");
+  const [trade,       setTrade]       = useState("");
+  const [homeAddress, setHomeAddress] = useState("");
+  const [radiusKm,    setRadiusKm]    = useState(10);
+  const [bio,         setBio]         = useState("");
+  const [loading,     setLoading]     = useState(false);
+  const [error,       setError]       = useState("");
 
-  const canSubmit = fullName.trim() && trade && zone;
+  const canSubmit = fullName.trim() && trade && homeAddress.trim();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -39,7 +41,7 @@ export default function ProfessionalOnboardingPage() {
       await user?.update({ firstName, lastName: rest.join(" ") || undefined });
 
       // Crear usuario + profesional en la DB
-      await completeOnboarding({ email, fullName: fullName.trim(), role: "professional", trade, zone, bio }, getToken);
+      await completeOnboarding({ email, fullName: fullName.trim(), role: "professional", trade, homeAddress: homeAddress.trim(), radiusKm, bio }, getToken);
 
       // Marcar onboarding completo y hacer reload para refrescar JWT.
       // Sumamos al array existente en vez de pisarlo, para no perder el rol
@@ -93,14 +95,18 @@ export default function ProfessionalOnboardingPage() {
           </div>
 
           <div className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm">
-            <span className="field__label block mb-2">Zona de trabajo *</span>
-            <div className="flex flex-wrap gap-2">
-              {ZONES.map((z) => (
-                <Chip key={z} active={zone === z} onClick={() => setZone(z)}>
-                  {z}
-                </Chip>
-              ))}
-            </div>
+            <Field label="Tu domicilio *" hint="Desde acá se calcula qué tan lejos podés llegar a trabajar">
+              <TextInput
+                value={homeAddress}
+                onChange={(e) => setHomeAddress(e.target.value)}
+                placeholder="Ej: Av. Corrientes 1234, CABA"
+                required
+              />
+            </Field>
+          </div>
+
+          <div className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm">
+            <DistanceSlider label="Radio de alcance" value={radiusKm} onChange={setRadiusKm} min={1} max={50} />
           </div>
 
           <div className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm">

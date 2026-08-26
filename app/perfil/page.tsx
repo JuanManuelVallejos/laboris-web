@@ -10,6 +10,7 @@ import NavBottom from "@/components/NavBottom";
 import Button from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import ProfessionalProfileView from "@/components/ProfessionalProfileView";
+import { Field, TextInput } from "@/components/ui/Field";
 import { getMyProfessional, completeOnboarding } from "@/lib/api";
 import type { Professional } from "@/lib/types";
 import { useActiveRole } from "@/lib/useActiveRole";
@@ -24,6 +25,7 @@ export default function PerfilPage() {
   const [profileError, setProfileError] = useState("");
   const [proLoading, setProLoading]   = useState(true);
   const [addingRole, setAddingRole]   = useState(false);
+  const [newClientAddress, setNewClientAddress] = useState("");
 
   const isPro = active === "professional";
 
@@ -40,15 +42,15 @@ export default function PerfilPage() {
     router.push("/sign-in");
   }
 
-  // Sumar el rol de cliente a una cuenta que hoy es solo profesional — no
-  // pide datos extra, así que no hace falta un formulario aparte.
+  // Sumar el rol de cliente a una cuenta que hoy es solo profesional —
+  // pide el domicilio inline, ya es obligatorio para poder usar Inicio.
   async function handleAddClientRole() {
-    if (!user) return;
+    if (!user || !newClientAddress.trim()) return;
     setAddingRole(true);
     try {
       const email = user.primaryEmailAddress?.emailAddress ?? "";
       const fullName = user.fullName ?? user.firstName ?? "Usuario";
-      await completeOnboarding({ email, fullName, role: "client" }, getToken);
+      await completeOnboarding({ email, fullName, role: "client", homeAddress: newClientAddress.trim() }, getToken);
       const existing = (user.unsafeMetadata?.roles as string[] | undefined) ?? [];
       const roles = Array.from(new Set([...existing, "client"]));
       await user.update({ unsafeMetadata: { ...user.unsafeMetadata, roles } });
@@ -128,7 +130,14 @@ export default function PerfilPage() {
           <div className="bg-surface-2 border border-border rounded-2xl p-5 shadow-sm text-center space-y-3">
             <p className="text-sm font-medium text-ink">¿También buscás servicios?</p>
             <p className="text-xs text-ink-soft">Sumá tu perfil de cliente sin salir de tu cuenta.</p>
-            <Button variant="secondary" size="sm" onClick={handleAddClientRole} disabled={addingRole}>
+            <Field label="Tu domicilio">
+              <TextInput
+                value={newClientAddress}
+                onChange={(e) => setNewClientAddress(e.target.value)}
+                placeholder="Ej: Av. Corrientes 1234, CABA"
+              />
+            </Field>
+            <Button variant="secondary" size="sm" onClick={handleAddClientRole} disabled={addingRole || !newClientAddress.trim()}>
               {addingRole ? "Sumando..." : "Sumar perfil de cliente"}
             </Button>
           </div>

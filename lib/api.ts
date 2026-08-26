@@ -2,8 +2,23 @@ import type { Professional, Job, Message, Attachment } from "./types";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
-export async function getProfessionals(): Promise<Professional[]> {
-  const res = await fetch(`${BASE}/api/v1/professionals`, { cache: "no-store" });
+/** Se lanza cuando el listado de profesionales requiere que el usuario cargue su domicilio primero. */
+export class AddressRequiredError extends Error {
+  constructor() {
+    super("Necesitás cargar tu domicilio para ver profesionales cerca tuyo.");
+    this.name = "AddressRequiredError";
+  }
+}
+
+export async function getProfessionals(
+  getToken: () => Promise<string | null>
+): Promise<Professional[]> {
+  const token = await getToken();
+  const res = await fetch(`${BASE}/api/v1/professionals`, {
+    cache: "no-store",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (res.status === 400) throw new AddressRequiredError();
   if (!res.ok) throw new Error("Failed to fetch professionals");
   const data = await res.json();
   return data ?? [];
@@ -29,7 +44,8 @@ export interface OnboardingData {
   fullName: string;
   role: "client" | "professional";
   trade?: string;
-  zone?: string;
+  homeAddress: string;
+  radiusKm?: number;
   bio?: string;
 }
 
@@ -70,7 +86,7 @@ export async function getMyProfessional(
 }
 
 export async function updateMyProfessional(
-  data: { trade: string; zone: string; bio: string },
+  data: { trade: string; homeAddress: string; radiusKm: number; bio: string },
   getToken: () => Promise<string | null>
 ): Promise<Professional> {
   const token = await getToken();
@@ -87,6 +103,26 @@ export async function updateMyProfessional(
     throw new Error(`${res.status}: ${body}`);
   }
   return res.json();
+}
+
+/** Actualiza el domicilio del cliente (distinto del domicilio del profesional, ver updateMyProfessional). */
+export async function updateMyAddress(
+  homeAddress: string,
+  getToken: () => Promise<string | null>
+): Promise<void> {
+  const token = await getToken();
+  const res = await fetch(`${BASE}/api/v1/me/address`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ homeAddress }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: "error desconocido" }));
+    throw new Error(body.error ?? `Error ${res.status}`);
+  }
 }
 
 export async function uploadPortfolioPhoto(

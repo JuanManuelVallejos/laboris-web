@@ -5,12 +5,13 @@ import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getMyProfessional, updateMyProfessional, uploadPortfolioPhoto, deletePortfolioPhoto } from "@/lib/api";
-import { TRADES, OTHER_TRADE_LABEL, ZONES } from "@/lib/catalog";
-import { Field, Textarea } from "@/components/ui/Field";
+import { TRADES, OTHER_TRADE_LABEL } from "@/lib/catalog";
+import { Field, TextInput, Textarea } from "@/components/ui/Field";
 import Chip from "@/components/ui/Chip";
 import Button from "@/components/ui/Button";
 import Icon from "@/components/icons/Icon";
 import PhotoUploader from "@/components/ui/PhotoUploader";
+import DistanceSlider from "@/components/ui/DistanceSlider";
 import type { Attachment } from "@/lib/types";
 
 const TRADE_OPTIONS = [...TRADES.map((t) => t.label), OTHER_TRADE_LABEL];
@@ -19,9 +20,10 @@ export default function EditProPage() {
   const { getToken } = useAuth();
   const router = useRouter();
 
-  const [trade, setTrade] = useState("");
-  const [zone,  setZone]  = useState("");
-  const [bio,   setBio]   = useState("");
+  const [trade,       setTrade]       = useState("");
+  const [homeAddress, setHomeAddress] = useState("");
+  const [radiusKm,    setRadiusKm]    = useState(10);
+  const [bio,         setBio]         = useState("");
   const [photos, setPhotos] = useState<Attachment[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [saving,   setSaving]   = useState(false);
@@ -31,7 +33,8 @@ export default function EditProPage() {
     getMyProfessional(getToken)
       .then((p) => {
         setTrade(p.trade);
-        setZone(p.zone);
+        setHomeAddress(p.homeAddress ?? "");
+        setRadiusKm(p.radiusKm ?? 10);
         setBio(p.bio ?? "");
         setPhotos(p.portfolioPhotos ?? []);
       })
@@ -51,11 +54,11 @@ export default function EditProPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!trade || !zone) return;
+    if (!trade || !homeAddress.trim()) return;
     setSaving(true);
     setError("");
     try {
-      await updateMyProfessional({ trade, zone, bio }, getToken);
+      await updateMyProfessional({ trade, homeAddress: homeAddress.trim(), radiusKm, bio }, getToken);
       router.push("/pro");
     } catch (err) {
       setError(`Error: ${err instanceof Error ? err.message : String(err)}`);
@@ -96,14 +99,18 @@ export default function EditProPage() {
             </div>
 
             <div className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm">
-              <span className="field__label block mb-2">Zona de trabajo *</span>
-              <div className="flex flex-wrap gap-2">
-                {ZONES.map((z) => (
-                  <Chip key={z} active={zone === z} onClick={() => setZone(z)}>
-                    {z}
-                  </Chip>
-                ))}
-              </div>
+              <Field label="Tu domicilio *" hint="Desde acá se calcula qué tan lejos podés llegar a trabajar">
+                <TextInput
+                  value={homeAddress}
+                  onChange={(e) => setHomeAddress(e.target.value)}
+                  placeholder="Ej: Av. Corrientes 1234, CABA"
+                  required
+                />
+              </Field>
+            </div>
+
+            <div className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm">
+              <DistanceSlider label="Radio de alcance" value={radiusKm} onChange={setRadiusKm} min={1} max={50} />
             </div>
 
             <div className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm">
@@ -128,7 +135,7 @@ export default function EditProPage() {
               </p>
             )}
 
-            <Button type="submit" variant="accent" size="lg" block disabled={!trade || !zone || saving}>
+            <Button type="submit" variant="accent" size="lg" block disabled={!trade || !homeAddress.trim() || saving}>
               {saving ? "Guardando..." : "Guardar cambios"}
             </Button>
           </form>

@@ -67,7 +67,7 @@ export default function AdminProfesionalesPage() {
             <tr className="border-b border-border bg-surface-3">
               <th className="text-left px-4 py-3 text-xs font-semibold text-ink-soft uppercase tracking-wide">Nombre</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-ink-soft uppercase tracking-wide">Oficio</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-ink-soft uppercase tracking-wide">Zona</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-ink-soft uppercase tracking-wide">Radio</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-ink-soft uppercase tracking-wide">Rating</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-ink-soft uppercase tracking-wide">Estado</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-ink-soft uppercase tracking-wide">Verificado</th>
@@ -94,7 +94,7 @@ export default function AdminProfesionalesPage() {
                   >
                     <td className="px-4 py-3 font-medium text-ink">{p.name}</td>
                     <td className="px-4 py-3 text-ink-soft capitalize">{p.trade}</td>
-                    <td className="px-4 py-3 text-ink-soft">{p.zone}</td>
+                    <td className="px-4 py-3 text-ink-soft">{p.radiusKm !== undefined ? `${p.radiusKm} km` : "—"}</td>
                     <td className="px-4 py-3 text-ink-soft">
                       {p.rating > 0 ? `★ ${p.rating.toFixed(1)}` : "—"}
                     </td>

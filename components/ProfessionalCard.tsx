@@ -31,7 +31,9 @@ export default function ProfessionalCard({ professional, className }: Props) {
       </div>
       <div className="pro-foot">
         {professional.verified && <span className="badge badge--verif">✓ verif.</span>}
-        <span style={{ color: "var(--ink-soft)", fontSize: "var(--t-2xs)" }}>{professional.zone}</span>
+        {professional.distanceKm !== undefined && (
+          <span style={{ color: "var(--ink-soft)", fontSize: "var(--t-2xs)" }}>a {professional.distanceKm.toFixed(1)} km</span>
+        )}
       </div>
     </Link>
   );

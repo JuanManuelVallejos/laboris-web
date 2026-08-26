@@ -13,27 +13,32 @@ export default function OnboardingPage() {
   const { user } = useUser();
   const { getToken } = useAuth();
 
-  const [fullName, setFullName] = useState(user?.fullName ?? "");
-  const [step,     setStep]     = useState<"name" | "role">("name");
-  const [loading,  setLoading]  = useState(false);
-  const [error,    setError]    = useState("");
+  const [fullName,    setFullName]    = useState(user?.fullName ?? "");
+  const [homeAddress, setHomeAddress] = useState("");
+  const [step,        setStep]        = useState<"name" | "role" | "address">("name");
+  const [loading,     setLoading]     = useState(false);
+  const [error,       setError]       = useState("");
 
   async function handleRole(role: "client" | "professional") {
+    // Guardamos el nombre antes de avanzar
+    const [firstName, ...rest] = fullName.trim().split(" ");
+    await user?.update({ firstName, lastName: rest.join(" ") || undefined });
+
     if (role === "professional") {
-      // Guardamos el nombre antes de ir al paso profesional
-      const [firstName, ...rest] = fullName.trim().split(" ");
-      await user?.update({ firstName, lastName: rest.join(" ") || undefined });
       router.push("/onboarding/professional");
       return;
     }
+    setStep("address");
+  }
 
+  async function handleFinishClient(e: React.FormEvent) {
+    e.preventDefault();
+    if (!homeAddress.trim()) return;
     setLoading(true);
     setError("");
     try {
       const email = user?.primaryEmailAddress?.emailAddress ?? "";
-      const [firstName, ...rest] = fullName.trim().split(" ");
-      await user?.update({ firstName, lastName: rest.join(" ") || undefined });
-      await completeOnboarding({ email, fullName: fullName.trim(), role: "client" }, getToken);
+      await completeOnboarding({ email, fullName: fullName.trim(), role: "client", homeAddress: homeAddress.trim() }, getToken);
       const existing = (user?.unsafeMetadata?.roles as string[] | undefined) ?? [];
       const roles = Array.from(new Set([...existing, "client"]));
       await user?.update({ unsafeMetadata: { onboardingComplete: true, roles } });
@@ -50,7 +55,37 @@ export default function OnboardingPage() {
     <div className="flex flex-col min-h-screen bg-page items-center justify-center px-4">
       <div className="max-w-sm w-full space-y-6">
 
-        {step === "name" ? (
+        {step === "address" ? (
+          <form onSubmit={handleFinishClient} className="space-y-6">
+            <div className="text-center space-y-1">
+              <h1 className="serif text-2xl font-bold text-ink">¿Dónde estás ubicado?</h1>
+              <p className="text-sm text-ink-soft">Así te mostramos profesionales que pueden llegar a tu domicilio</p>
+            </div>
+
+            {error && (
+              <p
+                className="text-sm rounded-xl px-4 py-3 text-center"
+                style={{ background: "color-mix(in srgb, var(--brand-alert) 12%, transparent)", color: "var(--brand-alert)" }}
+              >
+                {error}
+              </p>
+            )}
+
+            <Field label="Tu domicilio">
+              <TextInput
+                value={homeAddress}
+                onChange={(e) => setHomeAddress(e.target.value)}
+                placeholder="Ej: Av. Corrientes 1234, CABA"
+                autoFocus
+                required
+              />
+            </Field>
+
+            <Button type="submit" variant="accent" size="lg" block disabled={!homeAddress.trim() || loading}>
+              {loading ? "Guardando..." : "Terminar"}
+            </Button>
+          </form>
+        ) : step === "name" ? (
           <>
             <div className="text-center space-y-1">
               <h1 className="serif text-2xl font-bold text-ink">¿Cómo te llamás?</h1>

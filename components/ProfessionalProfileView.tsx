@@ -45,7 +45,11 @@ export default function ProfessionalProfileView({ professional, editHref, avatar
             {professional.verified && <span className="badge badge--verif">✓ verificado</span>}
           </div>
           {email && <p className="text-sm text-ink-soft mt-0.5 truncate">{email}</p>}
-          <p className="text-sm text-ink-soft capitalize mt-0.5">{professional.trade} · {professional.zone}</p>
+          <p className="text-sm text-ink-soft capitalize mt-0.5">
+            {professional.trade}
+            {isOwner && professional.radiusKm !== undefined && ` · Radio ${professional.radiusKm} km`}
+            {!isOwner && professional.distanceKm !== undefined && ` · a ${professional.distanceKm.toFixed(1)} km`}
+          </p>
           <p className="text-sm font-medium mt-1" style={{ color: "var(--amber)" }}>{ratingText}</p>
         </div>
         {editHref && (
@@ -89,7 +93,9 @@ export default function ProfessionalProfileView({ professional, editHref, avatar
       <div className="grid grid-cols-3 gap-3">
         {[
           { label: "Calificación", value: ratingText },
-          { label: "Zona", value: professional.zone },
+          isOwner
+            ? { label: "Radio", value: professional.radiusKm !== undefined ? `${professional.radiusKm} km` : "—" }
+            : { label: "Distancia", value: professional.distanceKm !== undefined ? `a ${professional.distanceKm.toFixed(1)} km` : "—" },
           { label: "Estado", value: professional.verified ? "Verificado" : "No verificado" },
         ].map((stat) => (
           <div key={stat.label} className="bg-surface-2 border border-border rounded-2xl p-3 shadow-sm text-center">

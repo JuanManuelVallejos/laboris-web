@@ -51,7 +51,10 @@ export default async function ProfessionalPage({ params }: { params: Promise<{ i
             <div className="sticky top-20 bg-surface-2 border border-border rounded-2xl p-5 shadow-sm space-y-4">
               <div>
                 <p className="text-sm font-semibold text-ink">{professional.name}</p>
-                <p className="text-xs text-ink-soft capitalize">{professional.trade} · {professional.zone}</p>
+                <p className="text-xs text-ink-soft capitalize">
+                  {professional.trade}
+                  {professional.distanceKm !== undefined && ` · a ${professional.distanceKm.toFixed(1)} km`}
+                </p>
                 <p className="text-sm font-medium mt-1" style={{ color: "var(--amber)" }}>{ratingText}</p>
               </div>
               <Link href={`/professionals/${id}/request`} className="block">

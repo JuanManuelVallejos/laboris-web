@@ -9,7 +9,6 @@ import Topbar from "@/components/Topbar";
 import NavBottom from "@/components/NavBottom";
 import Button from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import Icon from "@/components/icons/Icon";
 import ProfessionalProfileView from "@/components/ProfessionalProfileView";
 import { getMyProfessional } from "@/lib/api";
 import type { Professional } from "@/lib/types";
@@ -62,24 +61,26 @@ export default function PerfilPage() {
       <main className="flex-1 px-4 pt-5 pb-24 md:pb-10 max-w-lg mx-auto w-full space-y-4">
         <h2 className="serif text-lg font-bold text-ink">Mi perfil</h2>
 
-        {/* Avatar + datos */}
-        <div className="bg-surface-2 border border-border rounded-2xl p-5 shadow-sm flex items-center gap-4">
-          <div className="pro-av" style={{ width: 64, height: 64, fontSize: "var(--t-h2)", marginBottom: 0 }}>
-            {user?.imageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={user.imageUrl} alt={name} className="w-16 h-16 rounded-full object-cover" />
-            ) : (
-              initials
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-ink text-base">{name}</p>
-            <p className="text-sm text-ink-soft mt-0.5 truncate">{email}</p>
-            <div className="mt-1.5">
-              <Badge tone={isPro ? "info" : "verif"}>{isPro ? "Profesional" : "Cliente"}</Badge>
+        {/* Avatar + datos (cliente) */}
+        {!isPro && (
+          <div className="bg-surface-2 border border-border rounded-2xl p-5 shadow-sm flex items-center gap-4">
+            <div className="pro-av" style={{ width: 64, height: 64, fontSize: "var(--t-h2)", marginBottom: 0 }}>
+              {user?.imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={user.imageUrl} alt={name} className="w-16 h-16 rounded-full object-cover" />
+              ) : (
+                initials
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-ink text-base">{name}</p>
+              <p className="text-sm text-ink-soft mt-0.5 truncate">{email}</p>
+              <div className="mt-1.5">
+                <Badge tone="verif">Cliente</Badge>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Perfil profesional */}
         {isPro && proLoading && (
@@ -97,29 +98,8 @@ export default function PerfilPage() {
         )}
 
         {isPro && !proLoading && proProfile && (
-          <ProfessionalProfileView professional={proProfile} editHref="/pro/edit" />
+          <ProfessionalProfileView professional={proProfile} editHref="/pro/edit" avatarUrl={user?.imageUrl} email={email} />
         )}
-
-        {/* Acciones */}
-        <div className="bg-surface-2 border border-border rounded-2xl shadow-sm divide-y divide-border overflow-hidden">
-          {isPro ? (
-            <>
-              <Link href="/pro/pedidos" className="flex items-center justify-between px-5 py-4 hover:bg-surface-3 transition-colors">
-                <span className="text-sm font-medium text-ink">Mis pedidos</span>
-                <Icon name="arrow" className="text-ink-soft" style={{ width: 16, height: 16 }} />
-              </Link>
-              <Link href="/pro/edit" className="flex items-center justify-between px-5 py-4 hover:bg-surface-3 transition-colors">
-                <span className="text-sm font-medium text-ink">Editar perfil profesional</span>
-                <Icon name="arrow" className="text-ink-soft" style={{ width: 16, height: 16 }} />
-              </Link>
-            </>
-          ) : (
-            <Link href="/pedidos" className="flex items-center justify-between px-5 py-4 hover:bg-surface-3 transition-colors">
-              <span className="text-sm font-medium text-ink">Mis pedidos</span>
-              <Icon name="arrow" className="text-ink-soft" style={{ width: 16, height: 16 }} />
-            </Link>
-          )}
-        </div>
 
         <Button variant="secondary" size="lg" block onClick={handleSignOut} style={{ color: "var(--brand-alert)" }}>
           Cerrar sesión

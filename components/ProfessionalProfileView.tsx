@@ -11,20 +11,30 @@ interface ProfessionalProfileViewProps {
    * portfolio) muestran una invitación a completarlas en vez de ocultarse.
    */
   editHref?: string;
+  /**
+   * Foto a mostrar, con prioridad sobre professional.avatarUrl. La vista
+   * propia (Perfil) pasa acá user.imageUrl de Clerk, que siempre está
+   * actualizado, en vez de depender de que el webhook ya haya sincronizado
+   * professional.avatarUrl. La vista pública no la pasa.
+   */
+  avatarUrl?: string;
+  /** Si se pasa, se muestra debajo del nombre (solo tiene sentido en la vista propia). */
+  email?: string;
 }
 
-export default function ProfessionalProfileView({ professional, editHref }: ProfessionalProfileViewProps) {
+export default function ProfessionalProfileView({ professional, editHref, avatarUrl, email }: ProfessionalProfileViewProps) {
   const ratingText = professional.rating > 0 ? `★ ${professional.rating}` : "Sin calificación";
   const isOwner = !!editHref;
+  const avatar = avatarUrl ?? professional.avatarUrl;
 
   return (
     <>
       {/* Avatar + info principal */}
       <div className="bg-surface-2 border border-border rounded-2xl p-5 shadow-sm flex items-center gap-4 relative">
         <div className="pro-av" style={{ width: 64, height: 64, fontSize: "var(--t-h2)", marginBottom: 0 }}>
-          {professional.avatarUrl ? (
+          {avatar ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={professional.avatarUrl} alt={professional.name} className="w-16 h-16 rounded-full object-cover" />
+            <img src={avatar} alt={professional.name} className="w-16 h-16 rounded-full object-cover" />
           ) : (
             professional.name[0]?.toUpperCase()
           )}
@@ -34,6 +44,7 @@ export default function ProfessionalProfileView({ professional, editHref }: Prof
             <h2 className="serif text-lg font-bold text-ink">{professional.name}</h2>
             {professional.verified && <span className="badge badge--verif">✓ verificado</span>}
           </div>
+          {email && <p className="text-sm text-ink-soft mt-0.5 truncate">{email}</p>}
           <p className="text-sm text-ink-soft capitalize mt-0.5">{professional.trade} · {professional.zone}</p>
           <p className="text-sm font-medium mt-1" style={{ color: "var(--amber)" }}>{ratingText}</p>
         </div>

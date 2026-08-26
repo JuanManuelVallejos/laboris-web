@@ -2,23 +2,53 @@
 
 import { useEffect, useRef, useState } from "react";
 
-// Carga el script de Google Maps una sola vez por sesión de navegador,
-// aunque se monten varios AddressAutocomplete en la misma página o en
-// distintas navegaciones.
-let mapsLoader: Promise<void> | null = null;
+let bootstrapped = false;
 
-function loadGoogleMaps(apiKey: string): Promise<void> {
-  if (typeof window.google?.maps?.importLibrary === "function") return Promise.resolve();
-  if (mapsLoader) return mapsLoader;
-  mapsLoader = new Promise<void>((resolve, reject) => {
-    const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&loading=async`;
-    script.async = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error("No se pudo cargar el script de Google Maps"));
-    document.head.appendChild(script);
-  });
-  return mapsLoader;
+/**
+ * Bootstrap loader oficial de Google para carga dinámica de librerías
+ * (https://developers.google.com/maps/documentation/javascript/load-maps-js-api#dynamic-library-import).
+ * No alcanza con un <script src=".../maps/api/js">: este snippet define
+ * `google.maps.importLibrary` como un shim que recién inserta el script real
+ * la primera vez que se pide una librería — sin este bootstrap, `importLibrary`
+ * no existe en absoluto (por eso fallaba con "is not a function").
+ */
+function ensureGoogleMapsBootstrap(apiKey: string): void {
+  if (bootstrapped) return;
+  bootstrapped = true;
+
+  (function (g: Record<string, string>) {
+    let h: Promise<void> | undefined;
+    let a: HTMLScriptElement;
+    let k: string;
+    const p = "The Google Maps JavaScript API";
+    const c = "google";
+    const l = "importLibrary";
+    const q = "__ib__";
+    const m = document;
+    const b = window as unknown as Record<string, Record<string, unknown>>;
+    const gObj = (b[c] = b[c] || {});
+    const d = (gObj.maps = (gObj.maps as Record<string, unknown>) || {}) as Record<string, unknown>;
+    const r = new Set<string>();
+    const e = new URLSearchParams();
+    const u = (): Promise<void> =>
+      h ||
+      (h = new Promise<void>((resolve, reject) => {
+        a = m.createElement("script");
+        e.set("libraries", [...r] + "");
+        for (k in g) e.set(k.replace(/[A-Z]/g, (t) => "_" + t[0].toLowerCase()), g[k]);
+        e.set("callback", c + ".maps." + q);
+        a.src = `https://maps.${c}apis.com/maps/api/js?` + e;
+        d[q] = resolve;
+        a.onerror = () => { h = undefined; reject(new Error(p + " could not load.")); };
+        a.nonce = (m.querySelector("script[nonce]") as HTMLScriptElement | null)?.nonce || "";
+        m.head.append(a);
+      }));
+    if (d[l]) {
+      console.warn(p + " only loads once. Ignoring:", g);
+    } else {
+      d[l] = (f: string, ...n: unknown[]) => r.add(f) && u().then(() => (d[l] as (f: string, ...n: unknown[]) => unknown)(f, ...n));
+    }
+  })({ key: apiKey, v: "weekly" });
 }
 
 interface AddressAutocompleteProps {
@@ -49,11 +79,13 @@ export default function AddressAutocomplete({ currentValue, onSelect }: AddressA
       return;
     }
 
-    loadGoogleMaps(apiKey)
-      .then(async () => {
-        if (cancelled || !containerRef.current || !window.google) return;
+    ensureGoogleMapsBootstrap(apiKey);
 
-        const { PlaceAutocompleteElement } = await window.google.maps.importLibrary("places");
+    window.google.maps
+      .importLibrary("places")
+      .then(({ PlaceAutocompleteElement }) => {
+        if (cancelled || !containerRef.current) return;
+
         const el = new PlaceAutocompleteElement({ includedRegionCodes: ["ar"] });
 
         el.addEventListener("gmp-select", async (event: google.maps.places.PlacePredictionSelectEvent) => {
@@ -65,8 +97,6 @@ export default function AddressAutocomplete({ currentValue, onSelect }: AddressA
         containerRef.current.replaceChildren(el);
       })
       .catch((err) => {
-        // Si el mensaje real de Google quedó en un console.error propio (ej.
-        // key inválida/restringida), va a aparecer arriba de este log.
         console.error("No se pudo inicializar el autocompletado de Google:", err);
         if (!cancelled) setError("No se pudo cargar el buscador de direcciones. Recargá la página o probá de nuevo en un momento.");
       });

@@ -4,14 +4,22 @@ import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { getProfessional, createRequest, uploadRequestPhoto, listMyAddresses, createMyAddress } from "@/lib/api";
+import {
+  getProfessional,
+  createRequest,
+  uploadRequestPhoto,
+  listMyAddresses,
+  createMyAddress,
+  checkAddressDistance,
+  type AddressDistanceCheck,
+} from "@/lib/api";
 import { Field, Textarea, TextInput } from "@/components/ui/Field";
 import Button from "@/components/ui/Button";
 import Chip from "@/components/ui/Chip";
 import Icon from "@/components/icons/Icon";
 import LocalPhotoPicker from "@/components/ui/LocalPhotoPicker";
 import AddressAutocomplete from "@/components/ui/AddressAutocomplete";
-import type { SavedAddress } from "@/lib/types";
+import type { Professional, SavedAddress } from "@/lib/types";
 
 export default function RequestPage() {
   const router = useRouter();
@@ -19,7 +27,7 @@ export default function RequestPage() {
   const { getToken } = useAuth();
   const id = params.id as string;
 
-  const [professionalName, setProfessionalName] = useState("");
+  const [professional, setProfessional] = useState<Professional | null>(null);
   const [description, setDescription] = useState("");
   const [photos, setPhotos] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
@@ -33,10 +41,24 @@ export default function RequestPage() {
   const [newAddress, setNewAddress] = useState("");
   const [newAddressMapOpen, setNewAddressMapOpen] = useState(false);
   const [savingAddress, setSavingAddress] = useState(false);
+  const [addressCheck, setAddressCheck] = useState<AddressDistanceCheck | null>(null);
+  const [checkingAddress, setCheckingAddress] = useState(false);
 
   useEffect(() => {
-    getProfessional(id).then((p) => setProfessionalName(p.name)).catch(() => {});
+    getProfessional(id).then(setProfessional).catch(() => {});
   }, [id]);
+
+  // El listado ya filtró por el domicilio activo del cliente, pero acá
+  // adentro puede cambiar a otro domicilio guardado que quede fuera del
+  // radio de este profesional en particular — se re-valida cada vez.
+  useEffect(() => {
+    if (!selectedAddressId) { setAddressCheck(null); return; }
+    setCheckingAddress(true);
+    checkAddressDistance(id, selectedAddressId, getToken)
+      .then(setAddressCheck)
+      .catch(() => setAddressCheck(null))
+      .finally(() => setCheckingAddress(false));
+  }, [id, selectedAddressId, getToken]);
 
   useEffect(() => {
     listMyAddresses(getToken)
@@ -70,7 +92,7 @@ export default function RequestPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!description.trim() || !selectedAddressId) return;
+    if (!description.trim() || !selectedAddressId || (addressCheck && !addressCheck.withinRadius)) return;
     setLoading(true);
     setError("");
     try {
@@ -107,7 +129,7 @@ export default function RequestPage() {
 
           <div className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm">
             <p className="text-xs text-ink-soft mb-1">Enviando solicitud a</p>
-            <p className="text-sm font-semibold text-ink">{professionalName || "…"}</p>
+            <p className="text-sm font-semibold text-ink">{professional?.name || "…"}</p>
           </div>
 
           <div className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm space-y-3">
@@ -137,6 +159,15 @@ export default function RequestPage() {
                 {selectedAddressId && !showAddAddress && (
                   <p className="text-xs text-ink-soft">
                     {addresses.find((a) => a.id === selectedAddressId)?.address}
+                  </p>
+                )}
+
+                {addressCheck && !addressCheck.withinRadius && (
+                  <p
+                    className="text-xs rounded-lg px-3 py-2"
+                    style={{ background: "color-mix(in srgb, var(--brand-alert) 10%, transparent)", color: "var(--brand-alert)" }}
+                  >
+                    Este profesional no llega hasta este domicilio: está a {addressCheck.distanceKm.toFixed(1)} km, fuera de su radio de {professional?.radiusKm} km. Elegí otro domicilio para continuar.
                   </p>
                 )}
 
@@ -187,7 +218,7 @@ export default function RequestPage() {
           )}
 
           <div className="hidden md:block pt-2">
-            <Button type="submit" variant="accent" size="lg" block disabled={!description.trim() || !selectedAddressId || loading}>
+            <Button type="submit" variant="accent" size="lg" block disabled={!description.trim() || !selectedAddressId || checkingAddress || (addressCheck && !addressCheck.withinRadius) || loading}>
               {loading ? "Enviando..." : "Enviar solicitud"}
             </Button>
           </div>
@@ -202,7 +233,7 @@ export default function RequestPage() {
         <div className="max-w-lg mx-auto">
           <Button
             onClick={handleSubmit}
-            disabled={!description.trim() || !selectedAddressId || loading}
+            disabled={!description.trim() || !selectedAddressId || checkingAddress || (addressCheck && !addressCheck.withinRadius) || loading}
             variant="accent"
             size="lg"
             block

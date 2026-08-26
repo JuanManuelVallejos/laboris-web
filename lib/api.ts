@@ -39,6 +39,29 @@ export async function getProfessional(id: string): Promise<Professional> {
   return res.json();
 }
 
+export interface AddressDistanceCheck {
+  distanceKm: number;
+  withinRadius: boolean;
+}
+
+/** Valida un domicilio guardado contra el radio de alcance de un profesional puntual — se usa cuando el cliente cambia de domicilio ya dentro del flujo de pedir presupuesto. */
+export async function checkAddressDistance(
+  professionalId: string,
+  addressId: string,
+  getToken: () => Promise<string | null>
+): Promise<AddressDistanceCheck> {
+  const token = await getToken();
+  const res = await fetch(`${BASE}/api/v1/professionals/${professionalId}/address-check?addressId=${addressId}`, {
+    cache: "no-store",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: "error desconocido" }));
+    throw new Error(body.error ?? `Error ${res.status}`);
+  }
+  return res.json();
+}
+
 export async function ping(): Promise<boolean> {
   try {
     const res = await fetch(`${BASE}/ping`, { cache: "no-store" });

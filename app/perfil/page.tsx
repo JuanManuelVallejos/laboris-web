@@ -10,20 +10,22 @@ import NavBottom from "@/components/NavBottom";
 import Button from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import ProfessionalProfileView from "@/components/ProfessionalProfileView";
-import { getMyProfessional } from "@/lib/api";
+import { getMyProfessional, completeOnboarding } from "@/lib/api";
 import type { Professional } from "@/lib/types";
+import { useActiveRole } from "@/lib/useActiveRole";
 
 export default function PerfilPage() {
   const { user, isLoaded } = useUser();
   const { getToken } = useAuth();
   const { signOut } = useClerk();
   const router = useRouter();
+  const { hasClient, hasProfessional, active, setActive } = useActiveRole();
   const [proProfile, setProProfile]   = useState<Professional | null>(null);
   const [profileError, setProfileError] = useState("");
   const [proLoading, setProLoading]   = useState(true);
+  const [addingRole, setAddingRole]   = useState(false);
 
-  const roles = user?.unsafeMetadata?.roles as string[] | undefined;
-  const isPro = roles?.includes("professional");
+  const isPro = active === "professional";
 
   useEffect(() => {
     if (!isLoaded || !isPro) { setProLoading(false); return; }
@@ -36,6 +38,26 @@ export default function PerfilPage() {
   async function handleSignOut() {
     await signOut();
     router.push("/sign-in");
+  }
+
+  // Sumar el rol de cliente a una cuenta que hoy es solo profesional — no
+  // pide datos extra, así que no hace falta un formulario aparte.
+  async function handleAddClientRole() {
+    if (!user) return;
+    setAddingRole(true);
+    try {
+      const email = user.primaryEmailAddress?.emailAddress ?? "";
+      const fullName = user.fullName ?? user.firstName ?? "Usuario";
+      await completeOnboarding({ email, fullName, role: "client" }, getToken);
+      const existing = (user.unsafeMetadata?.roles as string[] | undefined) ?? [];
+      const roles = Array.from(new Set([...existing, "client"]));
+      await user.update({ unsafeMetadata: { ...user.unsafeMetadata, roles } });
+      setActive("client");
+      router.push("/");
+    } catch (err) {
+      console.error(err);
+      setAddingRole(false);
+    }
   }
 
   if (!isLoaded) {
@@ -99,6 +121,27 @@ export default function PerfilPage() {
 
         {isPro && !proLoading && proProfile && (
           <ProfessionalProfileView professional={proProfile} editHref="/pro/edit" avatarUrl={user?.imageUrl} email={email} />
+        )}
+
+        {/* Sumar el rol que falta */}
+        {isPro && !hasClient && (
+          <div className="bg-surface-2 border border-border rounded-2xl p-5 shadow-sm text-center space-y-3">
+            <p className="text-sm font-medium text-ink">¿También buscás servicios?</p>
+            <p className="text-xs text-ink-soft">Sumá tu perfil de cliente sin salir de tu cuenta.</p>
+            <Button variant="secondary" size="sm" onClick={handleAddClientRole} disabled={addingRole}>
+              {addingRole ? "Sumando..." : "Sumar perfil de cliente"}
+            </Button>
+          </div>
+        )}
+
+        {!isPro && !hasProfessional && (
+          <div className="bg-surface-2 border border-border rounded-2xl p-5 shadow-sm text-center space-y-3">
+            <p className="text-sm font-medium text-ink">¿También ofrecés servicios?</p>
+            <p className="text-xs text-ink-soft">Registrate como profesional y empezá a recibir pedidos.</p>
+            <Link href="/onboarding/professional">
+              <Button variant="secondary" size="sm">Registrarme como profesional</Button>
+            </Link>
+          </div>
         )}
 
         <Button variant="secondary" size="lg" block onClick={handleSignOut} style={{ color: "var(--brand-alert)" }}>

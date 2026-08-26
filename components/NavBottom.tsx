@@ -2,16 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
 import Icon from "@/components/icons/Icon";
 import type { IconName } from "@/components/icons/sprite";
 import { activeHref } from "@/lib/nav";
+import { useActiveRole } from "@/lib/useActiveRole";
 
 export default function NavBottom() {
   const pathname = usePathname();
-  const { user } = useUser();
-  const roles = user?.unsafeMetadata?.roles as string[] | undefined;
-  const isPro = roles?.includes("professional");
+  const { active: activeRole } = useActiveRole();
+  const isPro = activeRole === "professional";
 
   const items: { href: string; label: string; icon: IconName }[] = isPro
     ? [

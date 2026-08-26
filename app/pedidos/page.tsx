@@ -10,22 +10,23 @@ import RequestCard from "@/components/RequestCard";
 import Button from "@/components/ui/Button";
 import { getSentRequests } from "@/lib/api";
 import type { Request } from "@/lib/api";
+import { useActiveRole } from "@/lib/useActiveRole";
 
 export default function PedidosPage() {
   const { getToken } = useAuth();
-  const { user, isLoaded } = useUser();
+  const { isLoaded } = useUser();
+  const { hasClient, hasProfessional, active } = useActiveRole();
   const router = useRouter();
   const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading]   = useState(true);
 
   useEffect(() => {
     if (!isLoaded) return;
-    const roles = user?.unsafeMetadata?.roles as string[] | undefined;
-    if (roles?.includes("professional")) { router.replace("/pro/pedidos"); return; }
+    if (hasProfessional && (!hasClient || active === "professional")) { router.replace("/pro/pedidos"); return; }
     getSentRequests(getToken)
       .then(setRequests)
       .finally(() => setLoading(false));
-  }, [isLoaded, user, getToken, router]);
+  }, [isLoaded, hasClient, hasProfessional, active, getToken, router]);
 
   return (
     <div className="flex flex-col min-h-screen bg-page">

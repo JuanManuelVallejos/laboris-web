@@ -41,8 +41,12 @@ export default function ProfessionalOnboardingPage() {
       // Crear usuario + profesional en la DB
       await completeOnboarding({ email, fullName: fullName.trim(), role: "professional", trade, zone, bio }, getToken);
 
-      // Marcar onboarding completo y hacer reload para refrescar JWT
-      await user?.update({ unsafeMetadata: { onboardingComplete: true, roles: ["professional"] } });
+      // Marcar onboarding completo y hacer reload para refrescar JWT.
+      // Sumamos al array existente en vez de pisarlo, para no perder el rol
+      // de cliente si este usuario ya lo tenía.
+      const existing = (user?.unsafeMetadata?.roles as string[] | undefined) ?? [];
+      const roles = Array.from(new Set([...existing, "professional"]));
+      await user?.update({ unsafeMetadata: { onboardingComplete: true, roles } });
       window.location.replace("/pro");
     } catch (err) {
       setError(`Error: ${err instanceof Error ? err.message : String(err)}`);

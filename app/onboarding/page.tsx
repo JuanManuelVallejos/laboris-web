@@ -34,7 +34,9 @@ export default function OnboardingPage() {
       const [firstName, ...rest] = fullName.trim().split(" ");
       await user?.update({ firstName, lastName: rest.join(" ") || undefined });
       await completeOnboarding({ email, fullName: fullName.trim(), role: "client" }, getToken);
-      await user?.update({ unsafeMetadata: { onboardingComplete: true, roles: ["client"] } });
+      const existing = (user?.unsafeMetadata?.roles as string[] | undefined) ?? [];
+      const roles = Array.from(new Set([...existing, "client"]));
+      await user?.update({ unsafeMetadata: { onboardingComplete: true, roles } });
       window.location.replace("/");
     } catch (err) {
       setError("Ocurrió un error. Intentá de nuevo.");

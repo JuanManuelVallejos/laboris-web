@@ -360,6 +360,12 @@ h1, h2, h3, h4 { margin: 0; line-height: 1.5; color: var(--ink); }
   [data-theme="dark"] .mode-toggle .seg.on { background: rgba(62,200,122,.16); color: var(--brand-accent); }
   .mode-toggle .ico { width: 15px; height: 15px; }
 
+  /* ---------- Role pill (switch cliente/profesional) ---------- */
+  .role-pill { display: inline-flex; align-items: center; gap: 2px; border: 1.5px solid var(--border); background: var(--surface-2); border-radius: var(--r-pill); padding: 4px; }
+  .role-pill .seg { display: inline-flex; align-items: center; justify-content: center; padding: 5px 12px; border-radius: var(--r-pill); font-size: var(--t-xs); font-weight: 600; color: var(--ink-soft); transition: all .18s ease; }
+  .role-pill .seg.on { background: var(--brand-light); color: var(--brand-mid); }
+  [data-theme="dark"] .role-pill .seg.on { background: rgba(62,200,122,.16); color: var(--brand-accent); }
+
   /* ---------- Review box (confirmar fecha/cotización antes de proponer) ---------- */
   .review-box { background: var(--brand-light); }
   [data-theme="dark"] .review-box { background: rgba(62,200,122,.14); }

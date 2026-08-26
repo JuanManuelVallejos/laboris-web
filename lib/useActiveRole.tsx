@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { useUser } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 
@@ -21,13 +21,33 @@ function isClientPath(pathname: string): boolean {
   );
 }
 
+interface ActiveRoleValue {
+  hasClient: boolean;
+  hasProfessional: boolean;
+  dual: boolean;
+  active: Role;
+  setActive: (role: Role) => void;
+}
+
+const DEFAULT_VALUE: ActiveRoleValue = {
+  hasClient: false,
+  hasProfessional: false,
+  dual: false,
+  active: "client",
+  setActive: () => {},
+};
+
+const ActiveRoleContext = createContext<ActiveRoleValue | null>(null);
+
 /**
- * Modo activo (cliente/profesional) para usuarios con ambos roles. Se
- * actualiza solo al navegar a una zona inequívoca de la app (/pro vs.
- * inicio/pedidos/professionals) y persiste en localStorage para pantallas
- * compartidas entre roles (ej. /jobs/[id]) donde no hay señal de la URL.
+ * Fuente única del modo activo (cliente/profesional), montada una vez en
+ * app/layout.tsx. Antes cada componente (Topbar, NavBottom, la página de un
+ * job, etc.) tenía su propia copia vía useState + localStorage, así que un
+ * cambio hecho en un lugar (ej. al abrir un job) no se reflejaba en los
+ * demás (ej. la pill del Topbar) hasta el próximo montaje. Con Context,
+ * todos comparten el mismo estado de React y se actualizan juntos.
  */
-export function useActiveRole() {
+export function ActiveRoleProvider({ children }: { children: ReactNode }) {
   const { user } = useUser();
   const pathname = usePathname();
   const roles = (user?.unsafeMetadata?.roles as string[] | undefined) ?? [];
@@ -60,5 +80,10 @@ export function useActiveRole() {
 
   const active: Role = dual ? stored : hasProfessional ? "professional" : "client";
 
-  return { hasClient, hasProfessional, dual, active, setActive };
+  const value: ActiveRoleValue = { hasClient, hasProfessional, dual, active, setActive };
+  return <ActiveRoleContext.Provider value={value}>{children}</ActiveRoleContext.Provider>;
+}
+
+export function useActiveRole(): ActiveRoleValue {
+  return useContext(ActiveRoleContext) ?? DEFAULT_VALUE;
 }

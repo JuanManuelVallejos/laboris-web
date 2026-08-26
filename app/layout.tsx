@@ -3,6 +3,7 @@ import { Fraunces, Plus_Jakarta_Sans, IBM_Plex_Mono } from "next/font/google";
 import AppClerkProvider from "@/components/AppClerkProvider";
 import WarmupPing from "@/components/WarmupPing";
 import IconSprite from "@/components/icons/sprite";
+import { ActiveRoleProvider } from "@/lib/useActiveRole";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -54,7 +55,9 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-page" suppressHydrationWarning>
         <IconSprite />
         <WarmupPing />
-        <AppClerkProvider>{children}</AppClerkProvider>
+        <AppClerkProvider>
+          <ActiveRoleProvider>{children}</ActiveRoleProvider>
+        </AppClerkProvider>
       </body>
     </html>
   );

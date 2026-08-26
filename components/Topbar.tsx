@@ -161,12 +161,16 @@ function NotificationBell() {
 
 function RolePill() {
   const { active } = useActiveRole();
+  const seg = (isActive: boolean) =>
+    `px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+      isActive ? "bg-brand-light text-brand-mid" : "text-ink-mid hover:text-ink"
+    }`;
   return (
-    <div className="role-pill" role="group" aria-label="Modo">
-      <Link href="/" className={`seg ${active === "client" ? "on" : ""}`}>
+    <div className="flex items-center gap-0.5 border border-border bg-surface-2 rounded-full p-1" role="group" aria-label="Modo">
+      <Link href="/" className={seg(active === "client")}>
         Cliente
       </Link>
-      <Link href="/pro" className={`seg ${active === "professional" ? "on" : ""}`}>
+      <Link href="/pro" className={seg(active === "professional")}>
         Profesional
       </Link>
     </div>

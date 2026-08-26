@@ -19,7 +19,14 @@ export default function RequestCard({ title, request, children }: Props) {
       <p className="text-sm text-ink-mid leading-relaxed">{request.description}</p>
 
       {request.address && (
-        <p className="text-xs text-ink-soft">Domicilio: {request.address}</p>
+        <a
+          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(request.address)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-ink-soft underline decoration-dotted block"
+        >
+          Domicilio: {request.address}
+        </a>
       )}
 
       {request.status === "rejected" && request.rejectionReason && (

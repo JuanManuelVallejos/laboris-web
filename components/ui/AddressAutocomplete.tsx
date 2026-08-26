@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Button from "@/components/ui/Button";
 
 let bootstrapped = false;
 
@@ -67,9 +68,16 @@ interface AddressAutocompleteProps {
  */
 export default function AddressAutocomplete({ currentValue, onSelect }: AddressAutocompleteProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const markerRef = useRef<google.maps.Marker | null>(null);
+  const geocoderRef = useRef<google.maps.Geocoder | null>(null);
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
   const [error, setError] = useState("");
+
+  const [showMapFallback, setShowMapFallback] = useState(false);
+  const [pinAddress, setPinAddress] = useState("");
+  const [pinError, setPinError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -107,6 +115,79 @@ export default function AddressAutocomplete({ currentValue, onSelect }: AddressA
     };
   }, []);
 
+  // Fallback para cuando Google no encuentra la dirección exacta (barrios
+  // nuevos, countries, zonas rurales) — se arma solo cuando se pide, no de
+  // entrada, para que siga siendo la vía secundaria y no la principal.
+  useEffect(() => {
+    if (!showMapFallback || !mapContainerRef.current) return;
+    let cancelled = false;
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    if (!apiKey) return;
+
+    ensureGoogleMapsBootstrap(apiKey);
+
+    Promise.all([
+      window.google.maps.importLibrary("maps") as Promise<google.maps.MapsLibrary>,
+      window.google.maps.importLibrary("marker") as Promise<google.maps.MarkerLibrary>,
+      window.google.maps.importLibrary("geocoding") as Promise<google.maps.GeocodingLibrary>,
+    ])
+      .then(([{ Map }, { Marker }, { Geocoder }]) => {
+        if (cancelled || !mapContainerRef.current) return;
+
+        const map = new Map(mapContainerRef.current, {
+          center: { lat: -34.6037, lng: -58.3816 }, // Buenos Aires
+          zoom: 12,
+          streetViewControl: false,
+          mapTypeControl: false,
+        });
+        geocoderRef.current = new Geocoder();
+
+        const reverseGeocode = (latLng: google.maps.LatLng) => {
+          setPinError("");
+          geocoderRef.current!.geocode({ location: latLng }, (results, status) => {
+            if (cancelled) return;
+            if (status === "OK" && results && results[0]) {
+              setPinAddress(results[0].formatted_address);
+            } else {
+              setPinError("No pudimos identificar una dirección para ese punto — probá con otro lugar del mapa.");
+            }
+          });
+        };
+
+        const placePin = (latLng: google.maps.LatLng) => {
+          if (!markerRef.current) {
+            markerRef.current = new Marker({ position: latLng, map, draggable: true });
+            markerRef.current.addListener("dragend", () => {
+              const pos = markerRef.current!.getPosition();
+              if (pos) reverseGeocode(pos);
+            });
+          } else {
+            markerRef.current.setPosition(latLng);
+          }
+          reverseGeocode(latLng);
+        };
+
+        map.addListener("click", (e: google.maps.MapMouseEvent) => {
+          if (e.latLng) placePin(e.latLng);
+        });
+      })
+      .catch((err) => {
+        console.error("No se pudo cargar el mapa:", err);
+        if (!cancelled) setPinError("No se pudo cargar el mapa. Recargá la página o probá de nuevo en un momento.");
+      });
+
+    return () => {
+      cancelled = true;
+      markerRef.current = null;
+    };
+  }, [showMapFallback]);
+
+  function handleConfirmPin() {
+    if (!pinAddress) return;
+    onSelectRef.current(pinAddress);
+    setShowMapFallback(false);
+  }
+
   return (
     <div>
       {currentValue && (
@@ -117,6 +198,28 @@ export default function AddressAutocomplete({ currentValue, onSelect }: AddressA
       <div ref={containerRef} />
       {error && (
         <p className="text-xs mt-1" style={{ color: "var(--brand-alert)" }}>{error}</p>
+      )}
+
+      <button
+        type="button"
+        onClick={() => setShowMapFallback((v) => !v)}
+        className="text-xs font-medium text-brand-vivid mt-2"
+      >
+        {showMapFallback ? "Ocultar mapa" : "¿No encontrás tu domicilio? Marcalo en el mapa"}
+      </button>
+
+      {showMapFallback && (
+        <div className="mt-2 space-y-2">
+          <p className="text-xs text-ink-soft">Tocá el mapa para marcar tu domicilio.</p>
+          <div ref={mapContainerRef} className="rounded-xl overflow-hidden" style={{ height: 260 }} />
+          {pinAddress && <p className="text-xs text-ink">Ubicación marcada: {pinAddress}</p>}
+          {pinError && (
+            <p className="text-xs" style={{ color: "var(--brand-alert)" }}>{pinError}</p>
+          )}
+          <Button type="button" variant="secondary" size="sm" onClick={handleConfirmPin} disabled={!pinAddress}>
+            Confirmar ubicación
+          </Button>
+        </div>
       )}
     </div>
   );

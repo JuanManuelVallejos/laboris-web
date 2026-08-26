@@ -139,7 +139,7 @@
    BASE
    ============================================================ */
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; overflow-x: hidden; }
 body {
   margin: 0;
   background: var(--page);
@@ -149,6 +149,7 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   transition: background .3s ease, color .3s ease;
+  overflow-x: hidden;
 }
 h1, h2, h3, h4 { margin: 0; line-height: 1.5; color: var(--ink); }
 .mono { font-family: var(--font-mono); }

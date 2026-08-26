@@ -40,6 +40,7 @@ export default function HomeClient() {
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
   const [showAddressPicker, setShowAddressPicker] = useState(false);
   const [switchingAddressId, setSwitchingAddressId] = useState<string | null>(null);
+  const [showDistanceFilter, setShowDistanceFilter] = useState(false);
 
   const refreshProfessionals = useCallback(() => {
     setLoading(true);
@@ -107,6 +108,12 @@ export default function HomeClient() {
 
   const isFiltering = Boolean(activeTrade || distanceLimit > 0 || search);
 
+  const noResultsHint = distanceLimit > 0
+    ? "Probá ampliar la distancia máxima"
+    : activeTrade || search
+    ? "Probá con otro oficio o término de búsqueda"
+    : "Todavía no hay profesionales cerca de tu domicilio";
+
   function toggleTrade(value: string) {
     setActiveTrade((prev) => (prev === value ? null : value));
   }
@@ -156,16 +163,28 @@ export default function HomeClient() {
         </div>
       )}
 
-      {/* Distancia */}
-      <div className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm">
-        <DistanceSlider
-          label="Distancia máxima"
-          value={distanceLimit}
-          onChange={setDistanceLimit}
-          min={0}
-          max={50}
-          unlimitedLabel="Cualquier distancia"
-        />
+      {/* Distancia — poco accesible a propósito: es un caso de uso raro (solo
+          para quien quiere específicamente un profesional de su misma zona) */}
+      <div>
+        <button
+          type="button"
+          onClick={() => setShowDistanceFilter((v) => !v)}
+          className="sec-link"
+        >
+          {distanceLimit > 0 ? `Distancia: hasta ${distanceLimit} km` : "Filtrar por distancia"}
+        </button>
+        {showDistanceFilter && (
+          <div className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm mt-2">
+            <DistanceSlider
+              label="Distancia máxima"
+              value={distanceLimit}
+              onChange={setDistanceLimit}
+              min={0}
+              max={50}
+              unlimitedLabel="Cualquier distancia"
+            />
+          </div>
+        )}
       </div>
 
       {/* Servicios */}
@@ -174,7 +193,7 @@ export default function HomeClient() {
           <span className="sec-title">Servicios</span>
           {isFiltering && (
             <button
-              onClick={() => { setActiveTrade(null); setDistanceLimit(0); setSearch(""); }}
+              onClick={() => { setActiveTrade(null); setDistanceLimit(0); setSearch(""); setShowDistanceFilter(false); }}
               className="sec-link"
             >
               Limpiar filtros
@@ -208,7 +227,7 @@ export default function HomeClient() {
         ) : filtered.length === 0 ? (
           <div className="text-center py-12 space-y-2">
             <p className="text-sm font-medium text-ink">Sin resultados</p>
-            <p className="text-xs text-ink-soft">Probá con otro oficio o ampliá la distancia</p>
+            <p className="text-xs text-ink-soft">{noResultsHint}</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">

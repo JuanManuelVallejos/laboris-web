@@ -190,7 +190,11 @@ export default function Topbar() {
           Labor<em>is</em>
         </Link>
 
-        {dual && <RolePill />}
+        {dual && (
+          <div className="hidden md:block">
+            <RolePill />
+          </div>
+        )}
 
         <nav className="hidden md:flex items-center gap-1">
           {navLinks.map((link) => (
@@ -227,6 +231,12 @@ export default function Topbar() {
           </Show>
         </div>
       </div>
+
+      {dual && (
+        <div className="md:hidden flex justify-center pb-3">
+          <RolePill />
+        </div>
+      )}
     </header>
   );
 }

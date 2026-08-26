@@ -10,6 +10,7 @@ export interface Attachment {
 export interface Professional {
   id: string;
   name: string;
+  avatarUrl?: string;
   trade: string;
   zone: string;
   bio: string;

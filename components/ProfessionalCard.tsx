@@ -9,7 +9,14 @@ interface Props {
 export default function ProfessionalCard({ professional, className }: Props) {
   return (
     <Link href={`/professionals/${professional.id}`} className={["pro-card block", className].filter(Boolean).join(" ")}>
-      <div className="pro-av">{professional.name[0]?.toUpperCase()}</div>
+      <div className="pro-av">
+        {professional.avatarUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={professional.avatarUrl} alt={professional.name} className="w-full h-full rounded-full object-cover" />
+        ) : (
+          professional.name[0]?.toUpperCase()
+        )}
+      </div>
       <div className="pro-name">{professional.name}</div>
       <div className="pro-role capitalize">{professional.trade}</div>
       <div className="pro-rating">

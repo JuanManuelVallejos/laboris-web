@@ -22,7 +22,12 @@ export default function ProfessionalProfileView({ professional, editHref }: Prof
       {/* Avatar + info principal */}
       <div className="bg-surface-2 border border-border rounded-2xl p-5 shadow-sm flex items-center gap-4 relative">
         <div className="pro-av" style={{ width: 64, height: 64, fontSize: "var(--t-h2)", marginBottom: 0 }}>
-          {professional.name[0]?.toUpperCase()}
+          {professional.avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={professional.avatarUrl} alt={professional.name} className="w-16 h-16 rounded-full object-cover" />
+          ) : (
+            professional.name[0]?.toUpperCase()
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">

@@ -261,7 +261,9 @@ export interface UserWithRoles {
   clerkId: string;
   email: string;
   fullName: string;
+  avatarUrl: string;
   createdAt: string;
+  deletedAt: string | null;
   roles: string[];
 }
 

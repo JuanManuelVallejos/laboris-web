@@ -48,17 +48,18 @@ export default function AdminUsuariosPage() {
               <th className="text-left px-4 py-3 text-xs font-semibold text-ink-soft uppercase tracking-wide">Nombre</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-ink-soft uppercase tracking-wide">Email</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-ink-soft uppercase tracking-wide">Roles</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-ink-soft uppercase tracking-wide">Estado</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-ink-soft uppercase tracking-wide">Registrado</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {loading ? (
               <tr>
-                <td colSpan={4} className="px-4 py-10 text-center text-ink-soft">Cargando...</td>
+                <td colSpan={5} className="px-4 py-10 text-center text-ink-soft">Cargando...</td>
               </tr>
             ) : data?.items.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-4 py-10 text-center text-ink-soft">No hay usuarios</td>
+                <td colSpan={5} className="px-4 py-10 text-center text-ink-soft">No hay usuarios</td>
               </tr>
             ) : (
               data?.items.map((u) => (
@@ -77,6 +78,13 @@ export default function AdminUsuariosPage() {
                         ))
                       )}
                     </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    {u.deletedAt ? (
+                      <Badge tone="alert">Eliminado</Badge>
+                    ) : (
+                      <span className="text-xs text-ink-soft">Activo</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-ink-soft">
                     {new Date(u.createdAt).toLocaleDateString("es-AR", {

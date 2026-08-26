@@ -1,14 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { useAuth } from "@clerk/nextjs";
-import { updateMyAddress } from "@/lib/api";
+import { useAuth, useClerk } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+import { updateMyAddress, UserNotOnboardedError } from "@/lib/api";
 import { Field } from "@/components/ui/Field";
 import AddressAutocomplete from "@/components/ui/AddressAutocomplete";
 import Button from "@/components/ui/Button";
 
 export default function AddressOnboardingPage() {
   const { getToken } = useAuth();
+  const { signOut } = useClerk();
+  const router = useRouter();
 
   const [homeAddress, setHomeAddress] = useState("");
   const [loading, setLoading] = useState(false);
@@ -23,10 +26,16 @@ export default function AddressOnboardingPage() {
       await updateMyAddress(homeAddress.trim(), getToken);
       window.location.replace("/");
     } catch (err) {
+      if (err instanceof UserNotOnboardedError) { router.replace("/onboarding"); return; }
       setError(err instanceof Error ? err.message : "Ocurrió un error. Intentá de nuevo.");
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleSignOut() {
+    await signOut();
+    router.push("/sign-in");
   }
 
   return (
@@ -55,6 +64,15 @@ export default function AddressOnboardingPage() {
             {loading ? "Guardando..." : "Continuar"}
           </Button>
         </form>
+
+        <button
+          type="button"
+          onClick={handleSignOut}
+          className="block mx-auto text-sm font-medium"
+          style={{ color: "var(--brand-alert)" }}
+        >
+          Cerrar sesión
+        </button>
       </div>
     </div>
   );

@@ -10,6 +10,14 @@ export class AddressRequiredError extends Error {
   }
 }
 
+/** Se lanza cuando Clerk cree que el onboarding está completo pero el usuario nunca se creó del lado del backend — hay que repetir el onboarding completo, no solo pedir el domicilio. */
+export class UserNotOnboardedError extends Error {
+  constructor() {
+    super("Todavía no completaste el registro.");
+    this.name = "UserNotOnboardedError";
+  }
+}
+
 export async function getProfessionals(
   getToken: () => Promise<string | null>
 ): Promise<Professional[]> {
@@ -18,6 +26,7 @@ export async function getProfessionals(
     cache: "no-store",
     headers: { Authorization: `Bearer ${token}` },
   });
+  if (res.status === 404) throw new UserNotOnboardedError();
   if (res.status === 400) throw new AddressRequiredError();
   if (!res.ok) throw new Error("Failed to fetch professionals");
   const data = await res.json();
@@ -119,6 +128,7 @@ export async function updateMyAddress(
     },
     body: JSON.stringify({ homeAddress }),
   });
+  if (res.status === 404) throw new UserNotOnboardedError();
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: "error desconocido" }));
     throw new Error(body.error ?? `Error ${res.status}`);

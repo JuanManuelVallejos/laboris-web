@@ -9,7 +9,7 @@ import CategoryGrid from "@/components/ui/CategoryGrid";
 import UrgencyCard from "@/components/ui/UrgencyCard";
 import DistanceSlider from "@/components/ui/DistanceSlider";
 import { TRADES } from "@/lib/catalog";
-import { getMyProfessional, getProfessionals, AddressRequiredError } from "@/lib/api";
+import { getMyProfessional, getProfessionals, AddressRequiredError, UserNotOnboardedError } from "@/lib/api";
 import type { Professional } from "@/lib/types";
 import { useActiveRole } from "@/lib/useActiveRole";
 
@@ -32,6 +32,7 @@ export default function HomeClient() {
     getProfessionals(getToken)
       .then(setProfessionals)
       .catch((e) => {
+        if (e instanceof UserNotOnboardedError) { router.replace("/onboarding"); return; }
         if (e instanceof AddressRequiredError) { router.replace("/onboarding/address"); return; }
         console.error(e);
       })

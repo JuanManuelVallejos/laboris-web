@@ -163,30 +163,6 @@ export default function HomeClient() {
         </div>
       )}
 
-      {/* Distancia — poco accesible a propósito: es un caso de uso raro (solo
-          para quien quiere específicamente un profesional de su misma zona) */}
-      <div>
-        <button
-          type="button"
-          onClick={() => setShowDistanceFilter((v) => !v)}
-          className="sec-link"
-        >
-          {distanceLimit > 0 ? `Distancia: hasta ${distanceLimit} km` : "Filtrar por distancia"}
-        </button>
-        {showDistanceFilter && (
-          <div className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm mt-2">
-            <DistanceSlider
-              label="Distancia máxima"
-              value={distanceLimit}
-              onChange={setDistanceLimit}
-              min={0}
-              max={50}
-              unlimitedLabel="Cualquier distancia"
-            />
-          </div>
-        )}
-      </div>
-
       {/* Servicios */}
       <section>
         <div className="sec-head mb-3">
@@ -216,7 +192,30 @@ export default function HomeClient() {
           <span className="sec-title">
             {isFiltering ? `${filtered.length} resultado${filtered.length !== 1 ? "s" : ""}` : "Profesionales que llegan a tu domicilio"}
           </span>
+          <button
+            type="button"
+            onClick={() => setShowDistanceFilter((v) => !v)}
+            className="sec-link"
+          >
+            {distanceLimit > 0 ? `Distancia: hasta ${distanceLimit} km` : "Limitar distancia"}
+          </button>
         </div>
+
+        {showDistanceFilter && (
+          <div className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm mb-3 space-y-2">
+            <DistanceSlider
+              label="Distancia máxima"
+              value={distanceLimit}
+              onChange={setDistanceLimit}
+              min={0}
+              max={50}
+              unlimitedLabel="Cualquier distancia"
+            />
+            <p className="text-xs text-ink-soft">
+              Por defecto mostramos a todos los profesionales que llegan a tu domicilio. Activá esto si preferís ver solo a los que están más cerca tuyo.
+            </p>
+          </div>
+        )}
 
         {loading ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">

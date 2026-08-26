@@ -31,6 +31,7 @@ export default function RequestPage() {
   const [showAddAddress, setShowAddAddress] = useState(false);
   const [newLabel, setNewLabel] = useState("");
   const [newAddress, setNewAddress] = useState("");
+  const [newAddressMapOpen, setNewAddressMapOpen] = useState(false);
   const [savingAddress, setSavingAddress] = useState(false);
 
   useEffect(() => {
@@ -146,13 +147,13 @@ export default function RequestPage() {
                       onChange={(e) => setNewLabel(e.target.value)}
                       placeholder="Nombre (ej: Casa, Depto)"
                     />
-                    <AddressAutocomplete onSelect={setNewAddress} />
+                    <AddressAutocomplete onSelect={setNewAddress} onMapOpenChange={setNewAddressMapOpen} />
                     <Button
                       type="button"
                       variant="secondary"
                       size="sm"
                       onClick={handleAddAddress}
-                      disabled={savingAddress || !newLabel.trim() || !newAddress.trim()}
+                      disabled={savingAddress || !newLabel.trim() || !newAddress.trim() || newAddressMapOpen}
                     >
                       {savingAddress ? "Guardando..." : "Guardar domicilio"}
                     </Button>

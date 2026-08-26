@@ -14,6 +14,7 @@ export default function AddressOnboardingPage() {
   const router = useRouter();
 
   const [homeAddress, setHomeAddress] = useState("");
+  const [mapOpen, setMapOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState("");
 
@@ -57,10 +58,10 @@ export default function AddressOnboardingPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <Field label="Tu domicilio">
-            <AddressAutocomplete onSelect={setHomeAddress} />
+            <AddressAutocomplete onSelect={setHomeAddress} onMapOpenChange={setMapOpen} />
           </Field>
 
-          <Button type="submit" variant="accent" size="lg" block disabled={!homeAddress.trim() || loading}>
+          <Button type="submit" variant="accent" size="lg" block disabled={!homeAddress.trim() || mapOpen || loading}>
             {loading ? "Guardando..." : "Continuar"}
           </Button>
         </form>

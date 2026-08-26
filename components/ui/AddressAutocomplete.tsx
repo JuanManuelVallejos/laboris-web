@@ -57,6 +57,8 @@ interface AddressAutocompleteProps {
   currentValue?: string;
   /** Se dispara solo cuando el usuario elige una sugerencia real de Google — nunca con texto libre. */
   onSelect: (address: string) => void;
+  /** Avisa cuando se abre/cierra el mapa de respaldo — los formularios que editan un domicilio ya cargado lo usan para no dejar guardar mientras hay un pin sin confirmar. */
+  onMapOpenChange?: (open: boolean) => void;
 }
 
 /**
@@ -66,18 +68,28 @@ interface AddressAutocompleteProps {
  * A propósito no permite texto libre: la única forma de setear un valor es
  * eligiendo una sugerencia de la lista.
  */
-export default function AddressAutocomplete({ currentValue, onSelect }: AddressAutocompleteProps) {
+export default function AddressAutocomplete({ currentValue, onSelect, onMapOpenChange }: AddressAutocompleteProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const markerRef = useRef<google.maps.Marker | null>(null);
   const geocoderRef = useRef<google.maps.Geocoder | null>(null);
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
+  const onMapOpenChangeRef = useRef(onMapOpenChange);
+  onMapOpenChangeRef.current = onMapOpenChange;
   const [error, setError] = useState("");
 
   const [showMapFallback, setShowMapFallback] = useState(false);
   const [pinAddress, setPinAddress] = useState("");
   const [pinError, setPinError] = useState("");
+
+  // Avisa al formulario padre + arranca cada apertura/cierre del mapa sin
+  // restos de un intento anterior (pin marcado o error de una sesión previa).
+  useEffect(() => {
+    onMapOpenChangeRef.current?.(showMapFallback);
+    setPinAddress("");
+    setPinError("");
+  }, [showMapFallback]);
 
   useEffect(() => {
     let cancelled = false;
@@ -94,7 +106,13 @@ export default function AddressAutocomplete({ currentValue, onSelect }: AddressA
       .then(({ PlaceAutocompleteElement }) => {
         if (cancelled || !containerRef.current) return;
 
-        const el = new PlaceAutocompleteElement({ includedRegionCodes: ["ar"] });
+        const el = new PlaceAutocompleteElement({
+          includedRegionCodes: ["ar"],
+          // Exige una dirección específica (calle + altura, edificio con
+          // nombre propio, o unidad dentro de un edificio) — sin esto Google
+          // también sugiere localidades/partidos enteros (ej. "Bernal").
+          includedPrimaryTypes: ["street_address", "premise", "subpremise"],
+        });
 
         el.addEventListener("gmp-select", async (event: google.maps.places.PlacePredictionSelectEvent) => {
           const place = event.placePrediction.toPlace();

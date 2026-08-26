@@ -16,6 +16,7 @@ export default function OnboardingPage() {
 
   const [fullName,    setFullName]    = useState(user?.fullName ?? "");
   const [homeAddress, setHomeAddress] = useState("");
+  const [mapOpen,     setMapOpen]     = useState(false);
   const [step,        setStep]        = useState<"name" | "role" | "address">("name");
   const [loading,     setLoading]     = useState(false);
   const [error,       setError]       = useState("");
@@ -73,10 +74,10 @@ export default function OnboardingPage() {
             )}
 
             <Field label="Tu domicilio">
-              <AddressAutocomplete onSelect={setHomeAddress} />
+              <AddressAutocomplete onSelect={setHomeAddress} onMapOpenChange={setMapOpen} />
             </Field>
 
-            <Button type="submit" variant="accent" size="lg" block disabled={!homeAddress.trim() || loading}>
+            <Button type="submit" variant="accent" size="lg" block disabled={!homeAddress.trim() || mapOpen || loading}>
               {loading ? "Guardando..." : "Terminar"}
             </Button>
           </form>

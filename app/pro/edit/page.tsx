@@ -23,6 +23,7 @@ export default function EditProPage() {
 
   const [trade,       setTrade]       = useState("");
   const [homeAddress, setHomeAddress] = useState("");
+  const [mapOpen,     setMapOpen]     = useState(false);
   const [radiusKm,    setRadiusKm]    = useState(10);
   const [bio,         setBio]         = useState("");
   const [photos, setPhotos] = useState<Attachment[]>([]);
@@ -101,7 +102,7 @@ export default function EditProPage() {
 
             <div className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm">
               <Field label="Tu domicilio *" hint="Desde acá se calcula qué tan lejos podés llegar a trabajar">
-                <AddressAutocomplete currentValue={homeAddress} onSelect={setHomeAddress} />
+                <AddressAutocomplete currentValue={homeAddress} onSelect={setHomeAddress} onMapOpenChange={setMapOpen} />
               </Field>
             </div>
 
@@ -131,7 +132,7 @@ export default function EditProPage() {
               </p>
             )}
 
-            <Button type="submit" variant="accent" size="lg" block disabled={!trade || !homeAddress.trim() || saving}>
+            <Button type="submit" variant="accent" size="lg" block disabled={!trade || !homeAddress.trim() || mapOpen || saving}>
               {saving ? "Guardando..." : "Guardar cambios"}
             </Button>
           </form>

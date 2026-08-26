@@ -21,12 +21,13 @@ export default function ProfessionalOnboardingPage() {
   const [fullName,    setFullName]    = useState(user?.fullName ?? "");
   const [trade,       setTrade]       = useState("");
   const [homeAddress, setHomeAddress] = useState("");
+  const [mapOpen,     setMapOpen]     = useState(false);
   const [radiusKm,    setRadiusKm]    = useState(10);
   const [bio,         setBio]         = useState("");
   const [loading,     setLoading]     = useState(false);
   const [error,       setError]       = useState("");
 
-  const canSubmit = fullName.trim() && trade && homeAddress.trim();
+  const canSubmit = fullName.trim() && trade && homeAddress.trim() && !mapOpen;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -97,7 +98,7 @@ export default function ProfessionalOnboardingPage() {
 
           <div className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm">
             <Field label="Tu domicilio *" hint="Desde acá se calcula qué tan lejos podés llegar a trabajar">
-              <AddressAutocomplete onSelect={setHomeAddress} />
+              <AddressAutocomplete onSelect={setHomeAddress} onMapOpenChange={setMapOpen} />
             </Field>
           </div>
 

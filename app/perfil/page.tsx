@@ -35,6 +35,7 @@ export default function PerfilPage() {
   const [proLoading, setProLoading]   = useState(true);
   const [addingRole, setAddingRole]   = useState(false);
   const [newClientAddress, setNewClientAddress] = useState("");
+  const [newClientAddressMapOpen, setNewClientAddressMapOpen] = useState(false);
 
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
   const [addressesLoading, setAddressesLoading] = useState(true);
@@ -42,10 +43,12 @@ export default function PerfilPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [addLabel, setAddLabel] = useState("");
   const [addAddress, setAddAddress] = useState("");
+  const [addAddressMapOpen, setAddAddressMapOpen] = useState(false);
   const [savingAddress, setSavingAddress] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editLabel, setEditLabel] = useState("");
   const [editAddress, setEditAddress] = useState("");
+  const [editAddressMapOpen, setEditAddressMapOpen] = useState(false);
   const [busyAddressId, setBusyAddressId] = useState<string | null>(null);
 
   const isPro = active === "professional";
@@ -218,13 +221,13 @@ export default function PerfilPage() {
                           onChange={(e) => setEditLabel(e.target.value)}
                           placeholder="Nombre (ej: Casa)"
                         />
-                        <AddressAutocomplete currentValue={editAddress} onSelect={setEditAddress} />
+                        <AddressAutocomplete currentValue={editAddress} onSelect={setEditAddress} onMapOpenChange={setEditAddressMapOpen} />
                         <div className="flex gap-2">
                           <Button
                             variant="accent"
                             size="sm"
                             onClick={() => handleSaveEditAddress(a.id)}
-                            disabled={busyAddressId === a.id || !editLabel.trim() || !editAddress.trim()}
+                            disabled={busyAddressId === a.id || !editLabel.trim() || !editAddress.trim() || editAddressMapOpen}
                           >
                             {busyAddressId === a.id ? "Guardando..." : "Guardar"}
                           </Button>
@@ -300,13 +303,13 @@ export default function PerfilPage() {
                   onChange={(e) => setAddLabel(e.target.value)}
                   placeholder="Nombre (ej: Casa, Depto)"
                 />
-                <AddressAutocomplete onSelect={setAddAddress} />
+                <AddressAutocomplete onSelect={setAddAddress} onMapOpenChange={setAddAddressMapOpen} />
                 <div className="flex gap-2">
                   <Button
                     variant="accent"
                     size="sm"
                     onClick={handleAddAddress}
-                    disabled={savingAddress || !addLabel.trim() || !addAddress.trim()}
+                    disabled={savingAddress || !addLabel.trim() || !addAddress.trim() || addAddressMapOpen}
                   >
                     {savingAddress ? "Guardando..." : "Guardar domicilio"}
                   </Button>
@@ -348,9 +351,9 @@ export default function PerfilPage() {
             <p className="text-sm font-medium text-ink">¿También buscás servicios?</p>
             <p className="text-xs text-ink-soft">Sumá tu perfil de cliente sin salir de tu cuenta.</p>
             <Field label="Tu domicilio">
-              <AddressAutocomplete onSelect={setNewClientAddress} />
+              <AddressAutocomplete onSelect={setNewClientAddress} onMapOpenChange={setNewClientAddressMapOpen} />
             </Field>
-            <Button variant="secondary" size="sm" onClick={handleAddClientRole} disabled={addingRole || !newClientAddress.trim()}>
+            <Button variant="secondary" size="sm" onClick={handleAddClientRole} disabled={addingRole || !newClientAddress.trim() || newClientAddressMapOpen}>
               {addingRole ? "Sumando..." : "Sumar perfil de cliente"}
             </Button>
           </div>

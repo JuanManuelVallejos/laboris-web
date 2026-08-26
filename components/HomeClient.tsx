@@ -140,16 +140,10 @@ export default function HomeClient() {
             <p className="text-sm font-medium text-ink">Sin resultados</p>
             <p className="text-xs text-ink-soft">Probá con otro oficio o ampliá la distancia</p>
           </div>
-        ) : isFiltering ? (
+        ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {filtered.map((p) => (
               <ProfessionalCard key={p.id} professional={p} />
-            ))}
-          </div>
-        ) : (
-          <div className="scrollx gap-3">
-            {filtered.map((p) => (
-              <ProfessionalCard key={p.id} professional={p} className="w-[150px] shrink-0" />
             ))}
           </div>
         )}

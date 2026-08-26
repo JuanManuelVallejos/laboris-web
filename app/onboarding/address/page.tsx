@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useAuth, useClerk } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { updateMyAddress, UserNotOnboardedError } from "@/lib/api";
+import { createMyAddress, UserNotOnboardedError } from "@/lib/api";
 import { Field } from "@/components/ui/Field";
 import AddressAutocomplete from "@/components/ui/AddressAutocomplete";
 import Button from "@/components/ui/Button";
@@ -23,7 +23,7 @@ export default function AddressOnboardingPage() {
     setLoading(true);
     setError("");
     try {
-      await updateMyAddress(homeAddress.trim(), getToken);
+      await createMyAddress({ label: "Casa", address: homeAddress.trim() }, getToken);
       window.location.replace("/");
     } catch (err) {
       if (err instanceof UserNotOnboardedError) { router.replace("/onboarding"); return; }

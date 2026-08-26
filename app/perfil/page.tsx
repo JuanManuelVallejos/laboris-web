@@ -10,10 +10,18 @@ import NavBottom from "@/components/NavBottom";
 import Button from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import ProfessionalProfileView from "@/components/ProfessionalProfileView";
-import { Field } from "@/components/ui/Field";
+import { Field, TextInput } from "@/components/ui/Field";
 import AddressAutocomplete from "@/components/ui/AddressAutocomplete";
-import { getMyProfessional, completeOnboarding } from "@/lib/api";
-import type { Professional } from "@/lib/types";
+import {
+  getMyProfessional,
+  completeOnboarding,
+  listMyAddresses,
+  createMyAddress,
+  updateMyAddress,
+  deleteMyAddress,
+  setDefaultAddress,
+} from "@/lib/api";
+import type { Professional, SavedAddress } from "@/lib/types";
 import { useActiveRole } from "@/lib/useActiveRole";
 
 export default function PerfilPage() {
@@ -28,6 +36,18 @@ export default function PerfilPage() {
   const [addingRole, setAddingRole]   = useState(false);
   const [newClientAddress, setNewClientAddress] = useState("");
 
+  const [addresses, setAddresses] = useState<SavedAddress[]>([]);
+  const [addressesLoading, setAddressesLoading] = useState(true);
+  const [addressError, setAddressError] = useState("");
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [addLabel, setAddLabel] = useState("");
+  const [addAddress, setAddAddress] = useState("");
+  const [savingAddress, setSavingAddress] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editLabel, setEditLabel] = useState("");
+  const [editAddress, setEditAddress] = useState("");
+  const [busyAddressId, setBusyAddressId] = useState<string | null>(null);
+
   const isPro = active === "professional";
 
   useEffect(() => {
@@ -37,6 +57,79 @@ export default function PerfilPage() {
       .catch((e) => setProfileError(e.message))
       .finally(() => setProLoading(false));
   }, [isLoaded, isPro, getToken]);
+
+  useEffect(() => {
+    if (!isLoaded || isPro) { setAddressesLoading(false); return; }
+    listMyAddresses(getToken)
+      .then(setAddresses)
+      .catch((e) => setAddressError(e instanceof Error ? e.message : "Error al cargar tus domicilios"))
+      .finally(() => setAddressesLoading(false));
+  }, [isLoaded, isPro, getToken]);
+
+  async function handleAddAddress() {
+    if (!addLabel.trim() || !addAddress.trim()) return;
+    setSavingAddress(true);
+    setAddressError("");
+    try {
+      const created = await createMyAddress({ label: addLabel.trim(), address: addAddress.trim() }, getToken);
+      setAddresses((prev) => [...prev, created].sort((a, b) => Number(b.isDefault) - Number(a.isDefault)));
+      setShowAddForm(false);
+      setAddLabel("");
+      setAddAddress("");
+    } catch (err) {
+      setAddressError(err instanceof Error ? err.message : "No se pudo agregar el domicilio");
+    } finally {
+      setSavingAddress(false);
+    }
+  }
+
+  function startEditAddress(a: SavedAddress) {
+    setEditingId(a.id);
+    setEditLabel(a.label);
+    setEditAddress(a.address);
+    setAddressError("");
+  }
+
+  async function handleSaveEditAddress(id: string) {
+    if (!editLabel.trim() || !editAddress.trim()) return;
+    setBusyAddressId(id);
+    setAddressError("");
+    try {
+      const updated = await updateMyAddress(id, { label: editLabel.trim(), address: editAddress.trim() }, getToken);
+      setAddresses((prev) => prev.map((a) => (a.id === id ? updated : a)));
+      setEditingId(null);
+    } catch (err) {
+      setAddressError(err instanceof Error ? err.message : "No se pudo editar el domicilio");
+    } finally {
+      setBusyAddressId(null);
+    }
+  }
+
+  async function handleDeleteAddress(id: string) {
+    setBusyAddressId(id);
+    setAddressError("");
+    try {
+      await deleteMyAddress(id, getToken);
+      setAddresses((prev) => prev.filter((a) => a.id !== id));
+    } catch (err) {
+      setAddressError(err instanceof Error ? err.message : "No se pudo eliminar el domicilio");
+    } finally {
+      setBusyAddressId(null);
+    }
+  }
+
+  async function handleSetDefaultAddress(id: string) {
+    setBusyAddressId(id);
+    setAddressError("");
+    try {
+      await setDefaultAddress(id, getToken);
+      setAddresses((prev) => prev.map((a) => ({ ...a, isDefault: a.id === id })));
+    } catch (err) {
+      setAddressError(err instanceof Error ? err.message : "No se pudo marcar como predeterminado");
+    } finally {
+      setBusyAddressId(null);
+    }
+  }
 
   async function handleSignOut() {
     await signOut();
@@ -104,6 +197,129 @@ export default function PerfilPage() {
                 <Badge tone="verif">Cliente</Badge>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Mis domicilios (cliente) */}
+        {!isPro && (
+          <div className="bg-surface-2 border border-border rounded-2xl p-5 shadow-sm space-y-3">
+            <h3 className="text-sm font-semibold text-ink">Mis domicilios</h3>
+
+            {addressesLoading ? (
+              <div className="h-16 rounded-xl bg-surface-3 animate-pulse" />
+            ) : (
+              <div className="space-y-2">
+                {addresses.map((a) => (
+                  <div key={a.id} className="rounded-xl border border-border p-3">
+                    {editingId === a.id ? (
+                      <div className="space-y-2">
+                        <TextInput
+                          value={editLabel}
+                          onChange={(e) => setEditLabel(e.target.value)}
+                          placeholder="Nombre (ej: Casa)"
+                        />
+                        <AddressAutocomplete currentValue={editAddress} onSelect={setEditAddress} />
+                        <div className="flex gap-2">
+                          <Button
+                            variant="accent"
+                            size="sm"
+                            onClick={() => handleSaveEditAddress(a.id)}
+                            disabled={busyAddressId === a.id || !editLabel.trim() || !editAddress.trim()}
+                          >
+                            {busyAddressId === a.id ? "Guardando..." : "Guardar"}
+                          </Button>
+                          <Button variant="secondary" size="sm" onClick={() => setEditingId(null)}>
+                            Cancelar
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm font-semibold text-ink">{a.label}</p>
+                            {a.isDefault && <Badge tone="verif">Predeterminado</Badge>}
+                          </div>
+                          <p className="text-xs text-ink-soft mt-0.5">{a.address}</p>
+                          {a.hasActiveJob && (
+                            <p className="text-xs mt-1" style={{ color: "var(--brand-alert)" }}>
+                              Tiene un trabajo en curso — no se puede editar ni borrar
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex flex-col items-end gap-1 shrink-0">
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              className="text-xs font-medium text-brand-vivid disabled:opacity-40"
+                              disabled={a.hasActiveJob}
+                              onClick={() => startEditAddress(a)}
+                            >
+                              Editar
+                            </button>
+                            <button
+                              type="button"
+                              className="text-xs font-medium disabled:opacity-40"
+                              style={{ color: "var(--brand-alert)" }}
+                              disabled={a.hasActiveJob || busyAddressId === a.id}
+                              onClick={() => handleDeleteAddress(a.id)}
+                            >
+                              Eliminar
+                            </button>
+                          </div>
+                          {!a.isDefault && (
+                            <button
+                              type="button"
+                              className="text-xs font-medium text-ink-soft disabled:opacity-40"
+                              disabled={busyAddressId === a.id}
+                              onClick={() => handleSetDefaultAddress(a.id)}
+                            >
+                              Marcar como predeterminado
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {addresses.length === 0 && !showAddForm && (
+                  <p className="text-xs text-ink-soft">Todavía no cargaste ningún domicilio.</p>
+                )}
+              </div>
+            )}
+
+            {addressError && (
+              <p className="text-xs" style={{ color: "var(--brand-alert)" }}>{addressError}</p>
+            )}
+
+            {showAddForm ? (
+              <div className="space-y-2 pt-1">
+                <TextInput
+                  value={addLabel}
+                  onChange={(e) => setAddLabel(e.target.value)}
+                  placeholder="Nombre (ej: Casa, Depto)"
+                />
+                <AddressAutocomplete onSelect={setAddAddress} />
+                <div className="flex gap-2">
+                  <Button
+                    variant="accent"
+                    size="sm"
+                    onClick={handleAddAddress}
+                    disabled={savingAddress || !addLabel.trim() || !addAddress.trim()}
+                  >
+                    {savingAddress ? "Guardando..." : "Guardar domicilio"}
+                  </Button>
+                  <Button variant="secondary" size="sm" onClick={() => { setShowAddForm(false); setAddLabel(""); setAddAddress(""); }}>
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button variant="secondary" size="sm" onClick={() => setShowAddForm(true)}>
+                + Agregar domicilio
+              </Button>
+            )}
           </div>
         )}
 

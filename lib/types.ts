@@ -23,6 +23,15 @@ export interface Professional {
   portfolioPhotos?: Attachment[];
 }
 
+export interface SavedAddress {
+  id: string;
+  label: string;
+  address: string;
+  isDefault: boolean;
+  /** Si tiene un trabajo en curso creado con este domicilio, no se puede editar ni borrar. */
+  hasActiveJob: boolean;
+}
+
 export type JobStatus =
   | "pending_visit"
   | "visit_proposed"

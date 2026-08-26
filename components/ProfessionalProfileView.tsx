@@ -63,6 +63,14 @@ export default function ProfessionalProfileView({ professional, editHref, avatar
         )}
       </div>
 
+      {/* Domicilio */}
+      {isOwner && professional.homeAddress && (
+        <div className="bg-surface-2 border border-border rounded-2xl p-5 shadow-sm">
+          <h3 className="text-sm font-semibold text-ink mb-2">Domicilio</h3>
+          <p className="text-sm text-ink-mid leading-relaxed">{professional.homeAddress}</p>
+        </div>
+      )}
+
       {/* Sobre mí */}
       {professional.bio ? (
         <div className="bg-surface-2 border border-border rounded-2xl p-5 shadow-sm">

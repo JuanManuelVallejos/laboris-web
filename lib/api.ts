@@ -1,4 +1,4 @@
-import type { Professional, Job, Message, Attachment } from "./types";
+import type { Professional, Job, Message, Attachment, SavedAddress } from "./types";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
@@ -114,21 +114,85 @@ export async function updateMyProfessional(
   return res.json();
 }
 
-/** Actualiza el domicilio del cliente (distinto del domicilio del profesional, ver updateMyProfessional). */
+// ─── Domicilios guardados del cliente ──────────────────────────────────────
+// Distinto del domicilio del profesional (ver updateMyProfessional): un
+// cliente puede guardar varios domicilios con nombre ("Casa", "Depto") y
+// elegir cuál usar al pedir cada presupuesto.
+
+export async function listMyAddresses(
+  getToken: () => Promise<string | null>
+): Promise<SavedAddress[]> {
+  const token = await getToken();
+  const res = await fetch(`${BASE}/api/v1/me/addresses`, {
+    cache: "no-store",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (res.status === 404) throw new UserNotOnboardedError();
+  if (!res.ok) throw new Error("No se pudieron cargar tus domicilios");
+  const data = await res.json();
+  return data ?? [];
+}
+
+export async function createMyAddress(
+  data: { label: string; address: string },
+  getToken: () => Promise<string | null>
+): Promise<SavedAddress> {
+  const token = await getToken();
+  const res = await fetch(`${BASE}/api/v1/me/addresses`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(data),
+  });
+  if (res.status === 404) throw new UserNotOnboardedError();
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: "error desconocido" }));
+    throw new Error(body.error ?? `Error ${res.status}`);
+  }
+  return res.json();
+}
+
 export async function updateMyAddress(
-  homeAddress: string,
+  id: string,
+  data: { label: string; address: string },
+  getToken: () => Promise<string | null>
+): Promise<SavedAddress> {
+  const token = await getToken();
+  const res = await fetch(`${BASE}/api/v1/me/addresses/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: "error desconocido" }));
+    throw new Error(body.error ?? `Error ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function deleteMyAddress(
+  id: string,
   getToken: () => Promise<string | null>
 ): Promise<void> {
   const token = await getToken();
-  const res = await fetch(`${BASE}/api/v1/me/address`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ homeAddress }),
+  const res = await fetch(`${BASE}/api/v1/me/addresses/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
   });
-  if (res.status === 404) throw new UserNotOnboardedError();
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: "error desconocido" }));
+    throw new Error(body.error ?? `Error ${res.status}`);
+  }
+}
+
+export async function setDefaultAddress(
+  id: string,
+  getToken: () => Promise<string | null>
+): Promise<void> {
+  const token = await getToken();
+  const res = await fetch(`${BASE}/api/v1/me/addresses/${id}/default`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}` },
+  });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: "error desconocido" }));
     throw new Error(body.error ?? `Error ${res.status}`);
@@ -172,6 +236,7 @@ export async function deletePortfolioPhoto(
 export async function createRequest(
   professionalId: string,
   description: string,
+  addressId: string,
   getToken: () => Promise<string | null>
 ): Promise<Request> {
   const token = await getToken();
@@ -181,7 +246,7 @@ export async function createRequest(
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ professionalId, description }),
+    body: JSON.stringify({ professionalId, description, addressId }),
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: "error desconocido" }));

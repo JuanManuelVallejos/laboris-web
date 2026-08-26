@@ -4,11 +4,14 @@ import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { getProfessional, createRequest, uploadRequestPhoto } from "@/lib/api";
-import { Field, Textarea } from "@/components/ui/Field";
+import { getProfessional, createRequest, uploadRequestPhoto, listMyAddresses, createMyAddress } from "@/lib/api";
+import { Field, Textarea, TextInput } from "@/components/ui/Field";
 import Button from "@/components/ui/Button";
+import Chip from "@/components/ui/Chip";
 import Icon from "@/components/icons/Icon";
 import LocalPhotoPicker from "@/components/ui/LocalPhotoPicker";
+import AddressAutocomplete from "@/components/ui/AddressAutocomplete";
+import type { SavedAddress } from "@/lib/types";
 
 export default function RequestPage() {
   const router = useRouter();
@@ -22,17 +25,55 @@ export default function RequestPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const [addresses, setAddresses] = useState<SavedAddress[]>([]);
+  const [addressesLoading, setAddressesLoading] = useState(true);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [showAddAddress, setShowAddAddress] = useState(false);
+  const [newLabel, setNewLabel] = useState("");
+  const [newAddress, setNewAddress] = useState("");
+  const [savingAddress, setSavingAddress] = useState(false);
+
   useEffect(() => {
     getProfessional(id).then((p) => setProfessionalName(p.name)).catch(() => {});
   }, [id]);
 
+  useEffect(() => {
+    listMyAddresses(getToken)
+      .then((addrs) => {
+        setAddresses(addrs);
+        const def = addrs.find((a) => a.isDefault) ?? addrs[0];
+        if (def) setSelectedAddressId(def.id);
+        else setShowAddAddress(true);
+      })
+      .catch(() => setShowAddAddress(true))
+      .finally(() => setAddressesLoading(false));
+  }, [getToken]);
+
+  async function handleAddAddress() {
+    if (!newLabel.trim() || !newAddress.trim()) return;
+    setSavingAddress(true);
+    setError("");
+    try {
+      const created = await createMyAddress({ label: newLabel.trim(), address: newAddress.trim() }, getToken);
+      setAddresses((prev) => [...prev, created]);
+      setSelectedAddressId(created.id);
+      setShowAddAddress(false);
+      setNewLabel("");
+      setNewAddress("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo agregar el domicilio");
+    } finally {
+      setSavingAddress(false);
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!description.trim()) return;
+    if (!description.trim() || !selectedAddressId) return;
     setLoading(true);
     setError("");
     try {
-      const request = await createRequest(id, description.trim(), getToken);
+      const request = await createRequest(id, description.trim(), selectedAddressId, getToken);
       for (const photo of photos) {
         try {
           await uploadRequestPhoto(request.id, photo, getToken);
@@ -68,6 +109,59 @@ export default function RequestPage() {
             <p className="text-sm font-semibold text-ink">{professionalName || "…"}</p>
           </div>
 
+          <div className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm space-y-3">
+            <span className="field__label block">Domicilio del trabajo</span>
+
+            {addressesLoading ? (
+              <div className="h-9 rounded-xl bg-surface-3 animate-pulse" />
+            ) : (
+              <>
+                {addresses.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {addresses.map((a) => (
+                      <Chip
+                        key={a.id}
+                        active={selectedAddressId === a.id}
+                        onClick={() => { setSelectedAddressId(a.id); setShowAddAddress(false); }}
+                      >
+                        {a.label}
+                      </Chip>
+                    ))}
+                    <Chip active={showAddAddress} onClick={() => setShowAddAddress((v) => !v)}>
+                      + Domicilio nuevo
+                    </Chip>
+                  </div>
+                )}
+
+                {selectedAddressId && !showAddAddress && (
+                  <p className="text-xs text-ink-soft">
+                    {addresses.find((a) => a.id === selectedAddressId)?.address}
+                  </p>
+                )}
+
+                {showAddAddress && (
+                  <div className="space-y-2 pt-1">
+                    <TextInput
+                      value={newLabel}
+                      onChange={(e) => setNewLabel(e.target.value)}
+                      placeholder="Nombre (ej: Casa, Depto)"
+                    />
+                    <AddressAutocomplete onSelect={setNewAddress} />
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={handleAddAddress}
+                      disabled={savingAddress || !newLabel.trim() || !newAddress.trim()}
+                    >
+                      {savingAddress ? "Guardando..." : "Guardar domicilio"}
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
           <div className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm">
             <Field label="Describí el problema o trabajo">
               <Textarea
@@ -92,7 +186,7 @@ export default function RequestPage() {
           )}
 
           <div className="hidden md:block pt-2">
-            <Button type="submit" variant="accent" size="lg" block disabled={!description.trim() || loading}>
+            <Button type="submit" variant="accent" size="lg" block disabled={!description.trim() || !selectedAddressId || loading}>
               {loading ? "Enviando..." : "Enviar solicitud"}
             </Button>
           </div>
@@ -107,7 +201,7 @@ export default function RequestPage() {
         <div className="max-w-lg mx-auto">
           <Button
             onClick={handleSubmit}
-            disabled={!description.trim() || loading}
+            disabled={!description.trim() || !selectedAddressId || loading}
             variant="accent"
             size="lg"
             block

@@ -32,6 +32,11 @@ export const metadata: Metadata = {
   description: "Encontrá profesionales de confianza para tu hogar",
 };
 
+// Todas las páginas se renderizan por request en vez de prerenderizarse en
+// el build, para que el nonce del CSP estricto (ver proxy.ts) siempre
+// coincida entre el header y el script que ClerkProvider inyecta.
+export const dynamic = "force-dynamic";
+
 export default function RootLayout({
   children,
 }: Readonly<{

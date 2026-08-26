@@ -11,6 +11,7 @@ export default function AppClerkProvider({ children }: { children: React.ReactNo
 
   return (
     <ClerkProvider
+      dynamic
       signInUrl="/sign-in"
       signUpUrl="/sign-up"
       signInFallbackRedirectUrl="/"

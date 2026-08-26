@@ -1,16 +1,26 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import ProfessionalCard from "@/components/ProfessionalCard";
 import SearchBox from "@/components/ui/SearchBox";
 import CategoryGrid from "@/components/ui/CategoryGrid";
 import UrgencyCard from "@/components/ui/UrgencyCard";
 import DistanceSlider from "@/components/ui/DistanceSlider";
+import LocationChip from "@/components/ui/LocationChip";
+import Chip from "@/components/ui/Chip";
 import { TRADES } from "@/lib/catalog";
-import { getMyProfessional, getProfessionals, AddressRequiredError, UserNotOnboardedError } from "@/lib/api";
-import type { Professional } from "@/lib/types";
+import {
+  getMyProfessional,
+  getProfessionals,
+  listMyAddresses,
+  setDefaultAddress,
+  AddressRequiredError,
+  UserNotOnboardedError,
+} from "@/lib/api";
+import type { Professional, SavedAddress } from "@/lib/types";
 import { useActiveRole } from "@/lib/useActiveRole";
 
 export default function HomeClient() {
@@ -27,9 +37,13 @@ export default function HomeClient() {
   const [ownProfessionalId, setOwnProfessionalId] = useState<string | null>(null);
   const [checkedOwnId, setCheckedOwnId] = useState(false);
 
-  useEffect(() => {
-    if (!isLoaded) return;
-    getProfessionals(getToken)
+  const [addresses, setAddresses] = useState<SavedAddress[]>([]);
+  const [showAddressPicker, setShowAddressPicker] = useState(false);
+  const [switchingAddressId, setSwitchingAddressId] = useState<string | null>(null);
+
+  const refreshProfessionals = useCallback(() => {
+    setLoading(true);
+    return getProfessionals(getToken)
       .then(setProfessionals)
       .catch((e) => {
         if (e instanceof UserNotOnboardedError) { router.replace("/onboarding"); return; }
@@ -37,7 +51,34 @@ export default function HomeClient() {
         console.error(e);
       })
       .finally(() => setLoading(false));
-  }, [isLoaded, getToken, router]);
+  }, [getToken, router]);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    refreshProfessionals();
+  }, [isLoaded, refreshProfessionals]);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    listMyAddresses(getToken).then(setAddresses).catch(() => {});
+  }, [isLoaded, getToken]);
+
+  const activeAddress = addresses.find((a) => a.isDefault);
+
+  async function handleSelectAddress(addressId: string) {
+    if (addressId === activeAddress?.id) { setShowAddressPicker(false); return; }
+    setSwitchingAddressId(addressId);
+    try {
+      await setDefaultAddress(addressId, getToken);
+      setAddresses((prev) => prev.map((a) => ({ ...a, isDefault: a.id === addressId })));
+      await refreshProfessionals();
+      setShowAddressPicker(false);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSwitchingAddressId(null);
+    }
+  }
 
   // Si el usuario también es profesional, no debe verse a sí mismo en el
   // listado ni poder pedirse presupuesto (ver también la validación
@@ -84,7 +125,36 @@ export default function HomeClient() {
           placeholder="Plomero, electricista…"
           containerClassName="mt-3"
         />
+        {activeAddress && (
+          <LocationChip
+            label={`${activeAddress.label} · ${activeAddress.address.split(",")[0]}`}
+            onClick={() => setShowAddressPicker((v) => !v)}
+            className="mt-3"
+          />
+        )}
       </div>
+
+      {/* Selector de domicilio activo */}
+      {showAddressPicker && (
+        <div className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm space-y-3">
+          <p className="text-xs text-ink-soft">Buscando profesionales cerca de</p>
+          <div className="flex flex-wrap gap-2">
+            {addresses.map((a) => (
+              <Chip
+                key={a.id}
+                active={a.isDefault}
+                disabled={switchingAddressId === a.id}
+                onClick={() => handleSelectAddress(a.id)}
+              >
+                {switchingAddressId === a.id ? "Cambiando..." : a.label}
+              </Chip>
+            ))}
+          </div>
+          <Link href="/perfil" className="text-xs font-medium text-brand-vivid inline-block">
+            Gestionar domicilios →
+          </Link>
+        </div>
+      )}
 
       {/* Distancia */}
       <div className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm">

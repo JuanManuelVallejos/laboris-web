@@ -92,6 +92,10 @@ export default function ProRequestDetailPage() {
 
             <p className="text-sm text-ink-mid leading-relaxed">{request.description}</p>
 
+            {request.address && (
+              <p className="text-xs text-ink-soft">Domicilio: {request.address}</p>
+            )}
+
             {request.photos && request.photos.length > 0 && (
               <PhotoGallery photos={request.photos} />
             )}

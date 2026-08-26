@@ -301,6 +301,8 @@ export interface Request {
   status: "pending" | "viewed" | "accepted" | "rejected" | "expired";
   rejectionReason: string;
   jobId?: string;
+  /** Domicilio donde sería el trabajo — vacío en solicitudes viejas, creadas antes de este sistema. */
+  address?: string;
   photos?: Attachment[];
   createdAt: string;
 }

@@ -18,6 +18,10 @@ export default function RequestCard({ title, request, children }: Props) {
 
       <p className="text-sm text-ink-mid leading-relaxed">{request.description}</p>
 
+      {request.address && (
+        <p className="text-xs text-ink-soft">Domicilio: {request.address}</p>
+      )}
+
       {request.status === "rejected" && request.rejectionReason && (
         <p
           className="text-xs rounded-lg px-3 py-2"

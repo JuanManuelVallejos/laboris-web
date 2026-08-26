@@ -20,23 +20,31 @@ interface Props {
 }
 
 export default function HomeClient({ professionals }: Props) {
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const { getToken } = useAuth();
   const { hasProfessional } = useActiveRole();
   const [search,      setSearch]      = useState("");
   const [activeTrade, setActiveTrade] = useState<string | null>(null);
   const [activeZone,  setActiveZone]  = useState<string>(ALL_ZONES);
   const [ownProfessionalId, setOwnProfessionalId] = useState<string | null>(null);
+  const [checkedOwnId, setCheckedOwnId] = useState(false);
 
   // Si el usuario también es profesional, no debe verse a sí mismo en el
   // listado ni poder pedirse presupuesto (ver también la validación
-  // equivalente en el backend, RequestUseCase.Create).
+  // equivalente en el backend, RequestUseCase.Create). Hasta confirmar esto
+  // el listado se muestra vacío, para no pintar la propia ficha un instante
+  // y que después desaparezca.
   useEffect(() => {
-    if (!hasProfessional) return;
-    getMyProfessional(getToken).then((p) => setOwnProfessionalId(p.id)).catch(() => {});
-  }, [hasProfessional, getToken]);
+    if (!isLoaded) return;
+    if (!hasProfessional) { setCheckedOwnId(true); return; }
+    getMyProfessional(getToken)
+      .then((p) => setOwnProfessionalId(p.id))
+      .catch(() => {})
+      .finally(() => setCheckedOwnId(true));
+  }, [isLoaded, hasProfessional, getToken]);
 
   const filtered = useMemo(() => {
+    if (!checkedOwnId) return [];
     return professionals.filter((p) => {
       if (p.id === ownProfessionalId) return false;
       const matchName  = p.name.toLowerCase().includes(search.toLowerCase());
@@ -44,7 +52,7 @@ export default function HomeClient({ professionals }: Props) {
       const matchZone  = activeZone === ALL_ZONES || p.zone === activeZone;
       return matchName && matchTrade && matchZone;
     });
-  }, [professionals, ownProfessionalId, search, activeTrade, activeZone]);
+  }, [professionals, ownProfessionalId, checkedOwnId, search, activeTrade, activeZone]);
 
   const isFiltering = Boolean(activeTrade || activeZone !== ALL_ZONES || search);
 

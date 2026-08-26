@@ -182,6 +182,8 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
     const isSpecific = (place.types ?? []).some((t) => SPECIFIC_TYPES.includes(t));
     if (!isSpecific) {
       setSelectError("Esa dirección no tiene número — agregá la altura para que sea específica.");
+      setSuggestions([]);
+      setShowDropdown(false);
       return;
     }
 
@@ -276,6 +278,8 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
 
   function handleConfirmPin() {
     if (!pinAddress) return;
+    setInputText(pinAddress);
+    setConfirmed(true);
     onSelectRef.current(pinAddress);
     setShowMapFallback(false);
   }

@@ -12,10 +12,16 @@ export default clerkMiddleware(
   {
     contentSecurityPolicy: {
       directives: {
-        "connect-src": ["https://laboris-api.onrender.com", "https://*.supabase.co", "https://*.googleapis.com", "https://*.gstatic.com"],
-        "img-src": ["https://*.supabase.co", "https://*.gstatic.com", "https://*.googleapis.com", "data:"],
+        "connect-src": ["https://laboris-api.onrender.com", "https://*.supabase.co", "https://*.googleapis.com", "https://*.gstatic.com", "https://*.google.com"],
+        "img-src": ["https://*.supabase.co", "https://*.gstatic.com", "https://*.googleapis.com", "https://*.google.com", "https://*.googleusercontent.com", "data:"],
         "font-src": ["self", "data:", "https://fonts.gstatic.com"],
         "style-src": ["https://fonts.googleapis.com"],
+        // El widget de Places/Maps abre contenido en un iframe de Google en
+        // algunos casos (mobile) — sin esto el navegador lo bloquea en
+        // silencio y queda una pantalla vacía donde debería ir el mapa/
+        // dropdown de sugerencias (recomendado por la guía oficial de CSP
+        // de Google para Maps JavaScript API).
+        "frame-src": ["https://*.google.com"],
         "base-uri": ["self"],
         // google.maps.importLibrary carga parte de su código en un Web
         // Worker creado a partir de una URL blob: e internamente llama

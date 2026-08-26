@@ -73,6 +73,10 @@ export default function AddressAutocomplete({ currentValue, onSelect, onMapOpenC
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const markerRef = useRef<google.maps.Marker | null>(null);
   const geocoderRef = useRef<google.maps.Geocoder | null>(null);
+  // Se incrementa en cada click del mapa — si la respuesta de un click viejo
+  // llega después de uno más nuevo, se descarta en vez de pisar el resultado
+  // correcto.
+  const reverseGeocodeRequestIdRef = useRef(0);
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
   const onMapOpenChangeRef = useRef(onMapOpenChange);
@@ -160,14 +164,23 @@ export default function AddressAutocomplete({ currentValue, onSelect, onMapOpenC
         });
         geocoderRef.current = new Geocoder();
 
+        // Tipos específicos aceptados — mismo criterio que el autocompletado
+        // de texto (includedPrimaryTypes): sin esto, un punto en medio de un
+        // barrio puede resolver a un resultado a nivel localidad/zona en vez
+        // de una dirección puntual.
+        const SPECIFIC_TYPES = ["street_address", "premise", "subpremise"];
+
         const reverseGeocode = (latLng: google.maps.LatLng) => {
           setPinError("");
+          const requestId = ++reverseGeocodeRequestIdRef.current;
           geocoderRef.current!.geocode({ location: latLng }, (results, status) => {
-            if (cancelled) return;
-            if (status === "OK" && results && results[0]) {
-              setPinAddress(results[0].formatted_address);
+            if (cancelled || requestId !== reverseGeocodeRequestIdRef.current) return;
+            const specific = results?.find((r) => r.types.some((t) => SPECIFIC_TYPES.includes(t)));
+            if (status === "OK" && specific) {
+              setPinAddress(specific.formatted_address);
             } else {
-              setPinError("No pudimos identificar una dirección para ese punto — probá con otro lugar del mapa.");
+              console.error("Reverse geocode sin resultado específico:", status, results);
+              setPinError("No pudimos identificar una dirección específica para ese punto — probá con otro lugar del mapa.");
             }
           });
         };

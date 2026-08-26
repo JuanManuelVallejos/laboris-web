@@ -16,6 +16,12 @@ export default clerkMiddleware(
         "img-src": ["https://*.supabase.co", "https://*.gstatic.com", "https://*.googleapis.com", "data:"],
         "font-src": ["self", "data:"],
         "base-uri": ["self"],
+        // google.maps.importLibrary carga parte de su código en un Web
+        // Worker creado a partir de una URL blob: e internamente llama
+        // importScripts() ahí adentro — eso lo gobierna script-src (no
+        // worker-src, que ya permite blob: por defecto), así que hace
+        // falta agregarlo acá también.
+        "script-src": ["blob:"],
       },
     },
   }

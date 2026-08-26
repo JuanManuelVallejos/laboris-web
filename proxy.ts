@@ -5,9 +5,22 @@ const isPublic = createRouteMatcher([
   "/sign-up(.*)",
 ]);
 
-export default clerkMiddleware(async (auth, req) => {
-  if (!isPublic(req)) await auth.protect();
-});
+export default clerkMiddleware(
+  async (auth, req) => {
+    if (!isPublic(req)) await auth.protect();
+  },
+  {
+    contentSecurityPolicy: {
+      strict: true,
+      directives: {
+        "connect-src": ["https://laboris-api.onrender.com", "https://*.supabase.co"],
+        "img-src": ["https://*.supabase.co", "data:"],
+        "font-src": ["self", "data:"],
+        "base-uri": ["self"],
+      },
+    },
+  }
+);
 
 export const config = {
   matcher: [

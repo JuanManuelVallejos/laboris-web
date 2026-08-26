@@ -32,17 +32,6 @@ export const metadata: Metadata = {
   description: "Encontrá profesionales de confianza para tu hogar",
 };
 
-// Se ejecuta antes de la hidratación para evitar flash de tema incorrecto.
-const THEME_INIT_SCRIPT = `
-(function () {
-  try {
-    var stored = localStorage.getItem('lab-theme');
-    var theme = stored || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-    document.documentElement.setAttribute('data-theme', theme);
-  } catch (e) {}
-})();
-`;
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -55,7 +44,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <script src="/theme-init.js" />
       </head>
       <body className="min-h-full flex flex-col bg-page" suppressHydrationWarning>
         <IconSprite />

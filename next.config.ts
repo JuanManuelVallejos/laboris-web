@@ -1,9 +1,7 @@
 import type { NextConfig } from "next";
 
-// Política inicial en modo Report-Only: no bloquea nada, solo reporta
-// violaciones en la consola del navegador. Se pasa a bloqueante
-// (Content-Security-Policy) recién después de verificar en vivo que no
-// aparecen violaciones inesperadas (login, subida de fotos, chat).
+// Verificado en vivo en modo Report-Only (login, subida de fotos, portfolio,
+// chat) sin violaciones — pasa a bloqueante real.
 const csp = [
   "default-src 'self'",
   "script-src 'self' https://*.clerk.accounts.dev https://challenges.cloudflare.com",
@@ -27,7 +25,7 @@ const nextConfig: NextConfig = {
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
           { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
-          { key: "Content-Security-Policy-Report-Only", value: csp },
+          { key: "Content-Security-Policy", value: csp },
         ],
       },
     ];

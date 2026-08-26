@@ -10,7 +10,8 @@ import NavBottom from "@/components/NavBottom";
 import Button from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import ProfessionalProfileView from "@/components/ProfessionalProfileView";
-import { Field, TextInput } from "@/components/ui/Field";
+import { Field } from "@/components/ui/Field";
+import AddressAutocomplete from "@/components/ui/AddressAutocomplete";
 import { getMyProfessional, completeOnboarding } from "@/lib/api";
 import type { Professional } from "@/lib/types";
 import { useActiveRole } from "@/lib/useActiveRole";
@@ -131,11 +132,7 @@ export default function PerfilPage() {
             <p className="text-sm font-medium text-ink">¿También buscás servicios?</p>
             <p className="text-xs text-ink-soft">Sumá tu perfil de cliente sin salir de tu cuenta.</p>
             <Field label="Tu domicilio">
-              <TextInput
-                value={newClientAddress}
-                onChange={(e) => setNewClientAddress(e.target.value)}
-                placeholder="Ej: Av. Corrientes 1234, CABA"
-              />
+              <AddressAutocomplete onSelect={setNewClientAddress} />
             </Field>
             <Button variant="secondary" size="sm" onClick={handleAddClientRole} disabled={addingRole || !newClientAddress.trim()}>
               {addingRole ? "Sumando..." : "Sumar perfil de cliente"}

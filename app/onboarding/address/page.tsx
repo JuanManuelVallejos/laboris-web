@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { updateMyAddress } from "@/lib/api";
-import { Field, TextInput } from "@/components/ui/Field";
+import { Field } from "@/components/ui/Field";
+import AddressAutocomplete from "@/components/ui/AddressAutocomplete";
 import Button from "@/components/ui/Button";
 
 export default function AddressOnboardingPage() {
@@ -47,13 +48,7 @@ export default function AddressOnboardingPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <Field label="Tu domicilio">
-            <TextInput
-              value={homeAddress}
-              onChange={(e) => setHomeAddress(e.target.value)}
-              placeholder="Ej: Av. Corrientes 1234, CABA"
-              autoFocus
-              required
-            />
+            <AddressAutocomplete onSelect={setHomeAddress} />
           </Field>
 
           <Button type="submit" variant="accent" size="lg" block disabled={!homeAddress.trim() || loading}>

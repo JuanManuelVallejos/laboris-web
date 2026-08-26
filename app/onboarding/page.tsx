@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useUser, useAuth } from "@clerk/nextjs";
 import { completeOnboarding } from "@/lib/api";
 import { Field, TextInput } from "@/components/ui/Field";
+import AddressAutocomplete from "@/components/ui/AddressAutocomplete";
 import Button from "@/components/ui/Button";
 import Icon from "@/components/icons/Icon";
 
@@ -72,13 +73,7 @@ export default function OnboardingPage() {
             )}
 
             <Field label="Tu domicilio">
-              <TextInput
-                value={homeAddress}
-                onChange={(e) => setHomeAddress(e.target.value)}
-                placeholder="Ej: Av. Corrientes 1234, CABA"
-                autoFocus
-                required
-              />
+              <AddressAutocomplete onSelect={setHomeAddress} />
             </Field>
 
             <Button type="submit" variant="accent" size="lg" block disabled={!homeAddress.trim() || loading}>

@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getMyProfessional, updateMyProfessional, uploadPortfolioPhoto, deletePortfolioPhoto } from "@/lib/api";
 import { TRADES, OTHER_TRADE_LABEL } from "@/lib/catalog";
-import { Field, TextInput, Textarea } from "@/components/ui/Field";
+import { Field, Textarea } from "@/components/ui/Field";
+import AddressAutocomplete from "@/components/ui/AddressAutocomplete";
 import Chip from "@/components/ui/Chip";
 import Button from "@/components/ui/Button";
 import Icon from "@/components/icons/Icon";
@@ -100,12 +101,7 @@ export default function EditProPage() {
 
             <div className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm">
               <Field label="Tu domicilio *" hint="Desde acá se calcula qué tan lejos podés llegar a trabajar">
-                <TextInput
-                  value={homeAddress}
-                  onChange={(e) => setHomeAddress(e.target.value)}
-                  placeholder="Ej: Av. Corrientes 1234, CABA"
-                  required
-                />
+                <AddressAutocomplete currentValue={homeAddress} onSelect={setHomeAddress} />
               </Field>
             </div>
 

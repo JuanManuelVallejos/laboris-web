@@ -14,7 +14,8 @@ export default clerkMiddleware(
       directives: {
         "connect-src": ["https://laboris-api.onrender.com", "https://*.supabase.co", "https://*.googleapis.com", "https://*.gstatic.com"],
         "img-src": ["https://*.supabase.co", "https://*.gstatic.com", "https://*.googleapis.com", "data:"],
-        "font-src": ["self", "data:"],
+        "font-src": ["self", "data:", "https://fonts.gstatic.com"],
+        "style-src": ["https://fonts.googleapis.com"],
         "base-uri": ["self"],
         // google.maps.importLibrary carga parte de su código en un Web
         // Worker creado a partir de una URL blob: e internamente llama

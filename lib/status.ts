@@ -17,6 +17,25 @@ export const REQUEST_STATUS: Record<string, { label: string; tone: BadgeTone }> 
  * de app/jobs/[id]/page.tsx (mirror de domain.ValidTransitions en el backend)
  * y siguen viviendo ahí — acá solo se centraliza el color/tono del badge.
  */
+export const JOB_STATUS_LABEL: Record<JobStatus, string> = {
+  pending_visit:    "Esperando fecha de visita",
+  visit_proposed:   "Fecha propuesta — pendiente confirmación",
+  visit_scheduled:  "Visita confirmada",
+  visit_quoted:     "Cotización de visita enviada",
+  visit_paid:       "Visita pagada",
+  visit_completed:  "Visita realizada",
+  work_quoted:      "Cotización de trabajo enviada",
+  work_approved:    "Cotización aprobada",
+  work_in_progress: "Trabajo en progreso",
+  work_delivered:   "Trabajo entregado",
+  rework_requested:      "Correcciones solicitadas",
+  rework_quoted:         "Cotización de corrección enviada",
+  rework_accepted:       "Correcciones aceptadas — coordinando fecha",
+  rework_visit_proposed: "Fecha de retrabajo propuesta — pendiente confirmación",
+  completed:        "Completado",
+  cancelled:        "Cancelado",
+};
+
 export const JOB_STATUS_TONE: Record<JobStatus, BadgeTone> = {
   pending_visit: "neutral",
   visit_proposed: "neutral",

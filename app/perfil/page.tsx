@@ -10,6 +10,7 @@ import NavBottom from "@/components/NavBottom";
 import Button from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import Icon from "@/components/icons/Icon";
+import ProfessionalProfileView from "@/components/ProfessionalProfileView";
 import { getMyProfessional } from "@/lib/api";
 import type { Professional } from "@/lib/types";
 
@@ -18,14 +19,19 @@ export default function PerfilPage() {
   const { getToken } = useAuth();
   const { signOut } = useClerk();
   const router = useRouter();
-  const [proProfile, setProProfile] = useState<Professional | null>(null);
+  const [proProfile, setProProfile]   = useState<Professional | null>(null);
+  const [profileError, setProfileError] = useState("");
+  const [proLoading, setProLoading]   = useState(true);
 
   const roles = user?.unsafeMetadata?.roles as string[] | undefined;
   const isPro = roles?.includes("professional");
 
   useEffect(() => {
-    if (!isLoaded || !isPro) return;
-    getMyProfessional(getToken).then(setProProfile).catch(() => {});
+    if (!isLoaded || !isPro) { setProLoading(false); return; }
+    getMyProfessional(getToken)
+      .then(setProProfile)
+      .catch((e) => setProfileError(e.message))
+      .finally(() => setProLoading(false));
   }, [isLoaded, isPro, getToken]);
 
   async function handleSignOut() {
@@ -75,25 +81,23 @@ export default function PerfilPage() {
           </div>
         </div>
 
-        {/* Info profesional */}
-        {isPro && proProfile && (
-          <div className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm space-y-1">
-            <p className="text-xs text-ink-soft font-medium uppercase tracking-wide mb-2">Datos del perfil</p>
-            <div className="flex justify-between text-sm">
-              <span className="text-ink-soft">Oficio</span>
-              <span className="text-ink font-medium capitalize">{proProfile.trade}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-ink-soft">Zona</span>
-              <span className="text-ink font-medium">{proProfile.zone}</span>
-            </div>
-            {proProfile.rating > 0 && (
-              <div className="flex justify-between text-sm">
-                <span className="text-ink-soft">Calificación</span>
-                <span style={{ color: "var(--amber)" }} className="font-medium">★ {proProfile.rating.toFixed(1)}</span>
-              </div>
-            )}
+        {/* Perfil profesional */}
+        {isPro && proLoading && (
+          <div className="bg-surface-2 border border-border rounded-2xl p-6 shadow-sm animate-pulse h-32" />
+        )}
+
+        {isPro && !proLoading && profileError && (
+          <div className="bg-surface-2 border border-border rounded-2xl p-6 shadow-sm text-center space-y-3">
+            <p className="text-sm font-medium" style={{ color: "var(--brand-alert)" }}>{profileError}</p>
+            <p className="text-xs text-ink-soft">Tu perfil profesional no se encuentra en la base de datos.</p>
+            <Link href="/onboarding/professional">
+              <Button variant="secondary" size="sm">Completar perfil →</Button>
+            </Link>
           </div>
+        )}
+
+        {isPro && !proLoading && proProfile && (
+          <ProfessionalProfileView professional={proProfile} editHref="/pro/edit" />
         )}
 
         {/* Acciones */}

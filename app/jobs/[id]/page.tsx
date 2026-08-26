@@ -9,7 +9,7 @@ import Button from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { TextInput, Textarea } from "@/components/ui/Field";
 import Icon from "@/components/icons/Icon";
-import { JOB_STATUS_TONE } from "@/lib/status";
+import { JOB_STATUS_TONE, JOB_STATUS_LABEL } from "@/lib/status";
 import {
   getJob, getMessages, sendMessage, messagesStreamUrl, jobStreamUrl,
   scheduleVisit, confirmVisit, declineVisit, submitVisitQuote, skipVisit,
@@ -20,28 +20,9 @@ import {
   approveDelivery, cancelJob,
 } from "@/lib/api";
 import { useEventStream } from "@/lib/useEventStream";
-import type { Job, JobStatus, Message, ReworkRecord } from "@/lib/types";
+import type { Job, Message, ReworkRecord } from "@/lib/types";
 
 // ─── Labels ──────────────────────────────────────────────────────────────────
-
-const STATUS_LABEL: Record<JobStatus, string> = {
-  pending_visit:    "Esperando fecha de visita",
-  visit_proposed:   "Fecha propuesta — pendiente confirmación",
-  visit_scheduled:  "Visita confirmada",
-  visit_quoted:     "Cotización de visita enviada",
-  visit_paid:       "Visita pagada",
-  visit_completed:  "Visita realizada",
-  work_quoted:      "Cotización de trabajo enviada",
-  work_approved:    "Cotización aprobada",
-  work_in_progress: "Trabajo en progreso",
-  work_delivered:   "Trabajo entregado",
-  rework_requested:      "Correcciones solicitadas",
-  rework_quoted:         "Cotización de corrección enviada",
-  rework_accepted:       "Correcciones aceptadas — coordinando fecha",
-  rework_visit_proposed: "Fecha de retrabajo propuesta — pendiente confirmación",
-  completed:        "Completado",
-  cancelled:        "Cancelado",
-};
 
 // Mirrors backend domain.ValidTransitions — single source of truth for which
 // buttons are reachable from each state.
@@ -85,9 +66,9 @@ function stepIndex(status: string): number {
   const idx = STEP_ORDER.indexOf(status);
   if (idx !== -1) return idx;
   const map: Record<string, number> = {
-    visit_proposed:   1, // misma posición que visit_scheduled en el stepper
-    visit_quoted:     2,
-    visit_paid:       2,
+    visit_proposed:   0, // aún no confirmado por el cliente — sigue en paso 1
+    visit_quoted:     1,
+    visit_paid:       1,
     rework_requested:      6,
     rework_quoted:         6,
     rework_accepted:       6,
@@ -873,7 +854,7 @@ export default function JobPage() {
             </p>
           </div>
           <Badge tone={JOB_STATUS_TONE[job.status]} className="shrink-0">
-            {STATUS_LABEL[job.status]}
+            {JOB_STATUS_LABEL[job.status]}
           </Badge>
         </div>
 

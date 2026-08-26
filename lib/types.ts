@@ -83,6 +83,8 @@ export interface Job {
   reworkRecords: ReworkRecord[];
   createdAt: string;
   updatedAt: string;
+  viewerIsClient: boolean;
+  viewerIsProfessional: boolean;
 }
 
 export interface Message {

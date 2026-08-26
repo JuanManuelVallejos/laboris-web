@@ -20,6 +20,7 @@ import {
   approveDelivery, cancelJob,
 } from "@/lib/api";
 import { useEventStream } from "@/lib/useEventStream";
+import { useActiveRole } from "@/lib/useActiveRole";
 import type { Job, Message, ReworkRecord } from "@/lib/types";
 
 // ─── Labels ──────────────────────────────────────────────────────────────────
@@ -775,7 +776,8 @@ function Chat({
 export default function JobPage() {
   const { id } = useParams<{ id: string }>();
   const { getToken } = useAuth();
-  const { user, isLoaded } = useUser();
+  const { isLoaded } = useUser();
+  const { setActive } = useActiveRole();
   const router = useRouter();
 
   const [job, setJob] = useState<Job | null>(null);
@@ -783,22 +785,29 @@ export default function JobPage() {
   const [actionError, setActionError] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
 
-  const roles = (user?.unsafeMetadata?.roles as string[] | undefined) ?? [];
-  const isProfessional = roles.includes("professional");
-  const isClient = roles.includes("client");
-
   useEffect(() => {
     if (!isLoaded) return;
     getJob(id, getToken)
-      .then(setJob)
+      .then((j) => {
+        setJob(j);
+        // Deja el nav en el modo que corresponde al rol con el que
+        // efectivamente se participa en este job, sin importar cómo se
+        // llegó acá (notificación, link directo, etc).
+        setActive(j.viewerIsProfessional ? "professional" : "client");
+      })
       .catch(() => router.replace("/"))
       .finally(() => setLoading(false));
-  }, [id, getToken, isLoaded, router]);
+  }, [id, getToken, isLoaded, router, setActive]);
 
   useEventStream<Job>(
     id ? jobStreamUrl(id) : null,
     getToken,
-    (updatedJob) => setJob(updatedJob),
+    // El job que llega por SSE se difunde igual a los dos participantes, así
+    // que no trae viewerIsClient/viewerIsProfessional — se preservan los que
+    // ya se habían resuelto en la carga inicial (no cambian en la vida del job).
+    (updatedJob) => setJob((prev) => (prev
+      ? { ...updatedJob, viewerIsClient: prev.viewerIsClient, viewerIsProfessional: prev.viewerIsProfessional }
+      : updatedJob)),
     { pauseWhenHidden: false }
   );
 
@@ -831,7 +840,7 @@ export default function JobPage() {
 
   if (!job) return null;
 
-  const counterpart = isProfessional ? job.clientName : job.professionalName;
+  const counterpart = job.viewerIsProfessional ? job.clientName : job.professionalName;
 
   return (
     <div className="flex flex-col min-h-screen bg-page">
@@ -878,8 +887,8 @@ export default function JobPage() {
         ) : (
           <ActionPanel
             job={job}
-            isClient={isClient}
-            isProfessional={isProfessional}
+            isClient={job.viewerIsClient}
+            isProfessional={job.viewerIsProfessional}
             getToken={getToken}
             onAction={handleAction}
           />
@@ -889,7 +898,7 @@ export default function JobPage() {
         <Chat
           requestId={job.requestId}
           clientId={job.clientId}
-          isClient={isClient}
+          isClient={job.viewerIsClient}
           getToken={getToken}
         />
       </main>

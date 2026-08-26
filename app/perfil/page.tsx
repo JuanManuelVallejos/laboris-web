@@ -221,7 +221,7 @@ export default function PerfilPage() {
                           onChange={(e) => setEditLabel(e.target.value)}
                           placeholder="Nombre (ej: Casa)"
                         />
-                        <AddressAutocomplete currentValue={editAddress} onSelect={setEditAddress} onMapOpenChange={setEditAddressMapOpen} />
+                        <AddressAutocomplete currentValue={editAddress} onSelect={setEditAddress} onUnconfirmedChange={setEditAddressMapOpen} />
                         <div className="flex gap-2">
                           <Button
                             variant="accent"
@@ -303,7 +303,7 @@ export default function PerfilPage() {
                   onChange={(e) => setAddLabel(e.target.value)}
                   placeholder="Nombre (ej: Casa, Depto)"
                 />
-                <AddressAutocomplete onSelect={setAddAddress} onMapOpenChange={setAddAddressMapOpen} />
+                <AddressAutocomplete onSelect={setAddAddress} onUnconfirmedChange={setAddAddressMapOpen} />
                 <div className="flex gap-2">
                   <Button
                     variant="accent"
@@ -351,7 +351,7 @@ export default function PerfilPage() {
             <p className="text-sm font-medium text-ink">¿También buscás servicios?</p>
             <p className="text-xs text-ink-soft">Sumá tu perfil de cliente sin salir de tu cuenta.</p>
             <Field label="Tu domicilio">
-              <AddressAutocomplete onSelect={setNewClientAddress} onMapOpenChange={setNewClientAddressMapOpen} />
+              <AddressAutocomplete onSelect={setNewClientAddress} onUnconfirmedChange={setNewClientAddressMapOpen} />
             </Field>
             <Button variant="secondary" size="sm" onClick={handleAddClientRole} disabled={addingRole || !newClientAddress.trim() || newClientAddressMapOpen}>
               {addingRole ? "Sumando..." : "Sumar perfil de cliente"}

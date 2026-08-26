@@ -102,7 +102,7 @@ export default function EditProPage() {
 
             <div className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm">
               <Field label="Tu domicilio *" hint="Desde acá se calcula qué tan lejos podés llegar a trabajar">
-                <AddressAutocomplete currentValue={homeAddress} onSelect={setHomeAddress} onMapOpenChange={setMapOpen} />
+                <AddressAutocomplete currentValue={homeAddress} onSelect={setHomeAddress} onUnconfirmedChange={setMapOpen} />
               </Field>
             </div>
 

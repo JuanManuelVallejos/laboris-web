@@ -58,7 +58,7 @@ export default function AddressOnboardingPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <Field label="Tu domicilio">
-            <AddressAutocomplete onSelect={setHomeAddress} onMapOpenChange={setMapOpen} />
+            <AddressAutocomplete onSelect={setHomeAddress} onUnconfirmedChange={setMapOpen} />
           </Field>
 
           <Button type="submit" variant="accent" size="lg" block disabled={!homeAddress.trim() || mapOpen || loading}>

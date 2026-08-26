@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { TextInput } from "@/components/ui/Field";
 import Button from "@/components/ui/Button";
 
 let bootstrapped = false;
@@ -55,46 +56,63 @@ function ensureGoogleMapsBootstrap(apiKey: string): void {
 interface AddressAutocompleteProps {
   /** Domicilio ya guardado (si lo hay) — se muestra como referencia; para cambiarlo hay que elegir una sugerencia nueva, no se edita como texto libre. */
   currentValue?: string;
-  /** Se dispara solo cuando el usuario elige una sugerencia real de Google — nunca con texto libre. */
+  /** Se dispara solo cuando el usuario elige una sugerencia real de Google (o confirma un pin en el mapa) — nunca con texto libre. */
   onSelect: (address: string) => void;
-  /** Avisa cuando se abre/cierra el mapa de respaldo — los formularios que editan un domicilio ya cargado lo usan para no dejar guardar mientras hay un pin sin confirmar. */
-  onMapOpenChange?: (open: boolean) => void;
+  /** Avisa cuando hay una interacción sin confirmar (texto tipeado sin elegir sugerencia, o el mapa de respaldo abierto sin pin confirmado) — los formularios que editan un domicilio ya cargado lo usan para no dejar guardar en ese estado. */
+  onUnconfirmedChange?: (unconfirmed: boolean) => void;
 }
 
+// Dirección específica: calle con altura, edificio con nombre propio, o
+// unidad dentro de un edificio. "route" (calle sin altura) se acepta como
+// SUGERENCIA (para que aparezca mientras se escribe, antes de llegar al
+// número) pero se rechaza al confirmar la selección final.
+const SPECIFIC_TYPES = ["street_address", "premise", "subpremise"];
+const SUGGESTION_TYPES = [...SPECIFIC_TYPES, "route"];
+
 /**
- * Input de domicilio respaldado por el autocompletado de Google (Places API
- * nueva — PlaceAutocompleteElement, el widget viejo google.maps.places.Autocomplete
- * ya no está disponible para proyectos de Google Cloud nuevos desde marzo 2025).
+ * Input de domicilio respaldado por la Autocomplete Data API de Google
+ * (AutocompleteSuggestion) — a propósito NO usa el widget prearmado
+ * PlaceAutocompleteElement: no expone el texto en tiempo real (imposible
+ * validar "elegí una sugerencia" al guardar) y en mobile puede tomar toda la
+ * pantalla. Acá el input y el dropdown de sugerencias son nuestros.
  * A propósito no permite texto libre: la única forma de setear un valor es
- * eligiendo una sugerencia de la lista.
+ * eligiendo una sugerencia de la lista (o confirmando un pin en el mapa).
  */
-export default function AddressAutocomplete({ currentValue, onSelect, onMapOpenChange }: AddressAutocompleteProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
+export default function AddressAutocomplete({ currentValue, onSelect, onUnconfirmedChange }: AddressAutocompleteProps) {
+  const onSelectRef = useRef(onSelect);
+  onSelectRef.current = onSelect;
+  const onUnconfirmedChangeRef = useRef(onUnconfirmedChange);
+  onUnconfirmedChangeRef.current = onUnconfirmedChange;
+
+  const [error, setError] = useState("");
+  const [inputText, setInputText] = useState("");
+  const [confirmed, setConfirmed] = useState(false);
+  const [suggestions, setSuggestions] = useState<google.maps.places.AutocompleteSuggestion[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [selectError, setSelectError] = useState("");
+
+  const placesLibRef = useRef<google.maps.PlacesLibrary | null>(null);
+  const sessionTokenRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const suggestRequestIdRef = useRef(0);
+
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const markerRef = useRef<google.maps.Marker | null>(null);
   const geocoderRef = useRef<google.maps.Geocoder | null>(null);
-  // Se incrementa en cada click del mapa — si la respuesta de un click viejo
-  // llega después de uno más nuevo, se descarta en vez de pisar el resultado
-  // correcto.
   const reverseGeocodeRequestIdRef = useRef(0);
-  const onSelectRef = useRef(onSelect);
-  onSelectRef.current = onSelect;
-  const onMapOpenChangeRef = useRef(onMapOpenChange);
-  onMapOpenChangeRef.current = onMapOpenChange;
-  const [error, setError] = useState("");
-
   const [showMapFallback, setShowMapFallback] = useState(false);
   const [pinAddress, setPinAddress] = useState("");
   const [pinError, setPinError] = useState("");
 
-  // Avisa al formulario padre + arranca cada apertura/cierre del mapa sin
-  // restos de un intento anterior (pin marcado o error de una sesión previa).
-  useEffect(() => {
-    onMapOpenChangeRef.current?.(showMapFallback);
-    setPinAddress("");
-    setPinError("");
-  }, [showMapFallback]);
+  const hasPendingText = inputText.trim().length > 0 && !confirmed;
+  const mapPending = showMapFallback && !pinAddress;
 
+  useEffect(() => {
+    onUnconfirmedChangeRef.current?.(hasPendingText || mapPending);
+  }, [hasPendingText, mapPending]);
+
+  // Carga la librería "places" una vez (para AutocompleteSuggestion +
+  // AutocompleteSessionToken) y arranca el primer token de sesión.
   useEffect(() => {
     let cancelled = false;
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
@@ -107,24 +125,11 @@ export default function AddressAutocomplete({ currentValue, onSelect, onMapOpenC
 
     window.google.maps
       .importLibrary("places")
-      .then(({ PlaceAutocompleteElement }) => {
-        if (cancelled || !containerRef.current) return;
-
-        const el = new PlaceAutocompleteElement({
-          includedRegionCodes: ["ar"],
-          // Exige una dirección específica (calle + altura, edificio con
-          // nombre propio, o unidad dentro de un edificio) — sin esto Google
-          // también sugiere localidades/partidos enteros (ej. "Bernal").
-          includedPrimaryTypes: ["street_address", "premise", "subpremise"],
-        });
-
-        el.addEventListener("gmp-select", async (event: google.maps.places.PlacePredictionSelectEvent) => {
-          const place = event.placePrediction.toPlace();
-          await place.fetchFields({ fields: ["formattedAddress"] });
-          if (place.formattedAddress) onSelectRef.current(place.formattedAddress);
-        });
-
-        containerRef.current.replaceChildren(el);
+      .then((lib) => {
+        if (cancelled) return;
+        const placesLib = lib as google.maps.PlacesLibrary;
+        placesLibRef.current = placesLib;
+        sessionTokenRef.current = new placesLib.AutocompleteSessionToken();
       })
       .catch((err) => {
         console.error("No se pudo inicializar el autocompletado de Google:", err);
@@ -133,13 +138,75 @@ export default function AddressAutocomplete({ currentValue, onSelect, onMapOpenC
 
     return () => {
       cancelled = true;
-      containerRef.current?.replaceChildren();
     };
   }, []);
+
+  function handleInputChange(value: string) {
+    setInputText(value);
+    setConfirmed(false);
+    setSelectError("");
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (value.trim().length < 3 || !placesLibRef.current) {
+      setSuggestions([]);
+      setShowDropdown(false);
+      return;
+    }
+
+    const requestId = ++suggestRequestIdRef.current;
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const placesLib = placesLibRef.current!;
+        const { suggestions: results } = await placesLib.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+          input: value,
+          includedRegionCodes: ["ar"],
+          includedPrimaryTypes: SUGGESTION_TYPES,
+          sessionToken: sessionTokenRef.current ?? undefined,
+        });
+        if (requestId !== suggestRequestIdRef.current) return; // llegó tarde, ya hay una búsqueda más nueva
+        setSuggestions(results.filter((s) => s.placePrediction));
+        setShowDropdown(true);
+      } catch (err) {
+        console.error("Error buscando sugerencias:", err);
+      }
+    }, 300);
+  }
+
+  async function handleSelectSuggestion(suggestion: google.maps.places.AutocompleteSuggestion) {
+    const prediction = suggestion.placePrediction;
+    if (!prediction) return;
+    const place = prediction.toPlace();
+    await place.fetchFields({ fields: ["formattedAddress", "types"] });
+    if (!place.formattedAddress) return;
+
+    const isSpecific = (place.types ?? []).some((t) => SPECIFIC_TYPES.includes(t));
+    if (!isSpecific) {
+      setSelectError("Esa dirección no tiene número — agregá la altura para que sea específica.");
+      return;
+    }
+
+    setInputText(place.formattedAddress);
+    setConfirmed(true);
+    setSuggestions([]);
+    setShowDropdown(false);
+    setSelectError("");
+    onSelectRef.current(place.formattedAddress);
+
+    // Nueva sesión para la próxima búsqueda — agrupa la facturación de cada
+    // búsqueda completa por separado, como recomienda Google.
+    if (placesLibRef.current) {
+      sessionTokenRef.current = new placesLibRef.current.AutocompleteSessionToken();
+    }
+  }
 
   // Fallback para cuando Google no encuentra la dirección exacta (barrios
   // nuevos, countries, zonas rurales) — se arma solo cuando se pide, no de
   // entrada, para que siga siendo la vía secundaria y no la principal.
+  useEffect(() => {
+    setPinAddress("");
+    setPinError("");
+  }, [showMapFallback]);
+
   useEffect(() => {
     if (!showMapFallback || !mapContainerRef.current) return;
     let cancelled = false;
@@ -163,12 +230,6 @@ export default function AddressAutocomplete({ currentValue, onSelect, onMapOpenC
           mapTypeControl: false,
         });
         geocoderRef.current = new Geocoder();
-
-        // Tipos específicos aceptados — mismo criterio que el autocompletado
-        // de texto (includedPrimaryTypes): sin esto, un punto en medio de un
-        // barrio puede resolver a un resultado a nivel localidad/zona en vez
-        // de una dirección puntual.
-        const SPECIFIC_TYPES = ["street_address", "premise", "subpremise"];
 
         const reverseGeocode = (latLng: google.maps.LatLng) => {
           setPinError("");
@@ -226,7 +287,39 @@ export default function AddressAutocomplete({ currentValue, onSelect, onMapOpenC
           Domicilio actual: <span className="text-ink font-medium">{currentValue}</span>
         </p>
       )}
-      <div ref={containerRef} />
+
+      <div className="relative">
+        <TextInput
+          value={inputText}
+          onChange={(e) => handleInputChange(e.target.value)}
+          onFocus={() => suggestions.length > 0 && setShowDropdown(true)}
+          onBlur={() => setShowDropdown(false)}
+          placeholder="Escribí tu domicilio…"
+          autoComplete="off"
+        />
+        {showDropdown && suggestions.length > 0 && (
+          <div className="absolute z-10 mt-1 w-full bg-surface-2 border border-border rounded-xl shadow-lg divide-y divide-border overflow-hidden">
+            {suggestions.map((s, i) => (
+              <button
+                key={i}
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => handleSelectSuggestion(s)}
+                className="w-full text-left px-3 py-2 text-sm text-ink hover:bg-surface-3 transition-colors"
+              >
+                {s.placePrediction?.text.toString()}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {hasPendingText && !selectError && (
+        <p className="text-xs mt-1 text-ink-soft">Elegí una dirección de la lista de sugerencias.</p>
+      )}
+      {selectError && (
+        <p className="text-xs mt-1" style={{ color: "var(--brand-alert)" }}>{selectError}</p>
+      )}
       {error && (
         <p className="text-xs mt-1" style={{ color: "var(--brand-alert)" }}>{error}</p>
       )}

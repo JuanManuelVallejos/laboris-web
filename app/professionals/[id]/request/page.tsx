@@ -147,7 +147,7 @@ export default function RequestPage() {
                       onChange={(e) => setNewLabel(e.target.value)}
                       placeholder="Nombre (ej: Casa, Depto)"
                     />
-                    <AddressAutocomplete onSelect={setNewAddress} onMapOpenChange={setNewAddressMapOpen} />
+                    <AddressAutocomplete onSelect={setNewAddress} onUnconfirmedChange={setNewAddressMapOpen} />
                     <Button
                       type="button"
                       variant="secondary"

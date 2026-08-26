@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useEffect, useMemo, useState } from "react";
+import { useAuth, useUser } from "@clerk/nextjs";
 import ProfessionalCard from "@/components/ProfessionalCard";
 import SearchBox from "@/components/ui/SearchBox";
 import LocationChip from "@/components/ui/LocationChip";
@@ -9,7 +9,9 @@ import Chip from "@/components/ui/Chip";
 import CategoryGrid from "@/components/ui/CategoryGrid";
 import UrgencyCard from "@/components/ui/UrgencyCard";
 import { TRADES, ZONES } from "@/lib/catalog";
+import { getMyProfessional } from "@/lib/api";
 import type { Professional } from "@/lib/types";
+import { useActiveRole } from "@/lib/useActiveRole";
 
 const ALL_ZONES = "Todas";
 
@@ -19,18 +21,30 @@ interface Props {
 
 export default function HomeClient({ professionals }: Props) {
   const { user } = useUser();
+  const { getToken } = useAuth();
+  const { hasProfessional } = useActiveRole();
   const [search,      setSearch]      = useState("");
   const [activeTrade, setActiveTrade] = useState<string | null>(null);
   const [activeZone,  setActiveZone]  = useState<string>(ALL_ZONES);
+  const [ownProfessionalId, setOwnProfessionalId] = useState<string | null>(null);
+
+  // Si el usuario también es profesional, no debe verse a sí mismo en el
+  // listado ni poder pedirse presupuesto (ver también la validación
+  // equivalente en el backend, RequestUseCase.Create).
+  useEffect(() => {
+    if (!hasProfessional) return;
+    getMyProfessional(getToken).then((p) => setOwnProfessionalId(p.id)).catch(() => {});
+  }, [hasProfessional, getToken]);
 
   const filtered = useMemo(() => {
     return professionals.filter((p) => {
+      if (p.id === ownProfessionalId) return false;
       const matchName  = p.name.toLowerCase().includes(search.toLowerCase());
       const matchTrade = !activeTrade || p.trade.toLowerCase() === activeTrade;
       const matchZone  = activeZone === ALL_ZONES || p.zone === activeZone;
       return matchName && matchTrade && matchZone;
     });
-  }, [professionals, search, activeTrade, activeZone]);
+  }, [professionals, ownProfessionalId, search, activeTrade, activeZone]);
 
   const isFiltering = Boolean(activeTrade || activeZone !== ALL_ZONES || search);
 

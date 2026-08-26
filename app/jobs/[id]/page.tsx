@@ -867,6 +867,17 @@ export default function JobPage() {
           </Badge>
         </div>
 
+        {job.address && (
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(job.address)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-ink-soft underline decoration-dotted block -mt-2"
+          >
+            Domicilio: {job.address}
+          </a>
+        )}
+
         {/* Stepper */}
         <div className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm overflow-x-auto">
           <Stepper status={job.status} />

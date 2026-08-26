@@ -77,6 +77,8 @@ export interface Job {
   clientName: string;
   professionalId: string;
   professionalName: string;
+  /** Domicilio congelado al momento de crear la solicitud — no cambia si el cliente edita después ese domicilio guardado. Vacío en trabajos legacy. */
+  address?: string;
   status: JobStatus;
   visitScheduledAt?: string;
   visitQuoteAmount?: number;

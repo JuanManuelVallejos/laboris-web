@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { Show, UserButton, SignInButton, useAuth } from "@clerk/nextjs";
+import { Show, UserButton, SignInButton, useAuth, useUser } from "@clerk/nextjs";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import Icon from "@/components/icons/Icon";
 import Button from "@/components/ui/Button";
 import { useTheme } from "@/lib/useTheme";
 import { useEventStream } from "@/lib/useEventStream";
+import { activeHref } from "@/lib/nav";
 import {
   getUnreadCount,
   getNotifications,
@@ -15,7 +17,13 @@ import {
   type Notification,
 } from "@/lib/api";
 
-const navLinks = [
+const NAV_LINKS_PRO = [
+  { href: "/pro",         label: "Inicio" },
+  { href: "/pro/pedidos", label: "Pedidos" },
+  { href: "/perfil",      label: "Perfil" },
+];
+
+const NAV_LINKS_CLIENT = [
   { href: "/",        label: "Inicio" },
   { href: "/pedidos", label: "Pedidos" },
   { href: "/perfil",  label: "Perfil" },
@@ -151,6 +159,13 @@ function NotificationBell() {
 }
 
 export default function Topbar() {
+  const pathname = usePathname();
+  const { user } = useUser();
+  const roles = user?.unsafeMetadata?.roles as string[] | undefined;
+  const isPro = roles?.includes("professional");
+  const navLinks = isPro ? NAV_LINKS_PRO : NAV_LINKS_CLIENT;
+  const active = activeHref(pathname, navLinks.map((l) => l.href));
+
   return (
     <header className="topbar">
       <div className="topbar__in">
@@ -163,7 +178,11 @@ export default function Topbar() {
             <Link
               key={link.href}
               href={link.href}
-              className="px-4 py-2 rounded-xl text-sm font-medium text-ink-mid hover:text-ink hover:bg-surface-3 transition-colors"
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+                link.href === active
+                  ? "text-[var(--brand-deep)] bg-surface-3"
+                  : "text-ink-mid hover:text-ink hover:bg-surface-3"
+              }`}
             >
               {link.label}
             </Link>

@@ -62,23 +62,31 @@ export function ActiveRoleProvider({ children }: { children: ReactNode }) {
     if (saved === "client" || saved === "professional") setStored(saved);
   }, []);
 
+  // Si la ruta actual es inequívoca, gana sobre lo guardado — calculado acá
+  // en el render (no en un efecto) para que ningún componente hermano
+  // (ej. OnboardingGuard, que redirige según `active` en su propio efecto
+  // dentro del mismo commit) pueda leer el valor viejo justo después de
+  // navegar, antes de que un efecto tuviera chance de actualizar `stored`.
+  const pathOverride: Role | null = isProfessionalPath(pathname)
+    ? "professional"
+    : isClientPath(pathname)
+      ? "client"
+      : null;
+
+  // Efecto aparte solo para persistir ese override, así sobrevive al llegar
+  // después a una ruta neutra (ej. /jobs/[id], /perfil).
   useEffect(() => {
-    if (!dual) return;
-    if (isProfessionalPath(pathname)) {
-      setStored("professional");
-      localStorage.setItem(STORAGE_KEY, "professional");
-    } else if (isClientPath(pathname)) {
-      setStored("client");
-      localStorage.setItem(STORAGE_KEY, "client");
-    }
-  }, [pathname, dual]);
+    if (!dual || !pathOverride) return;
+    setStored(pathOverride);
+    localStorage.setItem(STORAGE_KEY, pathOverride);
+  }, [pathOverride, dual]);
 
   const setActive = useCallback((role: Role) => {
     setStored(role);
     localStorage.setItem(STORAGE_KEY, role);
   }, []);
 
-  const active: Role = dual ? stored : hasProfessional ? "professional" : "client";
+  const active: Role = dual ? (pathOverride ?? stored) : hasProfessional ? "professional" : "client";
 
   const value: ActiveRoleValue = { hasClient, hasProfessional, dual, active, setActive };
   return <ActiveRoleContext.Provider value={value}>{children}</ActiveRoleContext.Provider>;

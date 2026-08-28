@@ -55,6 +55,11 @@ export default function ApproxLocationSection({ requestId }: Props) {
           fillColor: "#16A34A",
           fillOpacity: 0.15,
         });
+        // Red de seguridad: si el contenedor todavía no tenía su layout
+        // final aplicado en este instante, el mapa puede quedar mal
+        // dimensionado (se ve todo alejado) — forzamos un recalculo.
+        window.google.maps.event.trigger(map, "resize");
+        map.setCenter({ lat, lng });
       })
       .catch((err) => {
         console.error("No se pudo cargar la zona aproximada:", err);
@@ -83,17 +88,21 @@ export default function ApproxLocationSection({ requestId }: Props) {
       </button>
 
       {showMap && (
-        <>
-          {loading && <div className="h-52 rounded-xl bg-surface-3 animate-pulse" />}
-          {error && (
-            <p className="text-xs" style={{ color: "var(--brand-alert)" }}>{error}</p>
+        <div className="relative rounded-xl overflow-hidden" style={{ height: 220 }}>
+          {/* El contenedor del mapa siempre está montado y visible (nunca
+              display:none) — un mapa de Google creado sobre un contenedor
+              oculto/sin dimensiones queda mal inicializado y se ve todo
+              alejado en vez de acercado al círculo. El estado de carga/error
+              se muestra como una capa encima, no ocultando el mapa. */}
+          <div ref={mapContainerRef} className="absolute inset-0" />
+          {(loading || error) && (
+            <div className="absolute inset-0 flex items-center justify-center bg-surface-3 px-4 text-center">
+              <p className="text-xs" style={{ color: error ? "var(--brand-alert)" : "var(--ink-soft)" }}>
+                {error || "Cargando…"}
+              </p>
+            </div>
           )}
-          <div
-            ref={mapContainerRef}
-            className="rounded-xl overflow-hidden"
-            style={{ height: 220, display: loading || error ? "none" : "block" }}
-          />
-        </>
+        </div>
       )}
     </div>
   );

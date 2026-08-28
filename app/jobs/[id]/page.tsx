@@ -801,18 +801,25 @@ export default function JobPage() {
   }, [id, getToken, isLoaded, router, setActive]);
 
   useEventStream<Job>(
-    id ? jobStreamUrl(id) : null,
+    // No se conecta hasta tener la primera carga por REST resuelta (abajo,
+    // getJob) — el job que llega por SSE se difunde igual a los dos
+    // participantes y NUNCA trae viewerIsClient/viewerIsProfessional (quedan
+    // en false/false), así que si un evento llegara antes de tener un `job`
+    // propio como base, no habría forma de saber de quién es cada mensaje
+    // del chat (Chat usa exactamente ese booleano) ni qué acciones mostrar
+    // en ActionPanel — de ahí salía el bug de mensajes "invertidos".
+    id && job ? jobStreamUrl(id) : null,
     getToken,
-    // El job que llega por SSE se difunde igual a los dos participantes, así
-    // que no trae viewerIsClient/viewerIsProfessional — se preservan los que
-    // ya se habían resuelto en la carga inicial (no cambian en la vida del
-    // job). address/addressRevealed tampoco son confiables acá (el
-    // broadcast siempre manda la versión más restrictiva, ver
-    // JobUseCase.updateJob) — se preservan también, y si el status cambió
-    // sin haberse revelado todavía, se vuelve a pedir por REST (la única
-    // vía que lo calcula bien según quién mira).
+    // Se preservan los campos ya resueltos por la carga inicial (no cambian
+    // en la vida del job): viewerIsClient/viewerIsProfessional, y
+    // address/addressRevealed (el broadcast siempre manda la versión más
+    // restrictiva, ver JobUseCase.updateJob) — si el status cambió sin
+    // haberse revelado todavía, se vuelve a pedir por REST.
     (updatedJob) => setJob((prev) => {
-      if (!prev) return updatedJob;
+      // Sin base previa confiable, se ignora el evento en vez de aceptarlo
+      // a ciegas (viewerIsClient/viewerIsProfessional vendrían en false/
+      // false) — la carga por REST en curso va a traer el estado completo.
+      if (!prev) return prev;
       const merged: Job = {
         ...updatedJob,
         viewerIsClient: prev.viewerIsClient,

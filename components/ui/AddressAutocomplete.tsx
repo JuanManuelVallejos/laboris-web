@@ -60,7 +60,7 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.Marker | null>(null);
-  const placePinRef = useRef<((latLng: google.maps.LatLng) => void) | null>(null);
+  const placePinRef = useRef<((latLng: google.maps.LatLng, onFound?: (address: string) => void) => void) | null>(null);
   const geocoderRef = useRef<google.maps.Geocoder | null>(null);
   const reverseGeocodeRequestIdRef = useRef(0);
   const [showMapFallback, setShowMapFallback] = useState(false);
@@ -282,7 +282,7 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
         mapRef.current = map;
         if (initialViewport) map.fitBounds(initialViewport);
 
-        const reverseGeocode = (latLng: google.maps.LatLng) => {
+        const reverseGeocode = (latLng: google.maps.LatLng, onFound?: (address: string) => void) => {
           setPinError("");
           const requestId = ++reverseGeocodeRequestIdRef.current;
           geocoderRef.current!.geocode({ location: latLng }, (results, status) => {
@@ -290,6 +290,7 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
             const specific = results?.find((r) => r.types.some((t) => SPECIFIC_TYPES.includes(t)));
             if (status === "OK" && specific) {
               setPinAddress(specific.formatted_address);
+              onFound?.(specific.formatted_address);
             } else {
               console.error("Reverse geocode sin resultado específico:", status, results);
               setPinError("No pudimos identificar una dirección específica para ese punto — probá con otro lugar del mapa.");
@@ -297,7 +298,7 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
           });
         };
 
-        const placePin = (latLng: google.maps.LatLng) => {
+        const placePin = (latLng: google.maps.LatLng, onFound?: (address: string) => void) => {
           if (!markerRef.current) {
             markerRef.current = new Marker({ position: latLng, map, draggable: true });
             markerRef.current.addListener("dragend", () => {
@@ -307,7 +308,7 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
           } else {
             markerRef.current.setPosition(latLng);
           }
-          reverseGeocode(latLng);
+          reverseGeocode(latLng, onFound);
         };
 
         map.addListener("click", (e: google.maps.MapMouseEvent) => {
@@ -328,6 +329,13 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
     };
   }, [showMapFallback]);
 
+  function confirmPinAddress(address: string) {
+    setInputText(address);
+    setConfirmed(true);
+    onSelectRef.current(address);
+    setShowMapFallback(false);
+  }
+
   function handleUseMyLocation() {
     if (!navigator.geolocation) {
       setPinError("Tu navegador no admite geolocalización.");
@@ -342,7 +350,11 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
         const latLng = new window.google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
         map.setCenter(latLng);
         map.setZoom(16);
-        placePin(latLng);
+        // Ubicación real del dispositivo: se confirma sola apenas el
+        // reverse-geocode resuelve una dirección específica, sin que haga
+        // falta apretar "Confirmar ubicación" — a diferencia de un click o
+        // arrastre manual del pin, que sigue requiriendo esa confirmación.
+        placePin(latLng, confirmPinAddress);
       },
       (err) => {
         console.error("Error obteniendo la ubicación actual:", err);
@@ -354,10 +366,7 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
 
   function handleConfirmPin() {
     if (!pinAddress) return;
-    setInputText(pinAddress);
-    setConfirmed(true);
-    onSelectRef.current(pinAddress);
-    setShowMapFallback(false);
+    confirmPinAddress(pinAddress);
   }
 
   return (

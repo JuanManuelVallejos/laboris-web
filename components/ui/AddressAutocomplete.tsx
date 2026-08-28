@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { TextInput } from "@/components/ui/Field";
 import Button from "@/components/ui/Button";
+import Icon from "@/components/icons/Icon";
 import { ensureGoogleMapsBootstrap } from "@/lib/googleMaps";
 
 interface AddressAutocompleteProps {
@@ -42,6 +43,11 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
   const [suggestions, setSuggestions] = useState<google.maps.places.AutocompleteSuggestion[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectError, setSelectError] = useState("");
+  // true cuando la búsqueda actual ya devuelve alguna sugerencia con altura
+  // (aunque todavía no se haya clickeado ninguna) — feedback positivo previo
+  // a la confirmación, sin necesidad de una llamada extra a la API (types
+  // viene poblado en la propia respuesta de fetchAutocompleteSuggestions).
+  const [looksSpecific, setLooksSpecific] = useState(false);
 
   const placesLibRef = useRef<google.maps.PlacesLibrary | null>(null);
   const sessionTokenRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
@@ -58,6 +64,12 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
 
   const hasPendingText = inputText.trim().length > 0 && !confirmed;
   const mapPending = showMapFallback && !pinAddress;
+  // Precedencia: un rechazo explícito manda por sobre todo; si no, una
+  // dirección con altura ya reconocida (o ya confirmada) se ve en verde
+  // aunque falte clickear la sugerencia; el resto del texto sin confirmar
+  // sigue en rojo como antes.
+  const showValid = !selectError && (looksSpecific || confirmed);
+  const showInvalid = !showValid && (hasPendingText || !!selectError);
 
   useEffect(() => {
     onUnconfirmedChangeRef.current?.(hasPendingText || mapPending);
@@ -97,6 +109,7 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
     setInputText(value);
     setConfirmed(false);
     setSelectError("");
+    setLooksSpecific(false);
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     if (value.trim().length < 3 || !placesLibRef.current) {
@@ -118,6 +131,7 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
         if (requestId !== suggestRequestIdRef.current) return; // llegó tarde, ya hay una búsqueda más nueva
         setSuggestions(results.filter((s) => s.placePrediction));
         setShowDropdown(true);
+        setLooksSpecific(results.some((s) => (s.placePrediction?.types ?? []).some((t) => SPECIFIC_TYPES.includes(t))));
       } catch (err) {
         console.error("Error buscando sugerencias:", err);
       }
@@ -254,8 +268,18 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
           onBlur={() => setShowDropdown(false)}
           placeholder="Escribí tu domicilio…"
           autoComplete="off"
-          style={(hasPendingText || selectError) ? { borderColor: "var(--brand-alert)" } : undefined}
+          className={showValid ? "pr-9" : undefined}
+          style={
+            showValid ? { borderColor: "#16A34A" } : showInvalid ? { borderColor: "var(--brand-alert)" } : undefined
+          }
         />
+        {showValid && (
+          <Icon
+            name="check"
+            className="ico absolute top-1/2 right-3 -translate-y-1/2 pointer-events-none"
+            style={{ width: 18, height: 18, color: "#16A34A" }}
+          />
+        )}
         {showDropdown && suggestions.length > 0 && (
           <div className="absolute z-10 mt-1 w-full bg-surface-2 border border-border rounded-xl shadow-lg divide-y divide-border overflow-hidden">
             {suggestions.map((s, i) => (
@@ -274,7 +298,11 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
       </div>
 
       {hasPendingText && !selectError && (
-        <p className="text-xs mt-1 text-ink-soft">Elegí una dirección de la lista de sugerencias.</p>
+        <p className="text-xs mt-1" style={showValid ? { color: "#16A34A" } : undefined}>
+          {showValid
+            ? "Esa dirección existe — elegila de la lista para confirmar."
+            : <span className="text-ink-soft">Elegí una dirección de la lista de sugerencias.</span>}
+        </p>
       )}
       {selectError && (
         <p className="text-xs mt-1" style={{ color: "var(--brand-alert)" }}>{selectError}</p>

@@ -18,6 +18,7 @@ export const ICON_NAMES = [
   "moon",
   "arrow",
   "edit",
+  "check",
 ] as const;
 
 export type IconName = (typeof ICON_NAMES)[number];
@@ -110,6 +111,9 @@ export default function IconSprite() {
         <g id="i-edit" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
           <path d="M14.5 4.5 19.5 9.5 8 21H3v-5z" />
           <path d="M12.5 6.5 17.5 11.5" />
+        </g>
+        <g id="i-check" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 12.5 9.5 18 20 6" />
         </g>
       </defs>
     </svg>

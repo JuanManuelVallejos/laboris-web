@@ -73,7 +73,7 @@ export default function ProfessionalOnboardingPage() {
       </header>
 
       <main className="flex-1 px-4 pt-5 pb-8 max-w-lg mx-auto w-full">
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} noValidate className="space-y-4">
 
           <div className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm">
             <Field label="Tu nombre *">
@@ -81,7 +81,6 @@ export default function ProfessionalOnboardingPage() {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="Ej: Juan Vallejo"
-                required
                 style={submitAttempted && !fullName.trim() ? { borderColor: "var(--brand-alert)" } : undefined}
               />
             </Field>

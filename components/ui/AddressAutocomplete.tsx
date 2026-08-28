@@ -347,6 +347,9 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
   function confirmPinAddress(address: string, opts?: { keepMapOpen?: boolean }) {
     setInputText(address);
     setConfirmed(true);
+    setSelectError("");
+    setSuggestions([]);
+    setShowDropdown(false);
     onSelectRef.current(address);
     if (!opts?.keepMapOpen) setShowMapFallback(false);
   }

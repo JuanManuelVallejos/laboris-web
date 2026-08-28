@@ -99,7 +99,7 @@ export default function ProPedidosPage() {
           </>
         )}
 
-        <h3 className="text-sm font-semibold text-ink-soft uppercase tracking-wide pt-2">Historial de pedidos</h3>
+        <h3 className="text-sm font-semibold text-ink-soft uppercase tracking-wide pt-2 pb-2">Historial de pedidos</h3>
 
         {loading && (
           <div className="space-y-3">

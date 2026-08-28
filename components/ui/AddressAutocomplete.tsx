@@ -149,24 +149,35 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
     }, 300);
   }
 
-  async function handleSelectSuggestion(suggestion: google.maps.places.AutocompleteSuggestion) {
-    const prediction = suggestion.placePrediction;
-    if (!prediction) return;
-    const place = prediction.toPlace();
-    await place.fetchFields({ fields: ["formattedAddress", "types"] });
-    if (!place.formattedAddress) return;
+  async function ensureGeocoder(): Promise<google.maps.Geocoder> {
+    if (geocoderRef.current) return geocoderRef.current;
+    const { Geocoder } = (await window.google.maps.importLibrary("geocoding")) as google.maps.GeocodingLibrary;
+    geocoderRef.current = new Geocoder();
+    return geocoderRef.current;
+  }
 
-    const isSpecific = (place.types ?? []).some((t) => SPECIFIC_TYPES.includes(t));
-    if (!isSpecific) {
-      setInputText(place.formattedAddress);
-      setConfirmed(false);
-      setSelectError("Esa dirección no tiene número — agregá la altura para que sea específica.");
-      setSuggestions([]);
-      setShowDropdown(false);
-      return;
+  // Google a veces resuelve el Place de una sugerencia a nivel "route" (sin
+  // altura) aunque el TEXTO de esa sugerencia sí incluya un número — pasa en
+  // calles poco mapeadas. Antes de rechazarla probamos geocodificar el texto
+  // tal cual (que sí trae el número) y nos quedamos con eso si es específico.
+  async function geocodeIfSpecific(text: string): Promise<string | null> {
+    try {
+      const geocoder = await ensureGeocoder();
+      return await new Promise((resolve) => {
+        geocoder.geocode({ address: text, region: "ar" }, (results, status) => {
+          if (status !== "OK" || !results) return resolve(null);
+          const specific = results.find((r) => r.types.some((t) => SPECIFIC_TYPES.includes(t)));
+          resolve(specific ? specific.formatted_address : null);
+        });
+      });
+    } catch (err) {
+      console.error("Error geocodificando dirección tipeada:", err);
+      return null;
     }
+  }
 
-    setInputText(place.formattedAddress);
+  function confirmAddress(formattedAddress: string) {
+    setInputText(formattedAddress);
     setConfirmed(true);
     setSuggestions([]);
     setShowDropdown(false);
@@ -177,13 +188,42 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
     // si no, mapPending queda pegado en true y nunca deja de avisarle al
     // padre que falta confirmar, aunque el domicilio ya esté listo.
     setShowMapFallback(false);
-    onSelectRef.current(place.formattedAddress);
+    onSelectRef.current(formattedAddress);
 
     // Nueva sesión para la próxima búsqueda — agrupa la facturación de cada
     // búsqueda completa por separado, como recomienda Google.
     if (placesLibRef.current) {
       sessionTokenRef.current = new placesLibRef.current.AutocompleteSessionToken();
     }
+  }
+
+  async function handleSelectSuggestion(suggestion: google.maps.places.AutocompleteSuggestion) {
+    const prediction = suggestion.placePrediction;
+    if (!prediction) return;
+    const rawText = prediction.text.toString();
+    const place = prediction.toPlace();
+    await place.fetchFields({ fields: ["formattedAddress", "types"] });
+    if (!place.formattedAddress) return;
+
+    const isSpecific = (place.types ?? []).some((t) => SPECIFIC_TYPES.includes(t));
+    if (isSpecific) {
+      confirmAddress(place.formattedAddress);
+      return;
+    }
+
+    if (/\d/.test(rawText)) {
+      const geocoded = await geocodeIfSpecific(rawText);
+      if (geocoded) {
+        confirmAddress(geocoded);
+        return;
+      }
+    }
+
+    setInputText(rawText);
+    setConfirmed(false);
+    setSelectError("Esa dirección no tiene número — agregá la altura para que sea específica.");
+    setSuggestions([]);
+    setShowDropdown(false);
   }
 
   // Fallback para cuando Google no encuentra la dirección exacta (barrios

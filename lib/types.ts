@@ -77,8 +77,10 @@ export interface Job {
   clientName: string;
   professionalId: string;
   professionalName: string;
-  /** Domicilio congelado al momento de crear la solicitud — no cambia si el cliente edita después ese domicilio guardado. Vacío en trabajos legacy. */
+  /** Domicilio congelado al momento de crear la solicitud — no cambia si el cliente edita después ese domicilio guardado. Vacío en trabajos legacy. Para el profesional viene recortado hasta que addressRevealed sea true. */
   address?: string;
+  /** true si `address` trae el domicilio completo — para el profesional, recién una vez confirmada la visita. No confiar en este campo cuando llega por SSE (ver app/jobs/[id]/page.tsx). */
+  addressRevealed?: boolean;
   status: JobStatus;
   visitScheduledAt?: string;
   visitQuoteAmount?: number;

@@ -11,6 +11,7 @@ import Icon from "@/components/icons/Icon";
 import { StatusBadge } from "@/components/ui/Badge";
 import PhotoGallery from "@/components/ui/PhotoGallery";
 import { AcceptRejectRow, RejectForm } from "@/components/RequestActions";
+import ApproxLocationSection from "@/components/ApproxLocationSection";
 import { getRequestDetail, updateRequestStatus } from "@/lib/api";
 import type { Request } from "@/lib/api";
 
@@ -101,6 +102,10 @@ export default function ProRequestDetailPage() {
               >
                 Domicilio: {request.address}
               </a>
+            )}
+
+            {request.address && !request.addressRevealed && (
+              <ApproxLocationSection requestId={request.id} />
             )}
 
             {request.photos && request.photos.length > 0 && (

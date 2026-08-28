@@ -314,6 +314,28 @@ export async function getRequestDetail(
   return res.json();
 }
 
+export interface ApproxLocation {
+  lat: number;
+  lng: number;
+}
+
+/** Punto aproximado (nunca el real) del domicilio de una solicitud — para ubicar la zona antes de que la dirección exacta se revele. */
+export async function getApproxLocation(
+  requestId: string,
+  getToken: () => Promise<string | null>
+): Promise<ApproxLocation> {
+  const token = await getToken();
+  const res = await fetch(`${BASE}/api/v1/requests/${requestId}/approx-location`, {
+    cache: "no-store",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: "error desconocido" }));
+    throw new Error(body.error ?? "error desconocido");
+  }
+  return res.json();
+}
+
 export interface Request {
   id: string;
   clientId: string;
@@ -324,8 +346,10 @@ export interface Request {
   status: "pending" | "viewed" | "accepted" | "rejected" | "expired";
   rejectionReason: string;
   jobId?: string;
-  /** Domicilio donde sería el trabajo — vacío en solicitudes viejas, creadas antes de este sistema. */
+  /** Domicilio donde sería el trabajo — vacío en solicitudes viejas, creadas antes de este sistema. Para el profesional viene recortado hasta que addressRevealed sea true. */
   address?: string;
+  /** true si `address` trae el domicilio completo — para el profesional, recién una vez confirmada la visita. */
+  addressRevealed?: boolean;
   photos?: Attachment[];
   createdAt: string;
 }

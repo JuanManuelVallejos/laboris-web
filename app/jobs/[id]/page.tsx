@@ -9,6 +9,7 @@ import Button from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { TextInput, Textarea } from "@/components/ui/Field";
 import Icon from "@/components/icons/Icon";
+import ApproxLocationSection from "@/components/ApproxLocationSection";
 import { JOB_STATUS_TONE, JOB_STATUS_LABEL } from "@/lib/status";
 import {
   getJob, getMessages, sendMessage, messagesStreamUrl, jobStreamUrl,
@@ -804,10 +805,26 @@ export default function JobPage() {
     getToken,
     // El job que llega por SSE se difunde igual a los dos participantes, así
     // que no trae viewerIsClient/viewerIsProfessional — se preservan los que
-    // ya se habían resuelto en la carga inicial (no cambian en la vida del job).
-    (updatedJob) => setJob((prev) => (prev
-      ? { ...updatedJob, viewerIsClient: prev.viewerIsClient, viewerIsProfessional: prev.viewerIsProfessional }
-      : updatedJob)),
+    // ya se habían resuelto en la carga inicial (no cambian en la vida del
+    // job). address/addressRevealed tampoco son confiables acá (el
+    // broadcast siempre manda la versión más restrictiva, ver
+    // JobUseCase.updateJob) — se preservan también, y si el status cambió
+    // sin haberse revelado todavía, se vuelve a pedir por REST (la única
+    // vía que lo calcula bien según quién mira).
+    (updatedJob) => setJob((prev) => {
+      if (!prev) return updatedJob;
+      const merged: Job = {
+        ...updatedJob,
+        viewerIsClient: prev.viewerIsClient,
+        viewerIsProfessional: prev.viewerIsProfessional,
+        address: prev.address,
+        addressRevealed: prev.addressRevealed,
+      };
+      if (updatedJob.status !== prev.status && !prev.addressRevealed) {
+        getJob(id, getToken).then(setJob).catch(() => {});
+      }
+      return merged;
+    }),
     { pauseWhenHidden: false }
   );
 
@@ -868,14 +885,18 @@ export default function JobPage() {
         </div>
 
         {job.address && (
-          <a
-            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(job.address)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-ink-soft underline decoration-dotted block -mt-2"
-          >
-            Domicilio: {job.address}
-          </a>
+          job.addressRevealed ? (
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(job.address)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-ink-soft underline decoration-dotted block -mt-2"
+            >
+              Domicilio: {job.address}
+            </a>
+          ) : (
+            <ApproxLocationSection requestId={job.requestId} />
+          )
         )}
 
         {/* Stepper */}

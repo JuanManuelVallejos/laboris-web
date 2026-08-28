@@ -68,15 +68,15 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
   const hasPendingText = inputText.trim().length > 0 && !confirmed;
   const mapPending = showMapFallback && !pinAddress;
   // El padre pide resaltar esto porque se intentó enviar el formulario sin
-  // haber confirmado — manda por sobre el verde de "parece válido": ese
-  // verde es justamente lo que puede hacer creer que ya está listo.
+  // haber confirmado — manda por sobre el ámbar de "parece válido".
   const unconfirmedNudge = !!highlightUnconfirmed && !confirmed;
-  // Precedencia: un rechazo explícito manda por sobre todo; si no, una
-  // dirección con altura ya reconocida (o ya confirmada) se ve en verde
-  // aunque falte clickear la sugerencia; el resto del texto sin confirmar
-  // sigue en rojo como antes.
-  const showValid = !selectError && !unconfirmedNudge && (looksSpecific || confirmed);
-  const showInvalid = !showValid && (hasPendingText || !!selectError || unconfirmedNudge);
+  // El verde + check queda reservado para cuando ya está realmente
+  // confirmado (se clickeó una sugerencia o se confirmó el pin) — antes de
+  // eso, aunque el texto ya matchee una dirección específica, todavía hace
+  // falta esa acción, así que el aviso es ámbar (no verde) y sin check.
+  const showConfirmed = !selectError && !unconfirmedNudge && confirmed;
+  const showPromising = !selectError && !unconfirmedNudge && !confirmed && looksSpecific;
+  const showInvalid = !showConfirmed && !showPromising && (hasPendingText || !!selectError || unconfirmedNudge);
 
   useEffect(() => {
     if (unconfirmedNudge) rootRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -325,16 +325,29 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
           onBlur={() => setShowDropdown(false)}
           placeholder="Escribí tu domicilio…"
           autoComplete="off"
-          className={showValid ? "pr-9" : undefined}
+          className={(showConfirmed || showPromising) ? "pr-9" : undefined}
           style={
-            showValid ? { borderColor: "#16A34A" } : showInvalid ? { borderColor: "var(--brand-alert)" } : undefined
+            showConfirmed
+              ? { borderColor: "#16A34A" }
+              : showPromising
+              ? { borderColor: "var(--amber)" }
+              : showInvalid
+              ? { borderColor: "var(--brand-alert)" }
+              : undefined
           }
         />
-        {showValid && (
+        {showConfirmed && (
           <Icon
             name="check"
             className="ico absolute top-1/2 right-3 -translate-y-1/2 pointer-events-none"
             style={{ width: 18, height: 18, color: "#16A34A" }}
+          />
+        )}
+        {showPromising && (
+          <Icon
+            name="alert"
+            className="ico absolute top-1/2 right-3 -translate-y-1/2 pointer-events-none"
+            style={{ width: 18, height: 18, color: "var(--amber)" }}
           />
         )}
         {showDropdown && suggestions.length > 0 && (
@@ -360,8 +373,8 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
         </p>
       )}
       {hasPendingText && !selectError && !unconfirmedNudge && (
-        <p className="text-xs mt-1" style={showValid ? { color: "#16A34A" } : undefined}>
-          {showValid
+        <p className="text-xs mt-1" style={showPromising ? { color: "var(--amber)" } : undefined}>
+          {showPromising
             ? "Esa dirección existe — elegila de la lista para confirmar."
             : <span className="text-ink-soft">Elegí una dirección de la lista de sugerencias.</span>}
         </p>

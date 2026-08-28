@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { TextInput } from "@/components/ui/Field";
-import Button from "@/components/ui/Button";
 import Icon from "@/components/icons/Icon";
 import { ensureGoogleMapsBootstrap } from "@/lib/googleMaps";
 
@@ -60,7 +59,7 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.Marker | null>(null);
-  const placePinRef = useRef<((latLng: google.maps.LatLng, onFound?: (address: string) => void) => void) | null>(null);
+  const placePinRef = useRef<((latLng: google.maps.LatLng) => void) | null>(null);
   const geocoderRef = useRef<google.maps.Geocoder | null>(null);
   const reverseGeocodeRequestIdRef = useRef(0);
   const [showMapFallback, setShowMapFallback] = useState(false);
@@ -296,7 +295,11 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
           map.fitBounds(initialViewport);
         }
 
-        const reverseGeocode = (latLng: google.maps.LatLng, onFound?: (address: string) => void) => {
+        // Cualquier pin (click, arrastre o geolocalización) confirma en el
+        // momento apenas resuelve una dirección específica — el textbox de
+        // arriba se actualiza en tiempo real, sin un botón "Confirmar" de
+        // por medio.
+        const reverseGeocode = (latLng: google.maps.LatLng) => {
           setPinError("");
           const requestId = ++reverseGeocodeRequestIdRef.current;
           geocoderRef.current!.geocode({ location: latLng }, (results, status) => {
@@ -304,7 +307,7 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
             const specific = results?.find((r) => r.types.some((t) => SPECIFIC_TYPES.includes(t)));
             if (status === "OK" && specific) {
               setPinAddress(specific.formatted_address);
-              onFound?.(specific.formatted_address);
+              confirmPinAddress(specific.formatted_address);
             } else {
               console.error("Reverse geocode sin resultado específico:", status, results);
               setPinError("No pudimos identificar una dirección específica para ese punto — probá con otro lugar del mapa.");
@@ -312,7 +315,7 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
           });
         };
 
-        const placePin = (latLng: google.maps.LatLng, onFound?: (address: string) => void) => {
+        const placePin = (latLng: google.maps.LatLng) => {
           if (!markerRef.current) {
             markerRef.current = new Marker({ position: latLng, map, draggable: true });
             markerRef.current.addListener("dragend", () => {
@@ -322,7 +325,7 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
           } else {
             markerRef.current.setPosition(latLng);
           }
-          reverseGeocode(latLng, onFound);
+          reverseGeocode(latLng);
         };
 
         map.addListener("click", (e: google.maps.MapMouseEvent) => {
@@ -344,14 +347,16 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
     };
   }, [showMapFallback]);
 
-  function confirmPinAddress(address: string, opts?: { keepMapOpen?: boolean }) {
+  // El mapa nunca se cierra solo al confirmar un pin — la única forma de
+  // cerrarlo es el toggle "Ocultar mapa", para poder seguir ajustando la
+  // posición después de que ya haya confirmado algo.
+  function confirmPinAddress(address: string) {
     setInputText(address);
     setConfirmed(true);
     setSelectError("");
     setSuggestions([]);
     setShowDropdown(false);
     onSelectRef.current(address);
-    if (!opts?.keepMapOpen) setShowMapFallback(false);
   }
 
   function handleUseMyLocation() {
@@ -368,13 +373,7 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
         const latLng = new window.google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
         map.setCenter(latLng);
         map.setZoom(16);
-        // Ubicación real del dispositivo: se confirma sola apenas el
-        // reverse-geocode resuelve una dirección específica, sin que haga
-        // falta apretar "Confirmar ubicación" — a diferencia de un click o
-        // arrastre manual del pin, que sigue requiriendo esa confirmación.
-        // El mapa queda abierto por si se lo quiere correr un poco (el GPS
-        // puede no ser exacto).
-        placePin(latLng, (address) => confirmPinAddress(address, { keepMapOpen: true }));
+        placePin(latLng);
       },
       (err) => {
         console.error("Error obteniendo la ubicación actual:", err);
@@ -382,11 +381,6 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
-  }
-
-  function handleConfirmPin() {
-    if (!pinAddress) return;
-    confirmPinAddress(pinAddress);
   }
 
   return (
@@ -483,13 +477,9 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
             </button>
           </div>
           <div ref={mapContainerRef} className="rounded-xl overflow-hidden" style={{ height: 260 }} />
-          {pinAddress && <p className="text-xs text-ink">Ubicación marcada: {pinAddress}</p>}
           {pinError && (
             <p className="text-xs" style={{ color: "var(--brand-alert)" }}>{pinError}</p>
           )}
-          <Button type="button" variant="secondary" size="sm" onClick={handleConfirmPin} disabled={!pinAddress}>
-            Confirmar ubicación
-          </Button>
         </div>
       )}
     </div>

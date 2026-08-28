@@ -258,6 +258,11 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
         // en Buenos Aires — el viewport que devuelve el geocoder ya viene
         // más o menos amplio según qué tan específico sea el resultado.
         let initialViewport: google.maps.LatLngBounds | null = null;
+        // Si el domicilio ya está confirmado y es específico (con altura),
+        // se marca el pin ahí apenas se abre el mapa — sin importar que se
+        // haya confirmado eligiendo una sugerencia de la lista en vez de
+        // haber tocado el mapa antes.
+        let initialPinLocation: google.maps.LatLng | null = null;
         const textToLocate = inputText.trim();
         if (textToLocate) {
           try {
@@ -266,7 +271,11 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
                 resolve(status === "OK" && res ? res : null);
               });
             });
-            if (results?.[0]?.geometry?.viewport) initialViewport = results[0].geometry.viewport;
+            const best = results?.[0];
+            if (best?.geometry?.viewport) initialViewport = best.geometry.viewport;
+            if (confirmed && best?.geometry?.location && best.types.some((t) => SPECIFIC_TYPES.includes(t))) {
+              initialPinLocation = best.geometry.location;
+            }
           } catch (err) {
             console.error("No se pudo centrar el mapa según lo tipeado:", err);
           }
@@ -280,7 +289,12 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
           mapTypeControl: false,
         });
         mapRef.current = map;
-        if (initialViewport) map.fitBounds(initialViewport);
+        if (initialPinLocation) {
+          map.setCenter(initialPinLocation);
+          map.setZoom(17);
+        } else if (initialViewport) {
+          map.fitBounds(initialViewport);
+        }
 
         const reverseGeocode = (latLng: google.maps.LatLng, onFound?: (address: string) => void) => {
           setPinError("");
@@ -315,6 +329,7 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
           if (e.latLng) placePin(e.latLng);
         });
         placePinRef.current = placePin;
+        if (initialPinLocation) placePin(initialPinLocation);
       })
       .catch((err) => {
         console.error("No se pudo cargar el mapa:", err);
@@ -329,11 +344,11 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
     };
   }, [showMapFallback]);
 
-  function confirmPinAddress(address: string) {
+  function confirmPinAddress(address: string, opts?: { keepMapOpen?: boolean }) {
     setInputText(address);
     setConfirmed(true);
     onSelectRef.current(address);
-    setShowMapFallback(false);
+    if (!opts?.keepMapOpen) setShowMapFallback(false);
   }
 
   function handleUseMyLocation() {
@@ -354,7 +369,9 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
         // reverse-geocode resuelve una dirección específica, sin que haga
         // falta apretar "Confirmar ubicación" — a diferencia de un click o
         // arrastre manual del pin, que sigue requiriendo esa confirmación.
-        placePin(latLng, confirmPinAddress);
+        // El mapa queda abierto por si se lo quiere correr un poco (el GPS
+        // puede no ser exacto).
+        placePin(latLng, (address) => confirmPinAddress(address, { keepMapOpen: true }));
       },
       (err) => {
         console.error("Error obteniendo la ubicación actual:", err);

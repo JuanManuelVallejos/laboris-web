@@ -133,6 +133,8 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
 
     const isSpecific = (place.types ?? []).some((t) => SPECIFIC_TYPES.includes(t));
     if (!isSpecific) {
+      setInputText(place.formattedAddress);
+      setConfirmed(false);
       setSelectError("Esa dirección no tiene número — agregá la altura para que sea específica.");
       setSuggestions([]);
       setShowDropdown(false);
@@ -252,6 +254,7 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
           onBlur={() => setShowDropdown(false)}
           placeholder="Escribí tu domicilio…"
           autoComplete="off"
+          style={(hasPendingText || selectError) ? { borderColor: "var(--brand-alert)" } : undefined}
         />
         {showDropdown && suggestions.length > 0 && (
           <div className="absolute z-10 mt-1 w-full bg-surface-2 border border-border rounded-xl shadow-lg divide-y divide-border overflow-hidden">

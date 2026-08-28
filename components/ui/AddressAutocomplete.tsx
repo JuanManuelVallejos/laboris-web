@@ -171,6 +171,12 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
     setSuggestions([]);
     setShowDropdown(false);
     setSelectError("");
+    // Si había quedado abierto el mapa de respaldo de una exploración
+    // anterior (ej. probó una dirección incompleta, abrió el mapa, y
+    // terminó resolviéndolo acá en vez de con un pin), hay que cerrarlo:
+    // si no, mapPending queda pegado en true y nunca deja de avisarle al
+    // padre que falta confirmar, aunque el domicilio ya esté listo.
+    setShowMapFallback(false);
     onSelectRef.current(place.formattedAddress);
 
     // Nueva sesión para la próxima búsqueda — agrupa la facturación de cada

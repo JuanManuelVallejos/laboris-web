@@ -26,12 +26,13 @@ export default function ProfessionalOnboardingPage() {
   const [bio,         setBio]         = useState("");
   const [loading,     setLoading]     = useState(false);
   const [error,       setError]       = useState("");
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
   const canSubmit = fullName.trim() && trade && homeAddress.trim() && !mapOpen;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!canSubmit) return;
+    if (!canSubmit) { setSubmitAttempted(true); return; }
     setLoading(true);
     setError("");
 
@@ -81,11 +82,18 @@ export default function ProfessionalOnboardingPage() {
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="Ej: Juan Vallejo"
                 required
+                style={submitAttempted && !fullName.trim() ? { borderColor: "var(--brand-alert)" } : undefined}
               />
             </Field>
+            {submitAttempted && !fullName.trim() && (
+              <p className="text-xs mt-1" style={{ color: "var(--brand-alert)" }}>Completá tu nombre.</p>
+            )}
           </div>
 
-          <div className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm">
+          <div
+            className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm"
+            style={submitAttempted && !trade ? { borderColor: "var(--brand-alert)" } : undefined}
+          >
             <span className="field__label block mb-2">Oficio *</span>
             <div className="flex flex-wrap gap-2">
               {TRADE_OPTIONS.map((t) => (
@@ -94,11 +102,14 @@ export default function ProfessionalOnboardingPage() {
                 </Chip>
               ))}
             </div>
+            {submitAttempted && !trade && (
+              <p className="text-xs mt-2" style={{ color: "var(--brand-alert)" }}>Elegí un oficio.</p>
+            )}
           </div>
 
           <div className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm">
             <Field label="Tu domicilio *" hint="Desde acá se calcula qué tan lejos podés llegar a trabajar">
-              <AddressAutocomplete onSelect={setHomeAddress} onUnconfirmedChange={setMapOpen} />
+              <AddressAutocomplete onSelect={setHomeAddress} onUnconfirmedChange={setMapOpen} highlightUnconfirmed={submitAttempted} />
             </Field>
           </div>
 
@@ -126,7 +137,7 @@ export default function ProfessionalOnboardingPage() {
             </p>
           )}
 
-          <Button type="submit" variant="accent" size="lg" block disabled={!canSubmit || loading}>
+          <Button type="submit" variant="accent" size="lg" block disabled={loading} aria-disabled={!canSubmit}>
             {loading ? "Guardando..." : "Crear mi perfil"}
           </Button>
 

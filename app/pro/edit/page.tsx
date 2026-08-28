@@ -30,6 +30,9 @@ export default function EditProPage() {
   const [loading,  setLoading]  = useState(true);
   const [saving,   setSaving]   = useState(false);
   const [error,    setError]    = useState("");
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+
+  const canSubmit = !!trade && !!homeAddress.trim() && !mapOpen;
 
   useEffect(() => {
     getMyProfessional(getToken)
@@ -56,7 +59,7 @@ export default function EditProPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!trade || !homeAddress.trim()) return;
+    if (!canSubmit) { setSubmitAttempted(true); return; }
     setSaving(true);
     setError("");
     try {
@@ -89,7 +92,10 @@ export default function EditProPage() {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm">
+            <div
+              className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm"
+              style={submitAttempted && !trade ? { borderColor: "var(--brand-alert)" } : undefined}
+            >
               <span className="field__label block mb-2">Oficio *</span>
               <div className="flex flex-wrap gap-2">
                 {TRADE_OPTIONS.map((t) => (
@@ -98,11 +104,14 @@ export default function EditProPage() {
                   </Chip>
                 ))}
               </div>
+              {submitAttempted && !trade && (
+                <p className="text-xs mt-2" style={{ color: "var(--brand-alert)" }}>Elegí un oficio.</p>
+              )}
             </div>
 
             <div className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm">
               <Field label="Tu domicilio *" hint="Desde acá se calcula qué tan lejos podés llegar a trabajar">
-                <AddressAutocomplete currentValue={homeAddress} onSelect={setHomeAddress} onUnconfirmedChange={setMapOpen} />
+                <AddressAutocomplete currentValue={homeAddress} onSelect={setHomeAddress} onUnconfirmedChange={setMapOpen} highlightUnconfirmed={submitAttempted} />
               </Field>
             </div>
 
@@ -132,7 +141,7 @@ export default function EditProPage() {
               </p>
             )}
 
-            <Button type="submit" variant="accent" size="lg" block disabled={!trade || !homeAddress.trim() || mapOpen || saving}>
+            <Button type="submit" variant="accent" size="lg" block disabled={saving} aria-disabled={!canSubmit}>
               {saving ? "Guardando..." : "Guardar cambios"}
             </Button>
           </form>

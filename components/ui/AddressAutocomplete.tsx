@@ -13,6 +13,8 @@ interface AddressAutocompleteProps {
   onSelect: (address: string) => void;
   /** Avisa cuando hay una interacción sin confirmar (texto tipeado sin elegir sugerencia, o el mapa de respaldo abierto sin pin confirmado) — los formularios que editan un domicilio ya cargado lo usan para no dejar guardar en ese estado. */
   onUnconfirmedChange?: (unconfirmed: boolean) => void;
+  /** El formulario padre lo pone en `true` cuando el usuario intentó enviar el formulario sin haber confirmado el domicilio — fuerza el aviso a rojo (aunque el texto tipeado ya "parezca" una dirección válida) y hace scroll hasta acá. */
+  highlightUnconfirmed?: boolean;
 }
 
 // Dirección específica: calle con altura, edificio con nombre propio, o
@@ -31,11 +33,12 @@ const SUGGESTION_TYPES = [...SPECIFIC_TYPES, "route"];
  * A propósito no permite texto libre: la única forma de setear un valor es
  * eligiendo una sugerencia de la lista (o confirmando un pin en el mapa).
  */
-export default function AddressAutocomplete({ currentValue, onSelect, onUnconfirmedChange }: AddressAutocompleteProps) {
+export default function AddressAutocomplete({ currentValue, onSelect, onUnconfirmedChange, highlightUnconfirmed }: AddressAutocompleteProps) {
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
   const onUnconfirmedChangeRef = useRef(onUnconfirmedChange);
   onUnconfirmedChangeRef.current = onUnconfirmedChange;
+  const rootRef = useRef<HTMLDivElement>(null);
 
   const [error, setError] = useState("");
   const [inputText, setInputText] = useState("");
@@ -64,12 +67,20 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
 
   const hasPendingText = inputText.trim().length > 0 && !confirmed;
   const mapPending = showMapFallback && !pinAddress;
+  // El padre pide resaltar esto porque se intentó enviar el formulario sin
+  // haber confirmado — manda por sobre el verde de "parece válido": ese
+  // verde es justamente lo que puede hacer creer que ya está listo.
+  const unconfirmedNudge = !!highlightUnconfirmed && !confirmed;
   // Precedencia: un rechazo explícito manda por sobre todo; si no, una
   // dirección con altura ya reconocida (o ya confirmada) se ve en verde
   // aunque falte clickear la sugerencia; el resto del texto sin confirmar
   // sigue en rojo como antes.
-  const showValid = !selectError && (looksSpecific || confirmed);
-  const showInvalid = !showValid && (hasPendingText || !!selectError);
+  const showValid = !selectError && !unconfirmedNudge && (looksSpecific || confirmed);
+  const showInvalid = !showValid && (hasPendingText || !!selectError || unconfirmedNudge);
+
+  useEffect(() => {
+    if (unconfirmedNudge) rootRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [unconfirmedNudge]);
 
   useEffect(() => {
     onUnconfirmedChangeRef.current?.(hasPendingText || mapPending);
@@ -253,7 +264,7 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
   }
 
   return (
-    <div>
+    <div ref={rootRef}>
       {currentValue && (
         <p className="text-xs text-ink-soft mb-2">
           Domicilio actual: <span className="text-ink font-medium">{currentValue}</span>
@@ -297,7 +308,12 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
         )}
       </div>
 
-      {hasPendingText && !selectError && (
+      {unconfirmedNudge && (
+        <p className="text-xs font-semibold mt-1" style={{ color: "var(--brand-alert)" }}>
+          Todavía te falta confirmar tu domicilio — elegí una sugerencia de la lista o marcalo en el mapa.
+        </p>
+      )}
+      {hasPendingText && !selectError && !unconfirmedNudge && (
         <p className="text-xs mt-1" style={showValid ? { color: "#16A34A" } : undefined}>
           {showValid
             ? "Esa dirección existe — elegila de la lista para confirmar."

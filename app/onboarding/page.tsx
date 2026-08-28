@@ -20,6 +20,7 @@ export default function OnboardingPage() {
   const [step,        setStep]        = useState<"name" | "role" | "address">("name");
   const [loading,     setLoading]     = useState(false);
   const [error,       setError]       = useState("");
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
   async function handleRole(role: "client" | "professional") {
     // Guardamos el nombre antes de avanzar
@@ -35,7 +36,7 @@ export default function OnboardingPage() {
 
   async function handleFinishClient(e: React.FormEvent) {
     e.preventDefault();
-    if (!homeAddress.trim()) return;
+    if (!homeAddress.trim() || mapOpen) { setSubmitAttempted(true); return; }
     setLoading(true);
     setError("");
     try {
@@ -74,10 +75,10 @@ export default function OnboardingPage() {
             )}
 
             <Field label="Tu domicilio">
-              <AddressAutocomplete onSelect={setHomeAddress} onUnconfirmedChange={setMapOpen} />
+              <AddressAutocomplete onSelect={setHomeAddress} onUnconfirmedChange={setMapOpen} highlightUnconfirmed={submitAttempted} />
             </Field>
 
-            <Button type="submit" variant="accent" size="lg" block disabled={!homeAddress.trim() || mapOpen || loading}>
+            <Button type="submit" variant="accent" size="lg" block disabled={loading} aria-disabled={!homeAddress.trim() || mapOpen}>
               {loading ? "Guardando..." : "Terminar"}
             </Button>
           </form>

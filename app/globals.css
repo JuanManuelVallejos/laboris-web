@@ -202,7 +202,7 @@ h1, h2, h3, h4 { margin: 0; line-height: 1.5; color: var(--ink); }
   .btn--lg { font-size: var(--t-body); padding: .9em 1.5em; }
   .btn--pill { border-radius: var(--r-pill); }
   .btn--block { display: flex; width: 100%; }
-  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn:disabled, .btn[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
   .btn .ico { width: 1.1em; height: 1.1em; }
 
   /* ---------- Chips / filtros ---------- */

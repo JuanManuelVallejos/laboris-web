@@ -17,10 +17,11 @@ export default function AddressOnboardingPage() {
   const [mapOpen, setMapOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState("");
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!homeAddress.trim()) return;
+    if (!homeAddress.trim() || mapOpen) { setSubmitAttempted(true); return; }
     setLoading(true);
     setError("");
     try {
@@ -58,10 +59,10 @@ export default function AddressOnboardingPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <Field label="Tu domicilio">
-            <AddressAutocomplete onSelect={setHomeAddress} onUnconfirmedChange={setMapOpen} />
+            <AddressAutocomplete onSelect={setHomeAddress} onUnconfirmedChange={setMapOpen} highlightUnconfirmed={submitAttempted} />
           </Field>
 
-          <Button type="submit" variant="accent" size="lg" block disabled={!homeAddress.trim() || mapOpen || loading}>
+          <Button type="submit" variant="accent" size="lg" block disabled={loading} aria-disabled={!homeAddress.trim() || mapOpen}>
             {loading ? "Guardando..." : "Continuar"}
           </Button>
         </form>

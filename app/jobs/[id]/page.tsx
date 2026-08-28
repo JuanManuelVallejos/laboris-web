@@ -876,7 +876,7 @@ export default function JobPage() {
 
       <main className="flex-1 px-4 pt-5 pb-24 md:pb-10 max-w-lg mx-auto w-full space-y-4">
         {/* Header */}
-        <div className="flex items-start justify-between gap-2">
+        <div className="flex items-start justify-between gap-2 pb-2">
           <div>
             <button onClick={() => router.back()} className="text-brand-vivid text-sm font-medium mb-1 inline-flex items-center gap-1">
               <Icon name="arrow" style={{ transform: "rotate(180deg)", width: 14, height: 14 }} />

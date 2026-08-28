@@ -67,7 +67,7 @@ export default function ProRequestDetailPage() {
       <Topbar />
 
       <main className="flex-1 px-4 pt-5 pb-24 md:pb-10 max-w-lg mx-auto w-full space-y-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 pb-2">
           <Link href="/pro/pedidos" className="text-brand-vivid" aria-label="Volver">
             <Icon name="arrow" style={{ transform: "rotate(180deg)", width: 18, height: 18 }} />
           </Link>

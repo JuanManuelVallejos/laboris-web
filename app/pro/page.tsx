@@ -39,7 +39,7 @@ export default function ProDashboard() {
       <Topbar />
 
       <main className="flex-1 px-4 pt-5 pb-24 md:pb-10 max-w-lg mx-auto w-full space-y-4">
-        <h2 className="serif text-lg font-bold text-ink">Mi panel</h2>
+        <h2 className="serif text-lg font-bold text-ink pb-2">Mi panel</h2>
 
         {loading && (
           <div className="space-y-4">

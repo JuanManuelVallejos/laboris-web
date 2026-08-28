@@ -19,14 +19,22 @@ export default function RequestCard({ title, request, children }: Props) {
       <p className="text-sm text-ink-mid leading-relaxed">{request.description}</p>
 
       {request.address && (
-        <a
-          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(request.address)}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs text-ink-soft underline decoration-dotted block"
-        >
-          Domicilio: {request.address}
-        </a>
+        request.addressRevealed ? (
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(request.address)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-ink-soft underline decoration-dotted block"
+          >
+            Domicilio: {request.address}
+          </a>
+        ) : (
+          // Dirección todavía no revelada: sin link a Google Maps real (una
+          // búsqueda a nivel localidad ahí muestra el polígono del barrio
+          // entero, no un círculo) — el círculo aproximado se ve al entrar
+          // al detalle ("Ver solicitud →"), vía ApproxLocationSection.
+          <p className="text-xs text-ink-soft">Domicilio: {request.address}</p>
+        )
       )}
 
       {request.status === "rejected" && request.rejectionReason && (

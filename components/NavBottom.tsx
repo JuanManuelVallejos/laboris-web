@@ -15,7 +15,7 @@ export default function NavBottom() {
   const items: { href: string; label: string; icon: IconName }[] = isPro
     ? [
         { href: "/pro",         label: "Inicio",  icon: "home" },
-        { href: "/pro/pedidos", label: "Pedidos", icon: "clip" },
+        { href: "/pro/pedidos", label: "Actividad", icon: "clip" },
         { href: "/perfil",      label: "Perfil",  icon: "user" },
       ]
     : [

@@ -23,6 +23,28 @@ export interface Professional {
   portfolioPhotos?: Attachment[];
 }
 
+export interface Review {
+  id: string;
+  professionalId: string;
+  reviewerName: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
+
+export interface MonthlyEarning {
+  /** Formato "2026-08" — el frontend le da formato legible. */
+  month: string;
+  amount: number;
+  jobsCount: number;
+}
+
+export interface ProfessionalStats {
+  totalCompleted: number;
+  totalEarned: number;
+  monthlyEarnings: MonthlyEarning[];
+}
+
 export interface SavedAddress {
   id: string;
   label: string;

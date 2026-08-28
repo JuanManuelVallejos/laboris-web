@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/Badge";
 import { TextInput, Textarea } from "@/components/ui/Field";
 import Icon from "@/components/icons/Icon";
 import ApproxLocationSection from "@/components/ApproxLocationSection";
+import LeaveReviewCard from "@/components/LeaveReviewCard";
 import { JOB_STATUS_TONE, JOB_STATUS_LABEL } from "@/lib/status";
 import {
   getJob, getMessages, sendMessage, messagesStreamUrl, jobStreamUrl,
@@ -302,6 +303,9 @@ function ActionPanel({
       )}
       {s === "completed" && (
         <InfoRow label="Pago liberado" value={fmt(job.workQuoteAmount)} tone="positive" />
+      )}
+      {s === "completed" && isClient && (
+        <LeaveReviewCard professionalId={job.professionalId} getToken={getToken} />
       )}
       {s === "completed" && job.autoCompleted && (
         <InfoRow

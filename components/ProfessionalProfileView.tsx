@@ -1,7 +1,12 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Icon from "@/components/icons/Icon";
 import PhotoGallery from "@/components/ui/PhotoGallery";
-import type { Professional } from "@/lib/types";
+import StarRating from "@/components/ui/StarRating";
+import { getProfessionalReviews } from "@/lib/api";
+import type { Professional, Review } from "@/lib/types";
 
 interface ProfessionalProfileViewProps {
   professional: Professional;
@@ -23,9 +28,18 @@ interface ProfessionalProfileViewProps {
 }
 
 export default function ProfessionalProfileView({ professional, editHref, avatarUrl, email }: ProfessionalProfileViewProps) {
-  const ratingText = professional.rating > 0 ? `★ ${professional.rating}` : "Sin calificación";
+  const ratingText = professional.rating > 0 ? professional.rating.toFixed(1) : "Sin calificación";
   const isOwner = !!editHref;
   const avatar = avatarUrl ?? professional.avatarUrl;
+
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+
+  useEffect(() => {
+    getProfessionalReviews(professional.id)
+      .then(setReviews)
+      .finally(() => setReviewsLoading(false));
+  }, [professional.id]);
 
   return (
     <>
@@ -50,7 +64,11 @@ export default function ProfessionalProfileView({ professional, editHref, avatar
             {isOwner && professional.radiusKm !== undefined && ` · Radio ${professional.radiusKm} km`}
             {!isOwner && professional.distanceKm !== undefined && ` · a ${professional.distanceKm.toFixed(1)} km`}
           </p>
-          <p className="text-sm font-medium mt-1" style={{ color: "var(--amber)" }}>{ratingText}</p>
+          <div className="flex items-center gap-1.5 mt-1">
+            {professional.rating > 0 && <StarRating rating={professional.rating} size={14} />}
+            <span className="text-sm font-medium" style={{ color: "var(--amber)" }}>{ratingText}</span>
+            {reviews.length > 0 && <span className="text-xs text-ink-soft">({reviews.length})</span>}
+          </div>
         </div>
         {editHref && (
           <Link
@@ -96,6 +114,31 @@ export default function ProfessionalProfileView({ professional, editHref, avatar
           <p className="text-sm text-ink-soft">Todavía no subiste fotos a tu portfolio.</p>
         </div>
       ) : null}
+
+      {/* Reseñas */}
+      <div className="bg-surface-2 border border-border rounded-2xl p-5 shadow-sm">
+        <h3 className="text-sm font-semibold text-ink mb-3">Reseñas</h3>
+        {reviewsLoading ? (
+          <div className="h-16 rounded-xl bg-surface-3 animate-pulse" />
+        ) : reviews.length === 0 ? (
+          <p className="text-sm text-ink-soft">Todavía no tiene reseñas.</p>
+        ) : (
+          <div className="space-y-4">
+            {reviews.map((r) => (
+              <div key={r.id} className="border-b border-border last:border-0 pb-4 last:pb-0">
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <p className="text-sm font-semibold text-ink">{r.reviewerName}</p>
+                  <StarRating rating={r.rating} size={13} />
+                </div>
+                {r.comment && <p className="text-sm text-ink-mid leading-relaxed">{r.comment}</p>}
+                <p className="text-xs text-ink-soft mt-1">
+                  {new Date(r.createdAt).toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" })}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">

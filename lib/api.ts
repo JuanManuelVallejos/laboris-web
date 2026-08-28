@@ -1,4 +1,4 @@
-import type { Professional, Job, Message, Attachment, SavedAddress } from "./types";
+import type { Professional, Job, Message, Attachment, SavedAddress, Review, ProfessionalStats } from "./types";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
@@ -36,6 +36,43 @@ export async function getProfessionals(
 export async function getProfessional(id: string): Promise<Professional> {
   const res = await fetch(`${BASE}/api/v1/professionals/${id}`, { cache: "no-store" });
   if (!res.ok) throw new Error("Professional not found");
+  return res.json();
+}
+
+export async function getProfessionalReviews(professionalId: string): Promise<Review[]> {
+  const res = await fetch(`${BASE}/api/v1/professionals/${professionalId}/reviews`, { cache: "no-store" });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data ?? [];
+}
+
+export async function submitReview(
+  professionalId: string,
+  data: { rating: number; comment: string },
+  getToken: () => Promise<string | null>
+): Promise<Review> {
+  const token = await getToken();
+  const res = await fetch(`${BASE}/api/v1/professionals/${professionalId}/reviews`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: "error desconocido" }));
+    throw new Error(body.error ?? "error desconocido");
+  }
+  return res.json();
+}
+
+export async function getMyProfessionalStats(
+  getToken: () => Promise<string | null>
+): Promise<ProfessionalStats> {
+  const token = await getToken();
+  const res = await fetch(`${BASE}/api/v1/me/professional/stats`, {
+    cache: "no-store",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`Error ${res.status}`);
   return res.json();
 }
 

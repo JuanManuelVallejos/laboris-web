@@ -20,7 +20,7 @@ import {
 
 const NAV_LINKS_PRO = [
   { href: "/pro",         label: "Inicio" },
-  { href: "/pro/pedidos", label: "Pedidos" },
+  { href: "/pro/pedidos", label: "Actividad" },
   { href: "/perfil",      label: "Perfil" },
 ];
 

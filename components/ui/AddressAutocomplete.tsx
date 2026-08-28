@@ -58,7 +58,9 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
   const suggestRequestIdRef = useRef(0);
 
   const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.Marker | null>(null);
+  const placePinRef = useRef<((latLng: google.maps.LatLng) => void) | null>(null);
   const geocoderRef = useRef<google.maps.Geocoder | null>(null);
   const reverseGeocodeRequestIdRef = useRef(0);
   const [showMapFallback, setShowMapFallback] = useState(false);
@@ -247,16 +249,38 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
       window.google.maps.importLibrary("marker") as Promise<google.maps.MarkerLibrary>,
       window.google.maps.importLibrary("geocoding") as Promise<google.maps.GeocodingLibrary>,
     ])
-      .then(([{ Map }, { Marker }, { Geocoder }]) => {
+      .then(async ([{ Map }, { Marker }, { Geocoder }]) => {
+        if (cancelled || !mapContainerRef.current) return;
+        geocoderRef.current = new Geocoder();
+
+        // Si ya hay algo tipeado (aunque no sea una dirección completa, ej.
+        // "Bernal"), arrancamos el mapa ya centrado/zoomeado ahí en vez de
+        // en Buenos Aires — el viewport que devuelve el geocoder ya viene
+        // más o menos amplio según qué tan específico sea el resultado.
+        let initialViewport: google.maps.LatLngBounds | null = null;
+        const textToLocate = inputText.trim();
+        if (textToLocate) {
+          try {
+            const results = await new Promise<google.maps.GeocoderResult[] | null>((resolve) => {
+              geocoderRef.current!.geocode({ address: textToLocate, region: "ar" }, (res, status) => {
+                resolve(status === "OK" && res ? res : null);
+              });
+            });
+            if (results?.[0]?.geometry?.viewport) initialViewport = results[0].geometry.viewport;
+          } catch (err) {
+            console.error("No se pudo centrar el mapa según lo tipeado:", err);
+          }
+        }
         if (cancelled || !mapContainerRef.current) return;
 
         const map = new Map(mapContainerRef.current, {
-          center: { lat: -34.6037, lng: -58.3816 }, // Buenos Aires
+          center: { lat: -34.6037, lng: -58.3816 }, // Buenos Aires — fallback si no hay texto o falla el geocode
           zoom: 12,
           streetViewControl: false,
           mapTypeControl: false,
         });
-        geocoderRef.current = new Geocoder();
+        mapRef.current = map;
+        if (initialViewport) map.fitBounds(initialViewport);
 
         const reverseGeocode = (latLng: google.maps.LatLng) => {
           setPinError("");
@@ -289,6 +313,7 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
         map.addListener("click", (e: google.maps.MapMouseEvent) => {
           if (e.latLng) placePin(e.latLng);
         });
+        placePinRef.current = placePin;
       })
       .catch((err) => {
         console.error("No se pudo cargar el mapa:", err);
@@ -298,8 +323,34 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
     return () => {
       cancelled = true;
       markerRef.current = null;
+      mapRef.current = null;
+      placePinRef.current = null;
     };
   }, [showMapFallback]);
+
+  function handleUseMyLocation() {
+    if (!navigator.geolocation) {
+      setPinError("Tu navegador no admite geolocalización.");
+      return;
+    }
+    setPinError("");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const map = mapRef.current;
+        const placePin = placePinRef.current;
+        if (!map || !placePin) return;
+        const latLng = new window.google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+        map.setCenter(latLng);
+        map.setZoom(16);
+        placePin(latLng);
+      },
+      (err) => {
+        console.error("Error obteniendo la ubicación actual:", err);
+        setPinError("No pudimos acceder a tu ubicación — revisá los permisos del navegador.");
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
 
   function handleConfirmPin() {
     if (!pinAddress) return;
@@ -396,7 +447,12 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
 
       {showMapFallback && (
         <div className="mt-2 space-y-2">
-          <p className="text-xs text-ink-soft">Tocá el mapa para marcar tu domicilio.</p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs text-ink-soft">Tocá el mapa para marcar tu domicilio.</p>
+            <button type="button" onClick={handleUseMyLocation} className="text-xs font-medium text-brand-vivid whitespace-nowrap">
+              Usar mi ubicación actual
+            </button>
+          </div>
           <div ref={mapContainerRef} className="rounded-xl overflow-hidden" style={{ height: 260 }} />
           {pinAddress && <p className="text-xs text-ink">Ubicación marcada: {pinAddress}</p>}
           {pinError && (

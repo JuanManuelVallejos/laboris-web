@@ -36,6 +36,7 @@ export default function PerfilPage() {
   const [addingRole, setAddingRole]   = useState(false);
   const [newClientAddress, setNewClientAddress] = useState("");
   const [newClientAddressMapOpen, setNewClientAddressMapOpen] = useState(false);
+  const [useProAddress, setUseProAddress] = useState(false);
 
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
   const [addressesLoading, setAddressesLoading] = useState(true);
@@ -350,9 +351,27 @@ export default function PerfilPage() {
           <div className="bg-surface-2 border border-border rounded-2xl p-5 shadow-sm text-center space-y-3">
             <p className="text-sm font-medium text-ink">¿También buscás servicios?</p>
             <p className="text-xs text-ink-soft">Sumá tu perfil de cliente sin salir de tu cuenta.</p>
-            <Field label="Tu domicilio">
-              <AddressAutocomplete onSelect={setNewClientAddress} onUnconfirmedChange={setNewClientAddressMapOpen} />
-            </Field>
+            {proProfile?.homeAddress && (
+              <label className="flex items-center justify-center gap-2 text-xs text-ink-soft">
+                <input
+                  type="checkbox"
+                  checked={useProAddress}
+                  onChange={(e) => {
+                    setUseProAddress(e.target.checked);
+                    setNewClientAddress(e.target.checked ? proProfile.homeAddress! : "");
+                    setNewClientAddressMapOpen(false);
+                  }}
+                />
+                Usar el mismo domicilio que ya tenés como profesional
+              </label>
+            )}
+            {useProAddress ? (
+              <p className="text-sm text-ink font-medium">{proProfile?.homeAddress}</p>
+            ) : (
+              <Field label="Tu domicilio">
+                <AddressAutocomplete onSelect={setNewClientAddress} onUnconfirmedChange={setNewClientAddressMapOpen} />
+              </Field>
+            )}
             <Button variant="secondary" size="sm" onClick={handleAddClientRole} disabled={addingRole || !newClientAddress.trim() || newClientAddressMapOpen}>
               {addingRole ? "Sumando..." : "Sumar perfil de cliente"}
             </Button>

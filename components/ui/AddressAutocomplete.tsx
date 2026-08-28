@@ -60,7 +60,9 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.Marker | null>(null);
+  const myLocationMarkerRef = useRef<google.maps.Marker | null>(null);
   const placePinRef = useRef<((latLng: google.maps.LatLng) => void) | null>(null);
+  const showMyLocationRef = useRef<((latLng: google.maps.LatLng) => void) | null>(null);
   const geocoderRef = useRef<google.maps.Geocoder | null>(null);
   const reverseGeocodeRequestIdRef = useRef(0);
   const [showMapFallback, setShowMapFallback] = useState(false);
@@ -310,10 +312,35 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
           reverseGeocode(latLng);
         };
 
+        // Punto azul estilo Google Maps: solo referencia visual de "acá
+        // estás vos", no arrastrable — el pin rojo (placePin) sigue siendo
+        // el que se confirma.
+        const showMyLocation = (latLng: google.maps.LatLng) => {
+          if (!myLocationMarkerRef.current) {
+            myLocationMarkerRef.current = new Marker({
+              position: latLng,
+              map,
+              clickable: false,
+              zIndex: 1,
+              icon: {
+                path: window.google.maps.SymbolPath.CIRCLE,
+                scale: 8,
+                fillColor: "#4285F4",
+                fillOpacity: 1,
+                strokeColor: "#ffffff",
+                strokeWeight: 2,
+              },
+            });
+          } else {
+            myLocationMarkerRef.current.setPosition(latLng);
+          }
+        };
+
         map.addListener("click", (e: google.maps.MapMouseEvent) => {
           if (e.latLng) placePin(e.latLng);
         });
         placePinRef.current = placePin;
+        showMyLocationRef.current = showMyLocation;
       })
       .catch((err) => {
         console.error("No se pudo cargar el mapa:", err);
@@ -323,8 +350,10 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
     return () => {
       cancelled = true;
       markerRef.current = null;
+      myLocationMarkerRef.current = null;
       mapRef.current = null;
       placePinRef.current = null;
+      showMyLocationRef.current = null;
     };
   }, [showMapFallback]);
 
@@ -342,6 +371,7 @@ export default function AddressAutocomplete({ currentValue, onSelect, onUnconfir
         const latLng = new window.google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
         map.setCenter(latLng);
         map.setZoom(16);
+        showMyLocationRef.current?.(latLng);
         placePin(latLng);
       },
       (err) => {

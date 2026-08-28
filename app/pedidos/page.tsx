@@ -8,9 +8,20 @@ import Topbar from "@/components/Topbar";
 import NavBottom from "@/components/NavBottom";
 import RequestCard from "@/components/RequestCard";
 import Button from "@/components/ui/Button";
-import { getSentRequests } from "@/lib/api";
+import { getSentRequests, getMyClientStats } from "@/lib/api";
 import type { Request } from "@/lib/api";
+import type { ClientStats } from "@/lib/types";
 import { useActiveRole } from "@/lib/useActiveRole";
+
+function formatCurrency(amount: number): string {
+  return amount.toLocaleString("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
+}
+
+function formatMonthLabel(month: string): string {
+  const [year, m] = month.split("-").map(Number);
+  const label = new Date(year, m - 1, 1).toLocaleDateString("es-AR", { month: "long", year: "numeric" });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
 
 export default function PedidosPage() {
   const { getToken } = useAuth();
@@ -19,6 +30,8 @@ export default function PedidosPage() {
   const router = useRouter();
   const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading]   = useState(true);
+  const [stats, setStats] = useState<ClientStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -28,12 +41,56 @@ export default function PedidosPage() {
       .finally(() => setLoading(false));
   }, [isLoaded, hasClient, hasProfessional, active, getToken, router]);
 
+  useEffect(() => {
+    getMyClientStats(getToken)
+      .then(setStats)
+      .catch(() => {})
+      .finally(() => setStatsLoading(false));
+  }, [getToken]);
+
   return (
     <div className="flex flex-col min-h-screen bg-page">
       <Topbar />
 
       <main className="flex-1 px-4 pt-5 pb-24 md:pb-10 max-w-lg mx-auto w-full space-y-4">
-        <h2 className="serif text-lg font-bold text-ink pb-2">Mis pedidos</h2>
+        <h2 className="serif text-lg font-bold text-ink pb-2">Mi actividad</h2>
+
+        {statsLoading ? (
+          <div className="grid grid-cols-2 gap-3">
+            {[1, 2].map((i) => (
+              <div key={i} className="bg-surface-2 border border-border rounded-2xl h-20 shadow-sm animate-pulse" />
+            ))}
+          </div>
+        ) : stats && (
+          <>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm text-center">
+                <p className="text-xs text-ink-soft mb-1">Trabajos completados</p>
+                <p className="text-lg font-bold text-ink">{stats.totalCompleted}</p>
+              </div>
+              <div className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm text-center">
+                <p className="text-xs text-ink-soft mb-1">Total gastado</p>
+                <p className="text-lg font-bold text-ink">{formatCurrency(stats.totalSpent)}</p>
+              </div>
+            </div>
+
+            {stats.monthlySpending.length > 0 && (
+              <div className="bg-surface-2 border border-border rounded-2xl p-4 shadow-sm space-y-2">
+                <p className="text-sm font-semibold text-ink mb-1">Gastos por mes</p>
+                {stats.monthlySpending.map((m) => (
+                  <div key={m.month} className="flex items-center justify-between text-sm">
+                    <span className="text-ink-mid">{formatMonthLabel(m.month)}</span>
+                    <span className="text-ink font-medium">
+                      {formatCurrency(m.amount)} · {m.jobsCount} trabajo{m.jobsCount !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        <h3 className="text-sm font-semibold text-ink-soft uppercase tracking-wide pt-2 pb-2">Historial de pedidos</h3>
 
         {loading && (
           <div className="space-y-3">

@@ -20,7 +20,7 @@ export default function NavBottom() {
       ]
     : [
         { href: "/",        label: "Inicio",  icon: "home" },
-        { href: "/pedidos", label: "Pedidos", icon: "clip" },
+        { href: "/pedidos", label: "Actividad", icon: "clip" },
         { href: "/perfil",  label: "Perfil",  icon: "user" },
       ];
 

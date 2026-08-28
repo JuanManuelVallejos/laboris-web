@@ -26,7 +26,7 @@ const NAV_LINKS_PRO = [
 
 const NAV_LINKS_CLIENT = [
   { href: "/",        label: "Inicio" },
-  { href: "/pedidos", label: "Pedidos" },
+  { href: "/pedidos", label: "Actividad" },
   { href: "/perfil",  label: "Perfil" },
 ];
 

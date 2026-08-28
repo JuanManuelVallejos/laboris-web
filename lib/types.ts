@@ -45,6 +45,12 @@ export interface ProfessionalStats {
   monthlyEarnings: MonthlyEarning[];
 }
 
+export interface ClientStats {
+  totalCompleted: number;
+  totalSpent: number;
+  monthlySpending: MonthlyEarning[];
+}
+
 export interface SavedAddress {
   id: string;
   label: string;

@@ -1,4 +1,4 @@
-import type { Professional, Job, Message, Attachment, SavedAddress, Review, ProfessionalStats } from "./types";
+import type { Professional, Job, Message, Attachment, SavedAddress, Review, ProfessionalStats, ClientStats } from "./types";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
@@ -69,6 +69,18 @@ export async function getMyProfessionalStats(
 ): Promise<ProfessionalStats> {
   const token = await getToken();
   const res = await fetch(`${BASE}/api/v1/me/professional/stats`, {
+    cache: "no-store",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`Error ${res.status}`);
+  return res.json();
+}
+
+export async function getMyClientStats(
+  getToken: () => Promise<string | null>
+): Promise<ClientStats> {
+  const token = await getToken();
+  const res = await fetch(`${BASE}/api/v1/me/client/stats`, {
     cache: "no-store",
     headers: { Authorization: `Bearer ${token}` },
   });

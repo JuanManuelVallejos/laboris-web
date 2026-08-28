@@ -37,6 +37,9 @@ export default function PerfilPage() {
   const [newClientAddress, setNewClientAddress] = useState("");
   const [newClientAddressMapOpen, setNewClientAddressMapOpen] = useState(false);
   const [useProAddress, setUseProAddress] = useState(false);
+  const [clientRoleAttempted, setClientRoleAttempted] = useState(false);
+  const [editAttempted, setEditAttempted] = useState(false);
+  const [addAttempted, setAddAttempted] = useState(false);
 
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
   const [addressesLoading, setAddressesLoading] = useState(true);
@@ -71,7 +74,7 @@ export default function PerfilPage() {
   }, [isLoaded, isPro, getToken]);
 
   async function handleAddAddress() {
-    if (!addLabel.trim() || !addAddress.trim()) return;
+    if (!addLabel.trim() || !addAddress.trim()) { setAddAttempted(true); return; }
     setSavingAddress(true);
     setAddressError("");
     try {
@@ -92,10 +95,11 @@ export default function PerfilPage() {
     setEditLabel(a.label);
     setEditAddress(a.address);
     setAddressError("");
+    setEditAttempted(false);
   }
 
   async function handleSaveEditAddress(id: string) {
-    if (!editLabel.trim() || !editAddress.trim()) return;
+    if (!editLabel.trim() || !editAddress.trim()) { setEditAttempted(true); return; }
     setBusyAddressId(id);
     setAddressError("");
     try {
@@ -143,7 +147,7 @@ export default function PerfilPage() {
   // Sumar el rol de cliente a una cuenta que hoy es solo profesional —
   // pide el domicilio inline, ya es obligatorio para poder usar Inicio.
   async function handleAddClientRole() {
-    if (!user || !newClientAddress.trim()) return;
+    if (!user || !newClientAddress.trim()) { setClientRoleAttempted(true); return; }
     setAddingRole(true);
     try {
       const email = user.primaryEmailAddress?.emailAddress ?? "";
@@ -221,14 +225,24 @@ export default function PerfilPage() {
                           value={editLabel}
                           onChange={(e) => setEditLabel(e.target.value)}
                           placeholder="Nombre (ej: Casa)"
+                          style={editAttempted && !editLabel.trim() ? { borderColor: "var(--brand-alert)" } : undefined}
                         />
-                        <AddressAutocomplete currentValue={editAddress} onSelect={setEditAddress} onUnconfirmedChange={setEditAddressMapOpen} />
+                        {editAttempted && !editLabel.trim() && (
+                          <p className="text-xs" style={{ color: "var(--brand-alert)" }}>Ingresá un nombre para el domicilio.</p>
+                        )}
+                        <AddressAutocomplete
+                          currentValue={editAddress}
+                          onSelect={setEditAddress}
+                          onUnconfirmedChange={setEditAddressMapOpen}
+                          highlightUnconfirmed={editAttempted}
+                        />
                         <div className="flex gap-2">
                           <Button
                             variant="accent"
                             size="sm"
                             onClick={() => handleSaveEditAddress(a.id)}
-                            disabled={busyAddressId === a.id || !editLabel.trim() || !editAddress.trim() || editAddressMapOpen}
+                            disabled={busyAddressId === a.id}
+                            aria-disabled={!editLabel.trim() || !editAddress.trim() || editAddressMapOpen}
                           >
                             {busyAddressId === a.id ? "Guardando..." : "Guardar"}
                           </Button>
@@ -303,18 +317,23 @@ export default function PerfilPage() {
                   value={addLabel}
                   onChange={(e) => setAddLabel(e.target.value)}
                   placeholder="Nombre (ej: Casa, Depto)"
+                  style={addAttempted && !addLabel.trim() ? { borderColor: "var(--brand-alert)" } : undefined}
                 />
-                <AddressAutocomplete onSelect={setAddAddress} onUnconfirmedChange={setAddAddressMapOpen} />
+                {addAttempted && !addLabel.trim() && (
+                  <p className="text-xs" style={{ color: "var(--brand-alert)" }}>Ingresá un nombre para el domicilio.</p>
+                )}
+                <AddressAutocomplete onSelect={setAddAddress} onUnconfirmedChange={setAddAddressMapOpen} highlightUnconfirmed={addAttempted} />
                 <div className="flex gap-2">
                   <Button
                     variant="accent"
                     size="sm"
                     onClick={handleAddAddress}
-                    disabled={savingAddress || !addLabel.trim() || !addAddress.trim() || addAddressMapOpen}
+                    disabled={savingAddress}
+                    aria-disabled={!addLabel.trim() || !addAddress.trim() || addAddressMapOpen}
                   >
                     {savingAddress ? "Guardando..." : "Guardar domicilio"}
                   </Button>
-                  <Button variant="secondary" size="sm" onClick={() => { setShowAddForm(false); setAddLabel(""); setAddAddress(""); }}>
+                  <Button variant="secondary" size="sm" onClick={() => { setShowAddForm(false); setAddLabel(""); setAddAddress(""); setAddAttempted(false); }}>
                     Cancelar
                   </Button>
                 </div>
@@ -369,10 +388,20 @@ export default function PerfilPage() {
               <p className="text-sm text-ink font-medium">{proProfile?.homeAddress}</p>
             ) : (
               <Field label="Tu domicilio">
-                <AddressAutocomplete onSelect={setNewClientAddress} onUnconfirmedChange={setNewClientAddressMapOpen} />
+                <AddressAutocomplete
+                  onSelect={setNewClientAddress}
+                  onUnconfirmedChange={setNewClientAddressMapOpen}
+                  highlightUnconfirmed={clientRoleAttempted}
+                />
               </Field>
             )}
-            <Button variant="secondary" size="sm" onClick={handleAddClientRole} disabled={addingRole || !newClientAddress.trim() || newClientAddressMapOpen}>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleAddClientRole}
+              disabled={addingRole}
+              aria-disabled={!newClientAddress.trim() || newClientAddressMapOpen}
+            >
               {addingRole ? "Sumando..." : "Sumar perfil de cliente"}
             </Button>
           </div>

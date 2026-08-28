@@ -41,6 +41,7 @@ export default function RequestPage() {
   const [newAddress, setNewAddress] = useState("");
   const [newAddressMapOpen, setNewAddressMapOpen] = useState(false);
   const [savingAddress, setSavingAddress] = useState(false);
+  const [newAddressAttempted, setNewAddressAttempted] = useState(false);
   const [addressCheck, setAddressCheck] = useState<AddressDistanceCheck | null>(null);
   const [checkingAddress, setCheckingAddress] = useState(false);
 
@@ -73,7 +74,7 @@ export default function RequestPage() {
   }, [getToken]);
 
   async function handleAddAddress() {
-    if (!newLabel.trim() || !newAddress.trim()) return;
+    if (!newLabel.trim() || !newAddress.trim()) { setNewAddressAttempted(true); return; }
     setSavingAddress(true);
     setError("");
     try {
@@ -177,14 +178,23 @@ export default function RequestPage() {
                       value={newLabel}
                       onChange={(e) => setNewLabel(e.target.value)}
                       placeholder="Nombre (ej: Casa, Depto)"
+                      style={newAddressAttempted && !newLabel.trim() ? { borderColor: "var(--brand-alert)" } : undefined}
                     />
-                    <AddressAutocomplete onSelect={setNewAddress} onUnconfirmedChange={setNewAddressMapOpen} />
+                    {newAddressAttempted && !newLabel.trim() && (
+                      <p className="text-xs" style={{ color: "var(--brand-alert)" }}>Ingresá un nombre para el domicilio.</p>
+                    )}
+                    <AddressAutocomplete
+                      onSelect={setNewAddress}
+                      onUnconfirmedChange={setNewAddressMapOpen}
+                      highlightUnconfirmed={newAddressAttempted}
+                    />
                     <Button
                       type="button"
                       variant="secondary"
                       size="sm"
                       onClick={handleAddAddress}
-                      disabled={savingAddress || !newLabel.trim() || !newAddress.trim() || newAddressMapOpen}
+                      disabled={savingAddress}
+                      aria-disabled={!newLabel.trim() || !newAddress.trim() || newAddressMapOpen}
                     >
                       {savingAddress ? "Guardando..." : "Guardar domicilio"}
                     </Button>
